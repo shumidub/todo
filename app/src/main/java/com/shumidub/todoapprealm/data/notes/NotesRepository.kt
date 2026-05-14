@@ -1,5 +1,6 @@
 package com.shumidub.todoapprealm.data.notes
 
+import com.shumidub.todoapprealm.App
 import com.shumidub.todoapprealm.realmcontrollers.notescontroller.FolderNotesRealmController
 import com.shumidub.todoapprealm.realmmodel.notes.FolderNotesObject
 import com.shumidub.todoapprealm.realmmodel.notes.NoteObject
@@ -24,7 +25,7 @@ class NotesRepository @Inject constructor() {
 
     fun refreshFolders() {
         val list: List<FolderNotesObject> =
-            com.shumidub.todoapprealm.App.folderOfNotesContainerList?.toList() ?: emptyList()
+            App.folderOfNotesContainerList?.toList() ?: emptyList()
         _folders.value = list.map { it.toSnapshot() }
     }
 

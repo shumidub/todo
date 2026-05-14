@@ -63,7 +63,7 @@ class TasksRepository @Inject constructor() {
 
     fun reorderFolder(from: Int, to: Int) {
         val container = App.realmFoldersContainer ?: return
-        val list = container.folderOfTasksList ?: return
+        val list = container.folderOfTasksList
         if (from !in list.indices || to !in list.indices) return
         App.initRealm()
         App.realm.executeTransaction {
@@ -143,6 +143,6 @@ class TasksRepository @Inject constructor() {
         maxAccumulation = maxAccumulation,
         countAccumulation = countAccumulation,
         isCycling = isCycling,
-        isDone = isDone,
+        isDone = done,
     )
 }
