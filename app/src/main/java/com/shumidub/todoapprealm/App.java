@@ -3,8 +3,8 @@ package com.shumidub.todoapprealm;
 import android.app.Application;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.support.multidex.MultiDex;
+import androidx.annotation.RequiresApi;
+import androidx.multidex.MultiDex;
 import android.util.Log;
 
 import com.shumidub.todoapprealm.realmcontrollers.ContainersControllers.ContainersRealmController;
@@ -28,6 +28,8 @@ import io.realm.RealmConfiguration;
 import io.realm.RealmList;
 import io.realm.RealmModel;
 
+import dagger.hilt.android.HiltAndroidApp;
+
 import static com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController.addTask;
 import static com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController.getTasks;
 
@@ -36,6 +38,7 @@ import static com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRea
  *
  */
 
+@HiltAndroidApp
 public class App extends Application {
 
     static App mApp;
