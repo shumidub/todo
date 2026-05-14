@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,6 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shumidub.todoapprealm.data.notes.FolderNoteSnapshot
 import com.shumidub.todoapprealm.ui.theme.TodoTheme
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun NotesScreen(viewModel: NotesViewModel = hiltViewModel()) {
@@ -38,6 +41,8 @@ fun NotesScreen(viewModel: NotesViewModel = hiltViewModel()) {
                 onFolderClick = viewModel::openFolder,
                 onFolderLongClick = viewModel::openFolderActions,
                 onNoteLongClick = viewModel::openNoteActions,
+                onReorderFolder = viewModel::reorderFolder,
+                onReorderNote = viewModel::reorderNote,
             )
         }
 
@@ -51,25 +56,22 @@ private fun NotesBody(
     onFolderClick: (FolderNoteSnapshot) -> Unit,
     onFolderLongClick: (Long) -> Unit,
     onNoteLongClick: (Long) -> Unit,
+    onReorderFolder: (from: Int, to: Int) -> Unit,
+    onReorderNote: (from: Int, to: Int) -> Unit,
 ) {
     when (state.mode) {
         NotesMode.Folders -> {
             if (state.folders.isEmpty()) {
                 EmptyState("No folders yet")
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(0.dp),
-                ) {
-                    items(state.folders, key = { it.id }) { folder ->
-                        NoteCard(
-                            text = folder.name,
-                            onClick = { onFolderClick(folder) },
-                            onLongClick = { onFolderLongClick(folder.id) },
-                        )
-                    }
-                }
+                ReorderableNoteList(
+                    items = state.folders,
+                    keyFor = { it.id },
+                    textFor = { it.name },
+                    onClick = { onFolderClick(it) },
+                    onLongClick = { onFolderLongClick(it.id) },
+                    onReorder = onReorderFolder,
+                )
             }
         }
 
@@ -77,19 +79,47 @@ private fun NotesBody(
             if (state.notes.isEmpty()) {
                 EmptyState("No notes in this folder")
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(0.dp),
-                ) {
-                    items(state.notes, key = { it.id }) { note ->
-                        NoteCard(
-                            text = note.text,
-                            onClick = null,
-                            onLongClick = { onNoteLongClick(note.id) },
-                        )
-                    }
-                }
+                ReorderableNoteList(
+                    items = state.notes,
+                    keyFor = { it.id },
+                    textFor = { it.text },
+                    onClick = null,
+                    onLongClick = { onNoteLongClick(it.id) },
+                    onReorder = onReorderNote,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun <T : Any> ReorderableNoteList(
+    items: List<T>,
+    keyFor: (T) -> Any,
+    textFor: (T) -> String,
+    onClick: ((T) -> Unit)?,
+    onLongClick: (T) -> Unit,
+    onReorder: (from: Int, to: Int) -> Unit,
+) {
+    val lazyListState = rememberLazyListState()
+    val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        onReorder(from.index, to.index)
+    }
+    LazyColumn(
+        state = lazyListState,
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(8.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
+    ) {
+        items(items, key = keyFor) { item ->
+            ReorderableItem(reorderableState, key = keyFor(item)) { isDragging ->
+                NoteCard(
+                    text = textFor(item),
+                    onClick = onClick?.let { { it(item) } },
+                    onLongClick = { onLongClick(item) },
+                    isDragging = isDragging,
+                    dragHandleModifier = Modifier.draggableHandle(),
+                )
             }
         }
     }

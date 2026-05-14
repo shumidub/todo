@@ -121,6 +121,18 @@ class NotesViewModel @Inject constructor(
         repository.deleteNote(id)
         dismissDialog()
     }
+
+    fun reorderFolder(from: Int, to: Int) {
+        if (from == to) return
+        repository.reorderFolder(from, to)
+    }
+
+    fun reorderNote(from: Int, to: Int) {
+        val m = mode.value as? NotesMode.Notes ?: return
+        if (from == to) return
+        val noteId = repository.notesFor(m.folderId).getOrNull(from)?.id ?: return
+        repository.reorderNote(m.folderId, noteId, from, to)
+    }
 }
 
 data class NotesState(

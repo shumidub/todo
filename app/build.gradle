@@ -102,6 +102,9 @@ dependencies {
     // SlidingUpPanel (AndroidX-compatible fork)
     implementation 'com.github.hannesa2:AndroidSlidingUpPanel:4.5.0'
 
+    // Reorderable LazyColumn for Compose
+    implementation 'sh.calvin.reorderable:reorderable:2.4.0'
+
     // Keyboard visibility (AndroidX-compatible release)
     implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:3.0.0-RC3'
 
