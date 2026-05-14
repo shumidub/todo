@@ -18,7 +18,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlin_version"
         classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$ksp_version"
         classpath "io.realm.kotlin:gradle-plugin:$realm_kotlin_version"
-        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.51.1'
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.52'
     }
 }
 
