@@ -17,16 +17,15 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -36,7 +35,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shumidub.todoapprealm.data.tasks.FolderTaskSnapshot
 import com.shumidub.todoapprealm.ui.theme.TodoTheme
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -44,21 +42,15 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksScreen(
+    bottomSheetState: SheetState = rememberStandardBottomSheetState(
+        initialValue = SheetValue.PartiallyExpanded,
+        skipHiddenState = true,
+    ),
     viewModel: TasksViewModel = hiltViewModel(),
-    sheetController: SheetController = remember { SheetController() },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val bottomSheetState = rememberStandardBottomSheetState(
-        initialValue = SheetValue.PartiallyExpanded,
-        skipHiddenState = true,
-    )
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
-
-    DisposableEffect(bottomSheetState, scope) {
-        sheetController.attach(bottomSheetState, scope)
-        onDispose { sheetController.detach() }
-    }
 
     TodoTheme {
         BottomSheetScaffold(
@@ -378,29 +370,3 @@ private fun ActionsDialog(
     )
 }
 
-/** Exposes imperative control of the bottom sheet to the hosting Fragment / Activity. */
-@OptIn(ExperimentalMaterial3Api::class)
-class SheetController {
-    private var sheetState: androidx.compose.material3.SheetState? = null
-    private var scope: CoroutineScope? = null
-
-    fun attach(state: androidx.compose.material3.SheetState, scope: CoroutineScope) {
-        this.sheetState = state
-        this.scope = scope
-    }
-
-    fun detach() {
-        sheetState = null
-        scope = null
-    }
-
-    fun isExpanded(): Boolean = sheetState?.currentValue == SheetValue.Expanded
-
-    fun collapseIfExpanded(): Boolean {
-        val state = sheetState ?: return false
-        val scope = scope ?: return false
-        if (state.currentValue != SheetValue.Expanded) return false
-        scope.launch { state.partialExpand() }
-        return true
-    }
-}
