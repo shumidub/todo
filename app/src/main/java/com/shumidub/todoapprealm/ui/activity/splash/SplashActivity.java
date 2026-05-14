@@ -1,7 +1,7 @@
 package com.shumidub.todoapprealm.ui.activity.splash;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;

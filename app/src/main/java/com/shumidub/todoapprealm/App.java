@@ -3,8 +3,8 @@ package com.shumidub.todoapprealm;
 import android.app.Application;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.support.multidex.MultiDex;
+import androidx.annotation.RequiresApi;
+import androidx.multidex.MultiDex;
 import android.util.Log;
 
 import com.shumidub.todoapprealm.realmcontrollers.ContainersControllers.ContainersRealmController;

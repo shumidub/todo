@@ -1,8 +1,8 @@
 package com.shumidub.todoapprealm.ui.activity.main;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 import com.shumidub.todoapprealm.ui.fragment.note_fragment.FolderNoteFragment;
 import com.shumidub.todoapprealm.ui.fragment.report_section.report_fragment.ReportFragment;
 import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;

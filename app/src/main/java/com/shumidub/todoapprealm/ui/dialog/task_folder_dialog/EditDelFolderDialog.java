@@ -24,7 +24,7 @@ import io.reactivex.annotations.NonNull;
  * Created by Артем on 24.12.2017.
  */
 
-public class EditDelFolderDialog extends android.support.v4.app.DialogFragment{
+public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
 
     public static String ID_FOLDER = "idFolder";
     public static String MODE_LIST = "ModeList";

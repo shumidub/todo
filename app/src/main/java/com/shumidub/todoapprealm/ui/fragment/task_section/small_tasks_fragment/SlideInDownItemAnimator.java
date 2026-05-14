@@ -2,8 +2,8 @@ package com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SimpleItemAnimator;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SimpleItemAnimator;
 import android.view.animation.DecelerateInterpolator;
 
 /**

@@ -5,8 +5,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.TextInputLayout;
+import androidx.annotation.Nullable;
+import com.google.android.material.textfield.TextInputLayout;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -26,7 +26,7 @@ import java.util.List;
  *
  */
 
-public class AddNoteDialog extends android.support.v4.app.DialogFragment {
+public class AddNoteDialog extends androidx.fragment.app.DialogFragment {
 
     protected MainActivity activity;
     protected EditText etText;
@@ -125,10 +125,10 @@ public class AddNoteDialog extends android.support.v4.app.DialogFragment {
 
 
     protected void notifyDataChanged() {
-        List<android.support.v4.app.Fragment> fragments
+        List<androidx.fragment.app.Fragment> fragments
                 = (getActivity()).getSupportFragmentManager().getFragments();
 
-        for (android.support.v4.app.Fragment fragment : fragments) {
+        for (androidx.fragment.app.Fragment fragment : fragments) {
             if (fragment instanceof FolderNoteFragment) {
                 ((FolderNoteFragment) fragment).notifyDataChanged();
             }

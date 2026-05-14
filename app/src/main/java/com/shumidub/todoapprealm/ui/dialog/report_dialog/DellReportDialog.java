@@ -3,8 +3,8 @@ package com.shumidub.todoapprealm.ui.dialog.report_dialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
 import android.view.KeyEvent;
 import android.view.View;
 
@@ -22,7 +22,7 @@ import io.reactivex.annotations.NonNull;
  * Created by A.shumidub on 05.02.18.
  */
 
-public class DellReportDialog extends android.support.v4.app.DialogFragment {
+public class DellReportDialog extends androidx.fragment.app.DialogFragment {
 
     @NonNull
     @Override
