@@ -15,7 +15,6 @@ import com.shumidub.todoapprealm.realmcontrollers.notescontroller.FolderNotesRea
 import com.shumidub.todoapprealm.sync.JsonSyncUtil;
 import com.shumidub.todoapprealm.sync.LocalSyncUtil;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
-import com.shumidub.todoapprealm.ui.dialog.report_dialog.AddReportDialog;
 import com.shumidub.todoapprealm.ui.fragment.note_fragment.FolderNoteFragment;
 
 import java.util.List;

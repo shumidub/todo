@@ -11,8 +11,6 @@ import android.view.inputmethod.InputMethodManager;
 
 import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
-import com.shumidub.todoapprealm.ui.dialog.report_dialog.DellReportDialog;
-import com.shumidub.todoapprealm.ui.dialog.report_dialog.EditReportDialog;
 import com.shumidub.todoapprealm.ui.fragment.note_fragment.FolderNoteFragment;
 import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
 
@@ -37,27 +35,15 @@ public class NoteActionModeCallback {
 
                 folderNoteFragment.actionModeIsEnabled = true;
 
+                // Edit/Delete menu items were wired to Report dialogs in legacy code (likely
+                // copy-paste mistake). Stubbed out until the Notes screen is migrated to Compose.
                 MenuItem editList = menu.add("edit ");
                 editList.setIcon(R.drawable.ic_edit);
-                editList.setOnMenuItemClickListener((MenuItem a) -> {
-                    EditReportDialog dialog = new EditReportDialog();
-                    dialog.show(((MainActivity) activity).getSupportFragmentManager(), EditReportDialog.EDIT_REPORT_TITLE);
-                    InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.toggleSoftInputFromWindow(
-                            activity.getWindow().getDecorView().getApplicationWindowToken(),
-                            InputMethodManager.SHOW_FORCED, 0);
-                    actionMode.finish();
-                    return true;
-                });
-
+                editList.setOnMenuItemClickListener(a -> { actionMode.finish(); return true; });
 
                 MenuItem deleteList = menu.add("delete ");
                 deleteList.setIcon(R.drawable.ic_del);
-                deleteList.setOnMenuItemClickListener((MenuItem a) -> {
-                    new DellReportDialog().show(((MainActivity)activity).getSupportFragmentManager(), "DELL");
-                    actionMode.finish();
-                    return true;
-                });
+                deleteList.setOnMenuItemClickListener(a -> { actionMode.finish(); return true; });
                 return true;
             }
 
