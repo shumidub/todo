@@ -17,7 +17,6 @@ import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer;
 import com.shumidub.todoapprealm.realmmodel.RealmInteger;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.realmmodel.notes.FolderNotesObject;
-import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -47,7 +46,6 @@ public class App extends Application {
     public static RealmFoldersContainer realmFoldersContainer;
     public static RealmList<FolderTaskObject> folderOfTasksListFromContainer;
     public static RealmList<FolderNotesObject> folderOfNotesContainerList;
-    public static FolderSlidingPanelFragment folderSlidingPanelFragment;
 
 
     RealmModel gettedFolderObject;
@@ -244,11 +242,6 @@ public class App extends Application {
                 App.dayScope = App.dayScope + task.getCountValue() * equalDateCount;
             }
         }
-    }
-
-
-    public static FolderSlidingPanelFragment getFolderSlidingPanelFragment(){
-        return folderSlidingPanelFragment;
     }
 
 }

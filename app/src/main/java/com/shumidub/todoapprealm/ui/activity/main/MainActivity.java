@@ -27,7 +27,6 @@ import com.shumidub.todoapprealm.ui.actionmode.EmptyActionModeCallback;
 import com.shumidub.todoapprealm.ui.fragment.note_fragment.FolderNoteFragment;
 import com.shumidub.todoapprealm.ui.fragment.report_section.report_fragment.ReportFragment;
 import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import io.realm.RealmObject;
 
@@ -212,11 +211,10 @@ public class MainActivity extends AppCompatActivity {
         if (currentFragmentItem == 1){
             for (Fragment fragment: getSupportFragmentManager ().getFragments()){
                 if (fragment instanceof FolderSlidingPanelFragment){
-                    SlidingUpPanelLayout slidingUpPanelLayout = ((FolderSlidingPanelFragment) fragment).slidingUpPanelLayout;
-                    if ( slidingUpPanelLayout.getPanelState()== SlidingUpPanelLayout.PanelState.EXPANDED){
-                        slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+                    FolderSlidingPanelFragment tasksFragment = (FolderSlidingPanelFragment) fragment;
+                    if (tasksFragment.collapseSheet()) {
                         return;
-                    } else{
+                    } else {
                         onBackPressedWithTimer();
                         return;
                     }
