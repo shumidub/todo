@@ -1,8 +1,8 @@
 package com.shumidub.todoapprealm.realmmodel.report
 
-import io.realm.RealmObject
+import io.realm.kotlin.types.RealmObject
 
-open class ReportObject : RealmObject() {
+class ReportObject : RealmObject {
     var id: Long = 0
     var date: String? = null
     var countOfDay: Int = 0

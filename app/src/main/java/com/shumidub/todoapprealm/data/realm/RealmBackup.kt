@@ -4,13 +4,14 @@ import android.content.ContentValues
 import android.content.Context
 import android.provider.MediaStore
 import android.util.Log
-import io.realm.Realm
-import io.realm.RealmConfiguration
-import io.realm.exceptions.RealmMigrationNeededException
+import io.realm.kotlin.Realm
+import io.realm.kotlin.RealmConfiguration
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private const val REALM_FILE_NAME = "default.realm"
 
 object RealmBackup {
 
@@ -18,28 +19,32 @@ object RealmBackup {
 
     /**
      * Probes the Realm file with a no-migration config. If the on-disk schema
-     * differs from the in-code schema (a migration would be needed), copies the
-     * current file to the public Downloads directory before returning so the
-     * caller can proceed with the real migration.
-     *
-     * Safe to call before any other Realm operation. Does nothing if the file
-     * doesn't exist or already matches the current schema.
+     * differs from the in-code schema, copies the file to the public Downloads
+     * directory before the caller proceeds with the real migration.
      */
     fun backupIfMigrationNeeded(context: Context) {
-        val probe = RealmConfiguration.Builder()
+        val probe = RealmConfiguration.Builder(REALM_SCHEMA)
             .schemaVersion(REALM_SCHEMA_VERSION)
             .build()
         try {
-            Realm.getInstance(probe).use { /* schemas match — nothing to do */ }
-        } catch (e: RealmMigrationNeededException) {
-            backup(context, reason = "schema-mismatch")
+            Realm.open(probe).close()
+        } catch (e: IllegalStateException) {
+            // Realm Kotlin throws IllegalStateException with "Migration is required..."
+            // when the on-disk schema needs migration but no migration block is provided.
+            if (e.message?.contains("migration", ignoreCase = true) == true ||
+                e.message?.contains("schema", ignoreCase = true) == true
+            ) {
+                backup(context, reason = "schema-mismatch")
+            } else {
+                Log.w(TAG, "Probe failed with non-migration error; skipping backup", e)
+            }
         } catch (e: Throwable) {
             Log.w(TAG, "Probe failed; skipping backup", e)
         }
     }
 
     private fun backup(context: Context, reason: String) {
-        val src = File(context.filesDir, Realm.DEFAULT_REALM_NAME)
+        val src = File(context.filesDir, REALM_FILE_NAME)
         if (!src.exists()) return
 
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())

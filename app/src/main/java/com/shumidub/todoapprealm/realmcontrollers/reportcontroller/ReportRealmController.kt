@@ -1,20 +1,20 @@
 package com.shumidub.todoapprealm.realmcontrollers.reportcontroller
 
 import com.shumidub.todoapprealm.App
+import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer
 import com.shumidub.todoapprealm.realmmodel.report.ReportObject
-import io.realm.RealmList
+import io.realm.kotlin.ext.query
 
 object ReportRealmController {
 
-    fun getReportList(): RealmList<ReportObject> {
-        App.initRealm()
-        return App.realmFoldersContainer?.reportObjectList ?: RealmList()
-    }
+    fun getReportList(): List<ReportObject> =
+        App.realm.query<RealmFoldersContainer>().first().find()
+            ?.reportObjectList
+            ?.toList()
+            .orEmpty()
 
-    fun getReport(id: Long): ReportObject? {
-        App.initRealm()
-        return App.realm.where(ReportObject::class.java).equalTo("id", id).findFirst()
-    }
+    fun getReport(id: Long): ReportObject? =
+        App.realm.query<ReportObject>("id == $0", id).first().find()
 
     fun addReport(
         date: String,
@@ -29,11 +29,11 @@ object ReportRealmController {
         isWeekReport: Boolean,
         weekNumber: Int,
     ): Long {
-        val id = getValidId()
-        App.initRealm()
-        App.realm.executeTransaction { realm ->
-            val report = realm.createObject(ReportObject::class.java).apply {
-                this.id = id
+        val newId = getValidId()
+        App.realm.writeBlocking {
+            val container = query<RealmFoldersContainer>().first().find() ?: return@writeBlocking
+            val report = copyToRealm(ReportObject().apply {
+                this.id = newId
                 this.date = date
                 this.countOfDay = dayCount
                 this.reportText = textReport
@@ -45,10 +45,10 @@ object ReportRealmController {
                 this.famillyRating = famillyRating
                 this.isWeekReport = isWeekReport
                 this.weekNumber = weekNumber
-            }
-            App.realmFoldersContainer?.reportObjectList?.add(report)
+            })
+            container.reportObjectList.add(report)
         }
-        return id
+        return newId
     }
 
     fun editReport(
@@ -64,9 +64,8 @@ object ReportRealmController {
         famillyRating: Int,
         weekNumber: Int,
     ) {
-        App.initRealm()
-        val report = getReport(id) ?: return
-        App.realm.executeTransaction {
+        App.realm.writeBlocking {
+            val report = query<ReportObject>("id == $0", id).first().find() ?: return@writeBlocking
             report.date = date
             report.countOfDay = dayCount
             report.reportText = textReport
@@ -81,23 +80,15 @@ object ReportRealmController {
     }
 
     fun delReport(id: Long) {
-        App.initRealm()
-        val report = getReport(id) ?: return
-        val deletion: () -> Unit = {
-            App.realmFoldersContainer?.reportObjectList?.remove(report)
-            report.deleteFromRealm()
-            App.realm.where(ReportObject::class.java)
-                .equalTo("id", id)
-                .findAll()
-                .deleteAllFromRealm()
+        App.realm.writeBlocking {
+            val report = query<ReportObject>("id == $0", id).first().find() ?: return@writeBlocking
+            delete(report)
         }
-        if (App.realm.isInTransaction) deletion() else App.realm.executeTransaction { deletion() }
     }
 
     private fun getValidId(): Long {
-        App.initRealm()
         var id = System.currentTimeMillis()
-        while (App.realm.where(ReportObject::class.java).equalTo("id", id).findFirst() != null) {
+        while (App.realm.query<ReportObject>("id == $0", id).first().find() != null) {
             id++
         }
         return id

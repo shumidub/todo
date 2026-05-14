@@ -1,7 +1,7 @@
 package com.shumidub.todoapprealm.realmmodel
 
-import io.realm.RealmObject
+import io.realm.kotlin.types.RealmObject
 
-open class RealmInteger : RealmObject() {
+class RealmInteger : RealmObject {
     var myInteger: Int = 0
 }

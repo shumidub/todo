@@ -3,84 +3,67 @@ package com.shumidub.todoapprealm.realmcontrollers.taskcontroller
 import com.shumidub.todoapprealm.App
 import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject
-import com.shumidub.todoapprealm.realmmodel.task.TaskObject
-import io.realm.RealmList
+import io.realm.kotlin.ext.query
 
 object FolderTaskRealmController {
 
-    fun getFoldersList(): RealmList<FolderTaskObject>? {
-        App.initRealm()
-        return App.folderOfTasksListFromContainer
-    }
+    fun getFoldersList(): List<FolderTaskObject> =
+        App.realm.query<RealmFoldersContainer>().first().find()
+            ?.folderOfTasksList
+            ?.toList()
+            .orEmpty()
 
-    fun getFolder(id: Long): FolderTaskObject? {
-        App.initRealm()
-        return App.realm.where(FolderTaskObject::class.java).equalTo("id", id).findFirst()
-    }
+    fun getFolder(id: Long): FolderTaskObject? =
+        App.realm.query<FolderTaskObject>("id == $0", id).first().find()
 
     fun addFolder(name: String, isDaily: Boolean): Long {
-        val id = getIdForNextValue()
-        App.initRealm()
-        App.realm.executeTransaction { realm ->
-            val folder = realm.createObject(FolderTaskObject::class.java).apply {
-                this.id = id
+        val newId = getIdForNextValue()
+        App.realm.writeBlocking {
+            val container = query<RealmFoldersContainer>().first().find() ?: return@writeBlocking
+            val folder = copyToRealm(FolderTaskObject().apply {
+                this.id = newId
                 this.name = name
                 this.isDaily = isDaily
-            }
-            App.folderOfTasksListFromContainer?.add(folder)
+            })
+            container.folderOfTasksList.add(folder)
         }
-        return id
+        return newId
     }
 
-    fun editFolder(id: Long, name: String, isDaily: Boolean): Long {
-        App.initRealm()
-        val folder = getFolder(id) ?: return id
-        App.realm.executeTransaction {
+    fun editFolder(id: Long, name: String, isDaily: Boolean) {
+        App.realm.writeBlocking {
+            val folder = query<FolderTaskObject>("id == $0", id).first().find() ?: return@writeBlocking
             folder.name = name
             folder.isDaily = isDaily
         }
-        return id
-    }
-
-    fun deleteFolder(folder: FolderTaskObject) {
-        App.initRealm()
-        val folderId = folder.id
-        val tasks = folder.folderTasks
-        val deletion: () -> Unit = {
-            tasks.deleteAllFromRealm()
-            App.realm.where(TaskObject::class.java)
-                .equalTo("taskFolderId", folderId)
-                .findAll()
-                .deleteAllFromRealm()
-            App.folderOfTasksListFromContainer?.remove(folder)
-            folder.deleteFromRealm()
-            App.realm.where(FolderTaskObject::class.java)
-                .equalTo("id", folderId)
-                .findAll()
-                .deleteAllFromRealm()
-        }
-        if (App.realm.isInTransaction) deletion() else App.realm.executeTransaction { deletion() }
     }
 
     fun deleteFolder(id: Long) {
-        getFolder(id)?.let { deleteFolder(it) }
+        App.realm.writeBlocking {
+            val folder = query<FolderTaskObject>("id == $0", id).first().find() ?: return@writeBlocking
+            folder.folderTasks.toList().forEach { delete(it) }
+            delete(folder)
+        }
     }
 
-    fun listOfFolderIsEmpty(): Boolean {
-        App.initRealm()
-        val all = App.realm.where(FolderTaskObject::class.java).findAll()
-        return all.isEmpty()
+    fun reorderFolder(from: Int, to: Int) {
+        App.realm.writeBlocking {
+            val list = query<RealmFoldersContainer>().first().find()?.folderOfTasksList ?: return@writeBlocking
+            if (from !in list.indices || to !in list.indices) return@writeBlocking
+            val item = list.removeAt(from)
+            list.add(to, item)
+        }
     }
 
-    fun containerOfFolderIsExist(): Boolean {
-        App.initRealm()
-        return App.realm.where(RealmFoldersContainer::class.java).findFirst() != null
-    }
+    fun listOfFolderIsEmpty(): Boolean =
+        App.realm.query<FolderTaskObject>().count().find() == 0L
+
+    fun containerOfFolderIsExist(): Boolean =
+        App.realm.query<RealmFoldersContainer>().first().find() != null
 
     private fun getIdForNextValue(): Long {
-        App.initRealm()
         var id = System.currentTimeMillis()
-        while (App.realm.where(FolderTaskObject::class.java).equalTo("id", id).findFirst() != null) {
+        while (App.realm.query<FolderTaskObject>("id == $0", id).first().find() != null) {
             id++
         }
         return id

@@ -1,138 +1,125 @@
 package com.shumidub.todoapprealm.realmcontrollers.notescontroller
 
 import com.shumidub.todoapprealm.App
+import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer
 import com.shumidub.todoapprealm.realmmodel.notes.FolderNotesObject
 import com.shumidub.todoapprealm.realmmodel.notes.NoteObject
-import io.realm.RealmList
+import io.realm.kotlin.ext.query
 
 object FolderNotesRealmController {
 
     // Folders
 
-    fun getFolderNote(id: Long): FolderNotesObject? {
-        App.initRealm()
-        return App.realm.where(FolderNotesObject::class.java).equalTo("id", id).findFirst()
-    }
+    fun getFoldersList(): List<FolderNotesObject> =
+        App.realm.query<RealmFoldersContainer>().first().find()
+            ?.folderOfNotesList
+            ?.toList()
+            .orEmpty()
+
+    fun getFolderNote(id: Long): FolderNotesObject? =
+        App.realm.query<FolderNotesObject>("id == $0", id).first().find()
 
     fun addFolderNote(name: String): Long {
-        val id = getNewValidFolderNotesId()
-        App.initRealm()
-        App.realm.executeTransaction { realm ->
-            val folder = realm.createObject(FolderNotesObject::class.java).apply {
-                this.id = id
+        val newId = getNewValidFolderNotesId()
+        App.realm.writeBlocking {
+            val container = query<RealmFoldersContainer>().first().find() ?: return@writeBlocking
+            val folder = copyToRealm(FolderNotesObject().apply {
+                this.id = newId
                 this.name = name
-            }
-            App.folderOfNotesContainerList?.add(folder)
+            })
+            container.folderOfNotesList.add(folder)
         }
-        return id
+        return newId
     }
 
     fun editFolderNote(id: Long, name: String) {
-        App.initRealm()
-        App.realm.executeTransaction {
-            App.realm.where(FolderNotesObject::class.java)
-                .equalTo("id", id)
-                .findFirst()
-                ?.name = name
+        App.realm.writeBlocking {
+            val folder = query<FolderNotesObject>("id == $0", id).first().find()
+                ?: return@writeBlocking
+            folder.name = name
         }
     }
 
     fun delFolderNote(id: Long) {
-        App.initRealm()
-        val folder = getFolderNote(id) ?: return
-        val notes = folder.notesObjectRealmList
-        val deletion: () -> Unit = {
-            notes.deleteAllFromRealm()
-            App.realm.where(FolderNotesObject::class.java)
-                .equalTo("id", id)
-                .findAll()
-                .deleteAllFromRealm()
+        App.realm.writeBlocking {
+            val folder = query<FolderNotesObject>("id == $0", id).first().find()
+                ?: return@writeBlocking
+            folder.notesObjectRealmList.toList().forEach { delete(it) }
+            delete(folder)
         }
-        if (App.realm.isInTransaction) deletion() else App.realm.executeTransaction { deletion() }
     }
 
     fun reorderFolderNote(from: Int, to: Int) {
-        App.initRealm()
-        val list = App.folderOfNotesContainerList ?: return
-        if (from !in list.indices || to !in list.indices) return
-        App.realm.executeTransaction { list.add(to, list.removeAt(from)) }
+        App.realm.writeBlocking {
+            val list = query<RealmFoldersContainer>().first().find()?.folderOfNotesList
+                ?: return@writeBlocking
+            if (from !in list.indices || to !in list.indices) return@writeBlocking
+            val item = list.removeAt(from)
+            list.add(to, item)
+        }
     }
 
     // Notes
 
-    fun getNotesList(idFolderNotesObject: Long): RealmList<NoteObject>? =
-        getFolderNote(idFolderNotesObject)?.notesObjectRealmList
+    fun getNotesList(folderId: Long): List<NoteObject> =
+        App.realm.query<FolderNotesObject>("id == $0", folderId).first().find()
+            ?.notesObjectRealmList
+            ?.toList()
+            .orEmpty()
 
-    fun getNote(idNotesObject: Long): NoteObject? {
-        App.initRealm()
-        return App.realm.where(NoteObject::class.java).equalTo("id", idNotesObject).findFirst()
-    }
+    fun getNote(id: Long): NoteObject? =
+        App.realm.query<NoteObject>("id == $0", id).first().find()
 
-    fun addNote(idFolderNotesObject: Long, text: String): Long {
-        val id = getNewValidNotesId()
-        App.initRealm()
-        App.realm.executeTransaction { realm ->
-            val folder = realm.where(FolderNotesObject::class.java)
-                .equalTo("id", idFolderNotesObject)
-                .findFirst() ?: return@executeTransaction
-            val note = realm.createObject(NoteObject::class.java).apply {
-                this.id = id
+    fun addNote(folderId: Long, text: String): Long {
+        val newId = getNewValidNotesId()
+        App.realm.writeBlocking {
+            val folder = query<FolderNotesObject>("id == $0", folderId).first().find()
+                ?: return@writeBlocking
+            val note = copyToRealm(NoteObject().apply {
+                this.id = newId
                 this.text = text
-                this.idFolder = idFolderNotesObject
-            }
+                this.idFolder = folderId
+            })
             folder.notesObjectRealmList.add(note)
         }
-        return id
+        return newId
     }
 
-    fun editNote(idNotesObject: Long, text: String) {
-        App.initRealm()
-        App.realm.executeTransaction {
-            App.realm.where(NoteObject::class.java)
-                .equalTo("id", idNotesObject)
-                .findFirst()
-                ?.text = text
+    fun editNote(id: Long, text: String) {
+        App.realm.writeBlocking {
+            val note = query<NoteObject>("id == $0", id).first().find() ?: return@writeBlocking
+            note.text = text
         }
     }
 
-    fun delNote(idNotesObject: Long) {
-        App.initRealm()
-        App.realm.executeTransaction {
-            val note = App.realm.where(NoteObject::class.java)
-                .equalTo("id", idNotesObject)
-                .findFirst() ?: return@executeTransaction
-            App.realm.where(FolderNotesObject::class.java)
-                .equalTo("id", note.idFolder)
-                .findFirst()
-                ?.notesObjectRealmList
-                ?.remove(note)
-            note.deleteFromRealm()
+    fun delNote(id: Long) {
+        App.realm.writeBlocking {
+            val note = query<NoteObject>("id == $0", id).first().find() ?: return@writeBlocking
+            delete(note)
         }
     }
 
-    fun reorderNote(idFolderNotesObject: Long, idNotesObject: Long, from: Int, to: Int) {
-        App.initRealm()
-        val notes = App.realm.where(FolderNotesObject::class.java)
-            .equalTo("id", idFolderNotesObject)
-            .findFirst()
-            ?.notesObjectRealmList ?: return
-        if (from !in notes.indices || to !in notes.indices) return
-        App.realm.executeTransaction { notes.add(to, notes.removeAt(from)) }
+    fun reorderNote(folderId: Long, noteId: Long, from: Int, to: Int) {
+        App.realm.writeBlocking {
+            val list = query<FolderNotesObject>("id == $0", folderId).first().find()
+                ?.notesObjectRealmList ?: return@writeBlocking
+            if (from !in list.indices || to !in list.indices) return@writeBlocking
+            val item = list.removeAt(from)
+            list.add(to, item)
+        }
     }
 
     private fun getNewValidFolderNotesId(): Long {
-        App.initRealm()
         var id = System.currentTimeMillis()
-        while (App.realm.where(FolderNotesObject::class.java).equalTo("id", id).findFirst() != null) {
+        while (App.realm.query<FolderNotesObject>("id == $0", id).first().find() != null) {
             id++
         }
         return id
     }
 
     private fun getNewValidNotesId(): Long {
-        App.initRealm()
         var id = System.currentTimeMillis()
-        while (App.realm.where(NoteObject::class.java).equalTo("id", id).findFirst() != null) {
+        while (App.realm.query<NoteObject>("id == $0", id).first().find() != null) {
             id++
         }
         return id

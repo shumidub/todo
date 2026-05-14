@@ -1,18 +1,17 @@
 package com.shumidub.todoapprealm
 
 import android.app.Application
+import com.shumidub.todoapprealm.data.realm.REALM_SCHEMA
 import com.shumidub.todoapprealm.data.realm.REALM_SCHEMA_VERSION
 import com.shumidub.todoapprealm.data.realm.RealmBackup
-import com.shumidub.todoapprealm.data.realm.TodoRealmMigration
+import com.shumidub.todoapprealm.data.realm.todoRealmMigration
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController
 import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer
-import com.shumidub.todoapprealm.realmmodel.notes.FolderNotesObject
-import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject
 import dagger.hilt.android.HiltAndroidApp
-import io.realm.Realm
-import io.realm.RealmConfiguration
-import io.realm.RealmList
+import io.realm.kotlin.Realm
+import io.realm.kotlin.RealmConfiguration
+import io.realm.kotlin.ext.query
 import java.util.Calendar
 
 @HiltAndroidApp
@@ -22,50 +21,35 @@ class App : Application() {
         super.onCreate()
         instance = this
 
-        Realm.init(this)
         RealmBackup.backupIfMigrationNeeded(this)
-        Realm.setDefaultConfiguration(
-            RealmConfiguration.Builder()
-                .schemaVersion(REALM_SCHEMA_VERSION)
-                .migration(TodoRealmMigration())
-                .build()
-        )
-        initRealm()
-        initContainers()
+
+        val config = RealmConfiguration.Builder(REALM_SCHEMA)
+            .schemaVersion(REALM_SCHEMA_VERSION)
+            .migration(todoRealmMigration)
+            .build()
+        realm = Realm.open(config)
+        ensureContainer()
+    }
+
+    private fun ensureContainer() {
+        if (!FolderTaskRealmController.containerOfFolderIsExist()) {
+            realm.writeBlocking {
+                copyToRealm(RealmFoldersContainer())
+            }
+        }
     }
 
     companion object {
-        private var _realm: Realm? = null
-
         @JvmStatic
         lateinit var instance: App
             private set
 
         @JvmStatic
-        val realm: Realm
-            get() = _realm ?: Realm.getDefaultInstance().also { _realm = it }
-
-        @JvmStatic
-        var realmFoldersContainer: RealmFoldersContainer? = null
-
-        @JvmStatic
-        var folderOfTasksListFromContainer: RealmList<FolderTaskObject>? = null
-
-        @JvmStatic
-        var folderOfNotesContainerList: RealmList<FolderNotesObject>? = null
+        lateinit var realm: Realm
+            private set
 
         @JvmStatic
         var dayScope: Int = 0
-
-        @JvmStatic
-        fun initRealm() {
-            if (_realm == null) _realm = Realm.getDefaultInstance()
-        }
-
-        @JvmStatic
-        fun closeRealm() {
-            _realm = null
-        }
 
         @JvmStatic
         fun setDayScopeValue() {
@@ -78,21 +62,6 @@ class App : Application() {
                 total += task.countValue * equalDateCount
             }
             dayScope = total
-        }
-
-        private fun initContainers() {
-            initRealm()
-            realm.executeTransaction { r ->
-                realmFoldersContainer = if (!FolderTaskRealmController.containerOfFolderIsExist()) {
-                    r.createObject(RealmFoldersContainer::class.java)
-                } else {
-                    r.where(RealmFoldersContainer::class.java).findFirst()
-                }
-            }
-            realmFoldersContainer?.let { container ->
-                folderOfTasksListFromContainer = container.folderOfTasksList
-                folderOfNotesContainerList = container.folderOfNotesList
-            }
         }
     }
 }

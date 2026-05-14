@@ -1,11 +1,12 @@
 package com.shumidub.todoapprealm.realmmodel.task
 
-import io.realm.RealmList
-import io.realm.RealmObject
+import io.realm.kotlin.ext.realmListOf
+import io.realm.kotlin.types.RealmList
+import io.realm.kotlin.types.RealmObject
 
-open class FolderTaskObject : RealmObject() {
+class FolderTaskObject : RealmObject {
     var id: Long = 0
     var name: String? = null
-    var folderTasks: RealmList<TaskObject> = RealmList()
+    var folderTasks: RealmList<TaskObject> = realmListOf()
     var isDaily: Boolean = false
 }

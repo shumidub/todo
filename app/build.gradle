@@ -1,9 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.devtools.ksp'
 apply plugin: 'dagger.hilt.android.plugin'
-apply plugin: 'realm-android'
+apply plugin: 'io.realm.kotlin'
 
 android {
     namespace 'com.shumidub.todoapprealm'
@@ -92,6 +91,9 @@ dependencies {
     // Hilt (brings Dagger transitively; compiler runs via KSP)
     implementation 'com.google.dagger:hilt-android:2.51.1'
     ksp 'com.google.dagger:hilt-android-compiler:2.51.1'
+
+    // Realm Kotlin SDK
+    implementation "io.realm.kotlin:library-base:$realm_kotlin_version"
 
     // JSON
     implementation 'com.google.code.gson:gson:2.11.0'

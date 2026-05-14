@@ -1,35 +1,26 @@
 package com.shumidub.todoapprealm.realmcontrollers.taskcontroller
 
 import com.shumidub.todoapprealm.App
+import com.shumidub.todoapprealm.realmmodel.RealmInteger
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject
-import io.realm.RealmList
-import io.realm.RealmResults
-import io.realm.Sort
+import io.realm.kotlin.ext.query
 import java.util.Calendar
 
 object TasksRealmController {
 
-    fun getTasks(folderId: Long): RealmResults<TaskObject> {
-        App.initRealm()
-        return getFolderTasksRealmListFromFolder(folderId)?.sort("done", Sort.ASCENDING)
-            ?: App.realm.where(TaskObject::class.java)
-                .alwaysFalse()
-                .findAll()
-    }
+    fun getTasks(folderId: Long): List<TaskObject> =
+        App.realm.query<TaskObject>("taskFolderId == $0 SORT(done ASC, id ASC)", folderId)
+            .find()
+            .toList()
 
-    fun getDoneAndPartiallyDoneTasks(): RealmResults<TaskObject> {
-        App.initRealm()
-        return App.realm.where(TaskObject::class.java)
-            .notEqualTo("countAccumulation", 0)
-            .findAll()
-            .sort("done", Sort.ASCENDING, "id", Sort.ASCENDING)
-    }
+    fun getDoneAndPartiallyDoneTasks(): List<TaskObject> =
+        App.realm.query<TaskObject>("countAccumulation != 0 SORT(done ASC, id ASC)")
+            .find()
+            .toList()
 
-    fun getTask(idTask: Long): TaskObject? {
-        App.initRealm()
-        return App.realm.where(TaskObject::class.java).equalTo("id", idTask).findFirst()
-    }
+    fun getTask(idTask: Long): TaskObject? =
+        App.realm.query<TaskObject>("id == $0", idTask).first().find()
 
     fun addTask(
         text: String,
@@ -39,33 +30,33 @@ object TasksRealmController {
         priority: Int,
         taskFolderId: Long,
     ) {
-        App.initRealm()
-        App.realm.executeTransaction { realm ->
-            val task = realm.createObject(TaskObject::class.java).apply {
-                this.id = getIdForNextValue()
+        val newId = getIdForNextValue()
+        App.realm.writeBlocking {
+            val folder = query<FolderTaskObject>("id == $0", taskFolderId).first().find()
+                ?: return@writeBlocking
+            val task = copyToRealm(TaskObject().apply {
+                this.id = newId
                 this.text = text
-                this.lastDoneDate = 0
                 this.priority = priority
                 this.taskFolderId = taskFolderId
                 this.countValue = count
                 this.maxAccumulation = maxAccumulation
-                this.countAccumulation = 0
                 this.isCycling = cycling
-            }
-            FolderTaskRealmController.getFolder(taskFolderId)?.folderTasks?.add(task)
+            })
+            folder.folderTasks.add(task)
         }
     }
 
     fun editTask(
-        task: TaskObject,
+        taskId: Long,
         text: String,
         count: Int,
         maxAccumulation: Int,
         cycling: Boolean,
         priority: Int,
     ) {
-        App.initRealm()
-        App.realm.executeTransaction {
+        App.realm.writeBlocking {
+            val task = query<TaskObject>("id == $0", taskId).first().find() ?: return@writeBlocking
             if (text.isNotEmpty()) task.text = text
             task.priority = priority
             task.countValue = count
@@ -74,18 +65,24 @@ object TasksRealmController {
         }
     }
 
-    fun setTaskDoneOrParticullaryDone(task: TaskObject, done: Boolean) {
-        App.initRealm()
-        App.realm.executeTransaction {
+    fun setTaskDoneOrParticullaryDone(taskId: Long, done: Boolean) {
+        App.realm.writeBlocking {
+            val task = query<TaskObject>("id == $0", taskId).first().find() ?: return@writeBlocking
             if (!done) {
                 task.done = false
-                task.clearDateCountAccumulation()
+                task.dateCountAccumulation.clear()
+                task.countAccumulation = 0
                 task.lastDoneDate = 0
             } else {
                 val cal = Calendar.getInstance()
-                val date = "${cal.get(Calendar.DAY_OF_YEAR)}${cal.get(Calendar.YEAR)}".toInt()
-                task.addDateCountAccumulation(date)
-                task.lastDoneDate = date
+                val today = "${cal.get(Calendar.DAY_OF_YEAR)}${cal.get(Calendar.YEAR)}".toInt()
+                if (task.dateCountAccumulation.size < task.maxAccumulation) {
+                    task.dateCountAccumulation.add(
+                        copyToRealm(RealmInteger().apply { myInteger = today })
+                    )
+                }
+                task.countAccumulation = task.dateCountAccumulation.size
+                task.lastDoneDate = today
                 if (task.countAccumulation >= task.maxAccumulation) {
                     task.done = true
                 }
@@ -93,42 +90,34 @@ object TasksRealmController {
         }
     }
 
-    fun deleteTask(task: TaskObject) {
-        App.initRealm()
-        val taskId = task.id
-        val deletion: () -> Unit = {
-            task.dateCountAccumulation.clear()
-            val folder = FolderTaskRealmController.getFolder(task.taskFolderId)
-            if (task.isValid && folder?.folderTasks?.contains(task) == true) {
-                folder.folderTasks.remove(task)
-            }
-            task.deleteFromRealm()
-            App.realm.where(TaskObject::class.java)
-                .equalTo("id", taskId)
-                .findAll()
-                .deleteAllFromRealm()
+    fun deleteTask(taskId: Long) {
+        App.realm.writeBlocking {
+            val task = query<TaskObject>("id == $0", taskId).first().find() ?: return@writeBlocking
+            delete(task)
         }
-        if (App.realm.isInTransaction) deletion() else App.realm.executeTransaction { deletion() }
     }
 
-    fun setTaskPriority(task: TaskObject, priority: Int) {
+    fun setTaskPriority(taskId: Long, priority: Int) {
         if (priority !in 0..3) return
-        App.initRealm()
-        App.realm.executeTransaction { task.priority = priority }
+        App.realm.writeBlocking {
+            val task = query<TaskObject>("id == $0", taskId).first().find() ?: return@writeBlocking
+            task.priority = priority
+        }
     }
 
-    fun getFolderTasksRealmListFromFolder(folderId: Long): RealmList<TaskObject>? {
-        App.initRealm()
-        return App.realm.where(FolderTaskObject::class.java)
-            .equalTo("id", folderId)
-            .findFirst()
-            ?.folderTasks
+    fun reorderTask(folderId: Long, from: Int, to: Int) {
+        App.realm.writeBlocking {
+            val list = query<FolderTaskObject>("id == $0", folderId).first().find()
+                ?.folderTasks ?: return@writeBlocking
+            if (from !in list.indices || to !in list.indices) return@writeBlocking
+            val item = list.removeAt(from)
+            list.add(to, item)
+        }
     }
 
     private fun getIdForNextValue(): Long {
-        App.initRealm()
         var id = System.currentTimeMillis()
-        while (App.realm.where(TaskObject::class.java).equalTo("id", id).findFirst() != null) {
+        while (App.realm.query<TaskObject>("id == $0", id).first().find() != null) {
             id++
         }
         return id

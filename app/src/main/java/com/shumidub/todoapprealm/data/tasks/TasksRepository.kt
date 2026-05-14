@@ -1,6 +1,5 @@
 package com.shumidub.todoapprealm.data.tasks
 
-import com.shumidub.todoapprealm.App
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject
@@ -25,9 +24,9 @@ class TasksRepository @Inject constructor() {
     }
 
     fun refreshFolders() {
-        val list = FolderTaskRealmController.getFoldersList()?.toList().orEmpty()
-        _folders.value = list.map { it.toSnapshot() }
-        _tasksByFolder.value = list.associate { folder ->
+        val folders = FolderTaskRealmController.getFoldersList()
+        _folders.value = folders.map { it.toSnapshot() }
+        _tasksByFolder.value = folders.associate { folder ->
             folder.id to TasksRealmController.getTasks(folder.id).map { it.toSnapshot() }
         }
     }
@@ -62,13 +61,7 @@ class TasksRepository @Inject constructor() {
     }
 
     fun reorderFolder(from: Int, to: Int) {
-        val container = App.realmFoldersContainer ?: return
-        val list = container.folderOfTasksList
-        if (from !in list.indices || to !in list.indices) return
-        App.initRealm()
-        App.realm.executeTransaction {
-            list.add(to, list.removeAt(from))
-        }
+        FolderTaskRealmController.reorderFolder(from, to)
         refreshFolders()
     }
 
@@ -92,39 +85,31 @@ class TasksRepository @Inject constructor() {
         isCycling: Boolean,
         priority: Int,
     ) {
-        val task = TasksRealmController.getTask(taskId) ?: return
-        val folderId = task.taskFolderId
-        TasksRealmController.editTask(task, text, countValue, maxAccumulation, isCycling, priority)
+        val folderId = TasksRealmController.getTask(taskId)?.taskFolderId ?: return
+        TasksRealmController.editTask(taskId, text, countValue, maxAccumulation, isCycling, priority)
         refreshTasks(folderId)
     }
 
     fun setTaskDone(taskId: Long, done: Boolean) {
-        val task = TasksRealmController.getTask(taskId) ?: return
-        val folderId = task.taskFolderId
-        TasksRealmController.setTaskDoneOrParticullaryDone(task, done)
+        val folderId = TasksRealmController.getTask(taskId)?.taskFolderId ?: return
+        TasksRealmController.setTaskDoneOrParticullaryDone(taskId, done)
         refreshTasks(folderId)
     }
 
     fun deleteTask(taskId: Long) {
-        val task = TasksRealmController.getTask(taskId) ?: return
-        val folderId = task.taskFolderId
-        TasksRealmController.deleteTask(task)
+        val folderId = TasksRealmController.getTask(taskId)?.taskFolderId ?: return
+        TasksRealmController.deleteTask(taskId)
         refreshTasks(folderId)
     }
 
     fun setTaskPriority(taskId: Long, priority: Int) {
-        val task = TasksRealmController.getTask(taskId) ?: return
-        TasksRealmController.setTaskPriority(task, priority)
-        refreshTasks(task.taskFolderId)
+        val folderId = TasksRealmController.getTask(taskId)?.taskFolderId ?: return
+        TasksRealmController.setTaskPriority(taskId, priority)
+        refreshTasks(folderId)
     }
 
     fun reorderTask(folderId: Long, from: Int, to: Int) {
-        val list = TasksRealmController.getFolderTasksRealmListFromFolder(folderId) ?: return
-        if (from !in list.indices || to !in list.indices) return
-        App.initRealm()
-        App.realm.executeTransaction {
-            list.add(to, list.removeAt(from))
-        }
+        TasksRealmController.reorderTask(folderId, from, to)
         refreshTasks(folderId)
     }
 
