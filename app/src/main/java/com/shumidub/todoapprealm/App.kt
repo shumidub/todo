@@ -1,8 +1,9 @@
 package com.shumidub.todoapprealm
 
 import android.app.Application
-import android.content.Context
-import androidx.multidex.MultiDex
+import com.shumidub.todoapprealm.data.realm.REALM_SCHEMA_VERSION
+import com.shumidub.todoapprealm.data.realm.RealmBackup
+import com.shumidub.todoapprealm.data.realm.TodoRealmMigration
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController
 import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer
@@ -17,20 +18,16 @@ import java.util.Calendar
 @HiltAndroidApp
 class App : Application() {
 
-    override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(base)
-        MultiDex.install(this)
-    }
-
     override fun onCreate() {
         super.onCreate()
         instance = this
 
         Realm.init(this)
+        RealmBackup.backupIfMigrationNeeded(this)
         Realm.setDefaultConfiguration(
             RealmConfiguration.Builder()
-                .schemaVersion(1)
-                .deleteRealmIfMigrationNeeded()
+                .schemaVersion(REALM_SCHEMA_VERSION)
+                .migration(TodoRealmMigration())
                 .build()
         )
         initRealm()
