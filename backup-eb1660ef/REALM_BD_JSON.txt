@@ -1,0 +1,3509 @@
+{
+  "folderOfNotesList": [
+    {
+      "id": 1762083981826,
+      "name": "с 3.11\n\nглавное на день:\nсостояние кроссфит , быть в ресурсе и за победами\nесть после 12, спорт, худеть, сон\nрелакс, дыхание, помидорки 90/20, лестница, глаза\nв ресурсы чтобы играть с Данной \nноу сги\n\n\n\nсостояние Веди Брукс Кроссфит - вперёд за достижениями, отдыхать и растить ресурс. Вызов это возможность, хочу взобраться на эту гору \n\nеда после 12\n\n\n90 минут помидорки и дыхание и лестница на работе. Выгружать эмоции на работе \n\n\nНо сги ноу дро \n\n",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1748779389704,
+      "name": "июнь 83кг\nиюль 80кг\n\nиюнь\nсостояние Лев\nДыхание 3 в день\nпланка, от холки, суставная  - в привычки\n\n\nиюль\nполюбить заниматься с детьми\n\nценности команды\nвидение для отдела \n\n\n\nБольшое видение\n\nсупер лидер\nИ Лев и для людей и администратор\n\nстрою сильные команды и культуры\n\nсчастливый брак и дети \n\nпередаю ценности спорта, хайков\n\n80 кг\n\nхороший коммуникатор\n\nживу в природном месте полной жизнью  \n",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1687073047782,
+      "name": "Минимум - 70 баллов и не бросать сотку. Делать минимум от спорта с утра и питания.",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1671352375111,
+      "name": "добавить прогулки днём ?",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1671352403954,
+      "name": "В выходные тоже самое ",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1671353115070,
+      "name": "Добавить прямую спину",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1671353294839,
+      "name": "добавить завтрак",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1671354057560,
+      "name": "Супер цель: \n1. Изо дня в день быть в активном достигаторском состоянии. Матра церкви, состояние сейчас. Делать сотку много дней подряд. Состояние перчатки, флоу. Допаминовый бег\n\nОтдыхать, чтобы быть в ресурсе\n\n\nСтремится к весу 85, гибкости \n\nЗаботиться об осанке, шее, глазах\n\n\nЖизнь просто поток энергии, времени. Просто прозоди его кайфуя, заботясь о здоровье, теле \n\nИзбегая вялого состояния, музыки.\nФильмы целиком можно, без роликов.\nДро меньше. \nВозд замков меньше. \n\n\nфокус:\n\n1. Ввести сотку с постоянством. \n2. Делегировать, разгружать себя.Чтобы на меня не блочилось.\n\n\nПосле разгрузки себя думать уже о подтягивании лидства и технической части \n\nПосле сотки думать о глазах больше, инглише, лечении Р.\n\n\n",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1671354422978,
+      "name": "Дана прививки\nДана развитие ",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1671354465283,
+      "name": "добавить про отсутствие вредного пункты -воз замки, погружения в слабое состояние ",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1684136251748,
+      "name": "Бег это просто даже когда мало сил, просто лёгкий спокойный бег",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1718535590878,
+      "name": "арведос на серфе с мечом можно заменять на шторм американского футбола и на перчатки мужик\n\nдля спокойных ситуаций на самурая японского трапа",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1718536239827,
+      "name": "за победами и мужик и со смехом ",
+      "notesObjectRealmList": []
+    },
+    {
+      "id": 1743342748179,
+      "name": "#л: значит люблю это , тренируюсь любить ",
+      "notesObjectRealmList": []
+    }
+  ],
+  "folderOfTasksList": [
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778649099921,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1778648529313,
+          "text": "🦸‍♀️Лев-славно, защитник и даватель любви. С Даной играл погруженно + полезное, гулял, развивал. Ренате защиту и заботу, понимание. Кроссфит, дух соревновательности, вперёд за победами "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778648624941,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1778648529313,
+          "text": "🏃‍♂️Спорт, еда после 12, много белка и клетчатки, не переел, видение бег, люблю спорт, без перетрена, хлопают. Дух соревновательности, за победами "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778649250206,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1778648529313,
+          "text": "🧠4-7-8 дважды, помидорка, планирование за день, глубокая беседа, после работы переключился от работы и есть ресурс. Основа не дешёвый, а добытый допамин"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778649314093,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1778648529313,
+          "text": "👨‍⚕️Глаза, осанка, работа стоя, миноксидил, крем утром, закаливание "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778649532029,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1778648529313,
+          "text": "Долгосрок развитие: инглиш + люблю инглиш, финанс"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778649555448,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1778648529313,
+          "text": "Улучшение отношений долгосрок"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778649712193,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1778648529313,
+          "text": "Применить ситуативку: не сорваться на злобу, на еду, сделать минимум, не бросить 100, не уйти в депрессию "
+        }
+      ],
+      "id": 1778648529313,
+      "isDaily": true,
+      "name": "Main"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1671351837995,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351658926,
+          "text": "Встать до 8:15"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 10,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1743332066061,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351658926,
+          "text": "🤸‍♂️ 4-7-8 вдох задержка выдох "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 7,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1723783731914,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "🤸‍♂️ eyes to sun in 15/30"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 3,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1718529708707,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Диафрагма и зевок"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 3,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1722163698757,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Нейрогимнастика"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1776088329413,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "🤸‍♂️ \"Бег, спортивный, 82кг\" видение "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1762689710856,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Лев славный ахахах. Кроссфит, за победами, серф сапробег"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743332263447,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 10,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1671351874165,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351658926,
+          "text": "🤸‍♂️ Зал "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1671351862215,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351658926,
+          "text": "🤸‍♂️ Растяжка / Разминка"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671351944805,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "🤸‍♂️ Глаза"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671351939675,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "🤸‍♂️ Душ (контрастный), зубы"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776091572851,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "🤸‍♂️ Love Sport "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776088198769,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776154570824,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1717556591100,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Комментирование 2 минуты"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 7,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1736222829569,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351658926,
+          "text": "Да, ещё один класс. день! Благодарность: хожу, дышу, музыка, рутина ..."
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743659180032,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "День живи заряжено, в ресурсе, полной жизнью. О будущем не переживай "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1740977456549,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351658926,
+          "text": "⚒️♏💫 ⚡😂🤠  ♥️🏄🏆   🫰 ⚡\n\nБери от ж все.\nВсе могу (Хем-тон).\nСвечение. \n\nЛюблю весело вперёд скользить за победами\n\nЗаряжено провести день \n"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1746856421298,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Я не обязан всем нравиться. МНЕ должны нравиться "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718535270277,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 2,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "I like to run for victories painfully, let\u0027s go"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 3,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1753932575850,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Служитель Солнца "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1753932623894,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Голодный за победами , больше попыток больше побед, обратное давление "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1754279405310,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Я часть великого пути, процесса, капля великого моря вселенной. И каждый новый день — чюдо"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1754281968365,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Лучше жить славно, весело, чем долго и парится "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1762750128654,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Скользи, серф, на щите по лесу, по траве амер футбол "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1763185685386,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Ахаха, жизнь бурлит и бьёт ключом "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1775192722118,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351658926,
+          "text": "Кроссфит состояние, хлопают, активно радуюсь видение"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718535199124,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "I have already reached a lot"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1738040595286,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "Ниндзя решатель вперёд "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1322026
+            }
+          ],
+          "done": true,
+          "id": 1778568168134,
+          "isCycling": false,
+          "lastDoneDate": 1322026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "задача "
+        },
+        {
+          "countAccumulation": 2,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1322026
+            },
+            {
+              "myInteger": 1322026
+            }
+          ],
+          "done": true,
+          "id": 1778568221140,
+          "isCycling": false,
+          "lastDoneDate": 1322026,
+          "maxAccumulation": 2,
+          "priority": 0,
+          "taskFolderId": 1671351658926,
+          "text": "двойной повтор "
+        }
+      ],
+      "id": 1671351658926,
+      "isDaily": true,
+      "name": "Morning"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1723972804569,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "начать отмечать 100ку с утра"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671351997738,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351985626,
+          "text": "Easy English //English Star Imitation Video (от аптеки)"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718531576251,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351985626,
+          "text": "Love Speak English "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1723972765607,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Anki 3 до аптеки "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 3,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1731847053223,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Shorts off"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1748238762667,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Кремушки для лица "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1352026
+            }
+          ],
+          "done": true,
+          "id": 1776088698714,
+          "isCycling": true,
+          "lastDoneDate": 1352026,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Миноксидил "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1762689704889,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Леееееееввввв, серф, булки "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776088725306,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1740977471102,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351985626,
+          "text": "⚒️♏💫   ♥️🏄🏆   🫰\n\nБери от ж все.\nВсе могу (Хем-тон).\nСвечение. \n\nЛюблю весело вперёд скользить за победами\n"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743658347517,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "ахах, похер что хуевый CL, откачусь до UL"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743569100796,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Заполнение цветом мужичкости при дыхании"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 7,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1748963304533,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Не перетренироваться , но тренироваться"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1749784004768,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Предложения аналоги. \"Нам нужно сдвинуть сроки\""
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1749784022617,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Свободная тема: дружба, птицы. С началом и концом рассказ"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1749784513931,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Пересказ "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1749784523843,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Медитация "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1752124104863,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Довольство быть собой "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743332459397,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1749784370847,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Зигзаг мысли "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1749783990214,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Дом который построил Джек\n\n\nДом, который построил Джек\nВот дом,\nКоторый построил Джек.\n\nА это пшеница,\nКоторая в тёмном чулане хранится\nВ доме,\nКоторый построил Джек.\n\nА это весёлая птица-синица,\nКоторая часто ворует пшеницу,\nКоторая в тёмном чулане хранится\nВ доме,\nКоторый построил Джек.\n\nВот кот,\nКоторый пугает и ловит синицу,\nКоторая часто ворует пшеницу,\nКоторая в тёмном чулане хранится\nВ доме,\nКоторый построил Джек.\n\nВот пёс без хвоста,\nКоторый за шиворот треплет кота,\nКоторый пугает и ловит синицу,\nКоторая часто ворует пшеницу,\nКоторая в тёмном чулане хранится\nВ доме,\nКоторый построил Джек.\n\nА это корова безрогая,\nЛягнувшая старого пса без хвоста,\nКоторый за шиворот треплет кота,\nКоторый пугает и ловит синицу,\nКоторая часто ворует пшеницу,\nКоторая в тёмном чулане хранится\nВ доме,\nКоторый построил Джек.\n\nА это старушка, седая и строгая,\nКоторая доит корову безрогую,\nЛягнувшую старого пса без хвоста,\nКоторый за шиворот треплет кота,\nКоторый пугает и ловит синицу,\nКоторая часто ворует пшеницу,\nКоторая в тёмном чулане хранится\nВ доме,\nКоторый построил Джек.\n\nА это ленивый и толстый пастух,\nКоторый бранится с коровницей строгою,\nКоторая доит корову безрогую,\nЛягнувшую старого пса без хвоста,\nКоторый за шиворот треплет кота,\nКоторый пугает и ловит синицу,\nКоторая часто ворует пшеницу,\nКоторая в тёмном чулане хранится\nВ доме,\nКоторый построил Джек.\n\nВот два петуха,\nКоторые будят того пастуха,\nКоторый бранится с коровницей строгою,\nКоторая доит корову безрогую,\nЛягнувшую старого пса без хвоста,\nКоторый за шиворот треплет кота,\nКоторый пугает и ловит синицу,\nКоторая часто ворует пшеницу,\nКоторая в тёмном чулане хранится\nВ доме,\nКоторый построил Джек\n\n\nВдох только межд абзацами\nНе поднимай плечи при вдохе\n\n\n\n"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1722163560770,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Повтор целей на день. Идти великий путь. Свечение играючи жизни. Свечение в собеседнике "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1737350797243,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Танцуй в good day, иди путь в грустный "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1738040600900,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Ниндзя решатель вперёд"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718535412329,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "I like to run for victories painfully, let\u0027s go"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671352222173,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "I have already reached a lot"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1762750133445,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Скользи, серф, на щите по лесу, по траве амер футбол "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1775192726842,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671351985626,
+          "text": "Кроссфит состояние, хлопают, активно радуюсь видение"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1775192734869,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671351985626,
+          "text": "Кроссфит состояние, хлопают, активно радуюсь видение"
+        }
+      ],
+      "id": 1671351985626,
+      "isDaily": true,
+      "name": "Way to Work"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1683784619717,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "Планировал день "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671352167338,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "Работал день по плану"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743332073258,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "🤸‍♂️ 4-7-8 вдох задержка выдох "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743332130891,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 2,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "Пройтись по лестнице "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671352124510,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 8,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "🤸‍♂️ Eyes"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1683782805434,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "🤸‍♂️ Осанка "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743657287817,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 7,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Общение — обмен энергией, как с другом, с искреннем интересом "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671352315591,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "🤸‍♂️ Вода, еда без лишней"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 7,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1723783758208,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Work standy"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1719039223546,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "English Reading "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1731847030979,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Safe mind to evening calls"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 3,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1736685774178,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Менемакс"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1748238729306,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "🤸‍♂️ Старт еды после 12"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1748255607177,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Помидорил 🍅"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776088895669,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Лееввв, серф, ахаха"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776089002895,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Транслирую что герой лидер энергичен не умирающий дед"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776089137100,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Запланировал завтра "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743332729659,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1740977484741,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 3,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "⚒️♏💫   ♥️🏄🏆   🫰\n\nБери от ж все.\nВсе могу (Хем-тон).\nСвечение. \n\nЛюблю весело вперёд скользить за победами"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743658971215,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "ахах, похер что хуевый CL, откачусь до UL"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1362023
+            }
+          ],
+          "done": true,
+          "id": 1673500352925,
+          "isCycling": false,
+          "lastDoneDate": 1362023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "запись в клинику "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 272023
+            }
+          ],
+          "done": true,
+          "id": 1673500357875,
+          "isCycling": false,
+          "lastDoneDate": 272023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "налоговая"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1322023
+            }
+          ],
+          "done": true,
+          "id": 1683784976712,
+          "isCycling": false,
+          "lastDoneDate": 1322023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "BF Nastya"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1745293090179,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "В ресурсе, полон энергии"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 7,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1748779194486,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Альфа, бинуальная музыка"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1763912558112,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "к черту суматоху, лучше размеренно мыслить "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1762689716263,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Леееееееввввв"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1723909901200,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Не перегрузить мозг поутру"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718535174083,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "I have already reached a lot"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718535456965,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 2,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "I like to run for victories painfully, let\u0027s go"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1719039211763,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "English Evening Homework"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716731153803,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "[optional] \"Уже поел\" + долго жевать "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1723992253979,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Decrease multi context per hour, rest for mind "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 7,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1723996564273,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "говорил от диафрагмы как хеммерсон "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1738040611316,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 3,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Ниндзя решатель вперёд"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1752124114014,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Довольство быть собой "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1762750140655,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352032140,
+          "text": "Скользи, серф, на щите по лесу, по траве амер футбол "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1775192744187,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352032140,
+          "text": "Кроссфит состояние, хлопают, активно радуюсь видение"
+        }
+      ],
+      "id": 1671352032140,
+      "isDaily": true,
+      "name": "Work / Day"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1717042738068,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Not less than 100 chain"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1687070928044,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Заполнил сотку и дневник"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 3,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718529821235,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Записал успехи. Вспомнил победы. Хлопают."
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1717515567275,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "После работы есть силы, ресурс "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1727153912496,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Голова освобождена от работы  "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718531651499,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352050641,
+          "text": "I am proud of myself for my success in English"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1723972786543,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Анки 3"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718531583223,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352050641,
+          "text": "Love Speak English "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1740977501839,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352050641,
+          "text": "#л: Я буду героем для Даны и ребенка Ренаты"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776088710121,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Миноксидил "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776089125810,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Хлопают "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743342460433,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1745293098055,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352050641,
+          "text": "В ресурсе, полон энергии"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743658979654,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "ахах, похер что хуевый CL, откачусь до UL"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1762689725487,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Леееееееввввв"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718535166656,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "I have already reached a lot"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1749916081404,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Охота за тишиной "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1752124120619,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Довольство быть собой "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1762750145901,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352050641,
+          "text": "Скользи, серф, на щите по лесу, по траве амер футбол "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1775192753791,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352050641,
+          "text": "Кроссфит состояние, хлопают, активно радуюсь видение"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778568034396,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352050641,
+          "text": "Кайф что КД становлюсь на шаг ближе к 80кг"
+        }
+      ],
+      "id": 1671352050641,
+      "isDaily": true,
+      "name": "Way Home"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743332243579,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Баланс Работа Я, здоровье Семья"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 3,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718531537383,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Reward: clup and smile to me, japanese trap, optional: airan"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1724476486293,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1687071805141,
+          "text": "Be Hero For My Daughter ❤️"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1753677421371,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Читать книгу Дане "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1753677408967,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Выйти на балкон с Даной "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1753677394642,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Физкультминутка с папой "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1746856401122,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1687071805141,
+          "text": "Ренате вечером поддержку, любовь, принятие, а не мой сон "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1753677432416,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Чистить зубы Дане "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1687071976370,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Растяжка"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1748779237440,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Планка 60, присед 30, поперечная пресса, от холки "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1748238784191,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Кремушки для лица. Миновивакс"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1687071963955,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Подготовка вещей, витаминов, планирование след дня"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743332081936,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1687071805141,
+          "text": "4-7-8 вдох задержка выдох "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 3,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1731847062309,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Shorts off"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1748238831701,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1687071805141,
+          "text": "Весь день в потоке побед, вечером заслуженное довольство "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743342537758,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536630948,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Серотонин от ЖОЗ, бейби, сги-фри"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 3,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718535935930,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Вода куплена"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1726544457812,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "готовить гречку"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1753677517574,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Упражнения для коленей "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776088033091,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "Чистить зубы левой рукой "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 3,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1776789662936,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071805141,
+          "text": "drink protein "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1778568079752,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1687071805141,
+          "text": "Кайф что КД есть вызовы поалхимить и быть полезным отцом, охотиться за временем с детьми  "
+        }
+      ],
+      "id": 1687071805141,
+      "isDaily": true,
+      "name": "Evening (can use on next day)"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743658032576,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 3,
+          "priority": 1,
+          "taskFolderId": 1671352056250,
+          "text": "Смеяться на нестандартную жизненную ситуацию "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1719122753491,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Сон 7.5 ч"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671352071654,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352056250,
+          "text": "[Дана] Гулять с Даной "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1671352334690,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352056250,
+          "text": "Вода, еда без лишней. Кефир"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1686807982651,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 2,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Выйти из ЗК"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1683782791812,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352056250,
+          "text": "Но Фи, но дро, онли муз"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1717557155996,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "На неудачу отреагировал как на путь "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1683807484296,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352056250,
+          "text": "Выполнил минимум, а не бросил и не передал себя"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1687071166693,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Побороть депрессию, индульгирование, потерю контроля над состоянием, эмоциями"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 2322023
+            }
+          ],
+          "done": true,
+          "id": 1689573552277,
+          "isCycling": false,
+          "lastDoneDate": 2322023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "сбер подключить. проверить поступления "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 2252023
+            }
+          ],
+          "done": true,
+          "id": 1691335375474,
+          "isCycling": false,
+          "lastDoneDate": 2252023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "запись к лору"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 10,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1472024
+            }
+          ],
+          "done": true,
+          "id": 1691335384527,
+          "isCycling": false,
+          "lastDoneDate": 1472024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "прививки Даны"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1472024
+            }
+          ],
+          "done": true,
+          "id": 1691380177410,
+          "isCycling": false,
+          "lastDoneDate": 1472024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "лысина"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 2472023
+            }
+          ],
+          "done": true,
+          "id": 1691939276005,
+          "isCycling": false,
+          "lastDoneDate": 2472023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "сбер перевести , у Ренаты попросить "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 2392023
+            }
+          ],
+          "done": true,
+          "id": 1692536914649,
+          "isCycling": false,
+          "lastDoneDate": 2392023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "звонить вайкики"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 2332023
+            }
+          ],
+          "done": true,
+          "id": 1692538734818,
+          "isCycling": false,
+          "lastDoneDate": 2332023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "как чинить полы "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1452024
+            }
+          ],
+          "done": true,
+          "id": 1692538742291,
+          "isCycling": false,
+          "lastDoneDate": 1452024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "дверной косяк"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1452024
+            }
+          ],
+          "done": true,
+          "id": 1692538746003,
+          "isCycling": false,
+          "lastDoneDate": 1452024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "телик"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 2472023
+            }
+          ],
+          "done": true,
+          "id": 1692538774738,
+          "isCycling": false,
+          "lastDoneDate": 2472023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "поискать варианты кв 2шек"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1472024
+            }
+          ],
+          "done": true,
+          "id": 1704691295815,
+          "isCycling": false,
+          "lastDoneDate": 1472024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "диабет не будет если пить компоты по утрам ?"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1472024
+            }
+          ],
+          "done": true,
+          "id": 1704692807737,
+          "isCycling": false,
+          "lastDoneDate": 1472024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "фрукты в воду ложить, вместо компота\n"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716731055036,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "спорт - мне нравится процесс преодолевать трудности "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716731195040,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "лёгкость в общении "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716731216446,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "зрительный контакт+ искренне заинтересован "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1482024
+            }
+          ],
+          "done": true,
+          "id": 1716734274011,
+          "isCycling": false,
+          "lastDoneDate": 1482024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Бриться"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1482024
+            }
+          ],
+          "done": true,
+          "id": 1716734352552,
+          "isCycling": false,
+          "lastDoneDate": 1482024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "суп"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1542024
+            }
+          ],
+          "done": true,
+          "id": 1716734359455,
+          "isCycling": false,
+          "lastDoneDate": 1542024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "вещи на неделю "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1482024
+            }
+          ],
+          "done": true,
+          "id": 1716734364918,
+          "isCycling": false,
+          "lastDoneDate": 1482024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "развесить вещи"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1592024
+            }
+          ],
+          "done": true,
+          "id": 1716786587271,
+          "isCycling": false,
+          "lastDoneDate": 1592024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "омегу купить "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1542024
+            }
+          ],
+          "done": true,
+          "id": 1716786600134,
+          "isCycling": false,
+          "lastDoneDate": 1542024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "мыть полы"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1682024
+            }
+          ],
+          "done": true,
+          "id": 1716786606912,
+          "isCycling": false,
+          "lastDoneDate": 1682024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "карты найти "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1562024
+            }
+          ],
+          "done": true,
+          "id": 1717477244041,
+          "isCycling": false,
+          "lastDoneDate": 1562024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "записать у дневник про вчера "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1592024
+            }
+          ],
+          "done": true,
+          "id": 1717477267515,
+          "isCycling": false,
+          "lastDoneDate": 1592024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "скачать инглиш урок и плеер с кнопочным управлением "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 5,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1592024
+            }
+          ],
+          "done": true,
+          "id": 1717643236007,
+          "isCycling": false,
+          "lastDoneDate": 1592024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "менять пульс в состоянии покоя "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1732244887015,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Дух соревновательности "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1736222893894,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352056250,
+          "text": "Смех/принятие когда не по плану распорядок/ожидания"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1736240827692,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Сохранял ресурс "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1736240846439,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Наслаждался днём и операционкой"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1736244744572,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Ел в 12 - 20 часовое окно "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1736394288828,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Лучше действовать и импрувить, чем доводить до совершенства откладывая. Мне не нужно знать все, достаточно главного. Уже знаю достаточно по качу и т.д. "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743332108575,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "4-4-4-4 при стрессе и для концентрации перед встречей "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1743657234162,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352056250,
+          "text": "Большая сложность — большая победа "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 7,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1748779205218,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Ноу Сги"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1749620956416,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 1,
+          "taskFolderId": 1671352056250,
+          "text": "Терпение, отличная возможность дать забу и управлять терпением "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1775193550737,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1671352056250,
+          "text": "Мастер борьбы с депрессией, ем на завтрак "
+        }
+      ],
+      "id": 1671352056250,
+      "isDaily": true,
+      "name": "[Daily] Situable"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1777961593535,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 3,
+          "priority": 3,
+          "taskFolderId": 1718535972882,
+          "text": "💯 Защитник и Даритель любви Семье "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536028168,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718535972882,
+          "text": "С Даной поиграл"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536041020,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718535972882,
+          "text": "С Даной погулял"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536050145,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718535972882,
+          "text": "Маме позвонил"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536069870,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718535972882,
+          "text": "Ренате любовь, заботу, внимание, безопасность "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536130330,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718535972882,
+          "text": "Люблю преодолевать семейные выпады"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536151937,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718535972882,
+          "text": "Избежал срыва на Ренату"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536182472,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718535972882,
+          "text": "Для Даны полезное, развитие, здоровье, психика, еда"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1738131620377,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718535972882,
+          "text": "Дочке инглиш каждый день "
+        }
+      ],
+      "id": 1718535972882,
+      "isDaily": true,
+      "name": "[Daily] Family"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718542969215,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718542901122,
+          "text": "Дане говорить, что агрессию словами "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 2,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718543002088,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718542901122,
+          "text": "? Дане напоминать как много мама делает. не закрепится плохой образ любви ?"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1736240796528,
+          "isCycling": true,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1718542901122,
+          "text": "отслеживание прогресса и планирование недели "
+        }
+      ],
+      "id": 1718542901122,
+      "isDaily": true,
+      "name": "[Plan For Improve Live] Week Plan"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1792023
+            }
+          ],
+          "done": true,
+          "id": 1687093497805,
+          "isCycling": false,
+          "lastDoneDate": 1792023,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "заклеить окно"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1582024
+            }
+          ],
+          "done": true,
+          "id": 1716727423425,
+          "isCycling": false,
+          "lastDoneDate": 1582024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "Рената подарок"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1732024
+            }
+          ],
+          "done": true,
+          "id": 1717925264858,
+          "isCycling": false,
+          "lastDoneDate": 1732024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "найти карту"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1612024
+            }
+          ],
+          "done": true,
+          "id": 1717925276166,
+          "isCycling": false,
+          "lastDoneDate": 1612024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "отменить подписку ргаль"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1612024
+            }
+          ],
+          "done": true,
+          "id": 1717925291207,
+          "isCycling": false,
+          "lastDoneDate": 1612024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "отменить подписку софтскиллс"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1642024
+            }
+          ],
+          "done": true,
+          "id": 1717925306001,
+          "isCycling": false,
+          "lastDoneDate": 1642024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "отменить подписку линкед"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1622024
+            }
+          ],
+          "done": true,
+          "id": 1717925374301,
+          "isCycling": false,
+          "lastDoneDate": 1622024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "полиса на Дану и Ренату"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1622024
+            }
+          ],
+          "done": true,
+          "id": 1717925383676,
+          "isCycling": false,
+          "lastDoneDate": 1622024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "жёсткие диски родителям "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1622024
+            }
+          ],
+          "done": true,
+          "id": 1717925404845,
+          "isCycling": false,
+          "lastDoneDate": 1622024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "Рената налоги "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1612024
+            }
+          ],
+          "done": true,
+          "id": 1717925416143,
+          "isCycling": false,
+          "lastDoneDate": 1612024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "Ван ноте сохранить "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1622024
+            }
+          ],
+          "done": true,
+          "id": 1717925422624,
+          "isCycling": false,
+          "lastDoneDate": 1622024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "лимон купить "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1642024
+            }
+          ],
+          "done": true,
+          "id": 1717925507910,
+          "isCycling": false,
+          "lastDoneDate": 1642024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "менять в доллары, смотреть курс"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1732024
+            }
+          ],
+          "done": true,
+          "id": 1717926326826,
+          "isCycling": false,
+          "lastDoneDate": 1732024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "взять карту, снять налик и менять на usd, взять паспорт. "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1622024
+            }
+          ],
+          "done": true,
+          "id": 1717926373740,
+          "isCycling": false,
+          "lastDoneDate": 1622024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071853876,
+          "text": "носки разложить "
+        }
+      ],
+      "id": 1687071853876,
+      "isDaily": false,
+      "name": "[ToDo] Week, End of week"
+    },
+    {
+      "folderTasks": [
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1472024
+            }
+          ],
+          "done": true,
+          "id": 1687072846787,
+          "isCycling": false,
+          "lastDoneDate": 1472024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": " drive mega проверить "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1687072860461,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "перенести one note заметки"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1687072870319,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "сохранить куда-то кроме гугл драйва"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1687072974812,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "как оставаться голодным"
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1512024
+            }
+          ],
+          "done": true,
+          "id": 1687072985344,
+          "isCycling": false,
+          "lastDoneDate": 1512024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "медальки - от бронзы до золота"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1687093458710,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "В дневник последние годы записать "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1688825237079,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "активировать полиса"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716712916906,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "Родителям ноуты, жёсткие диски"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716712932895,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "причесать архив, собрать в одном месте "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716727434566,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "Рената налоги свои пусть чекнет"
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716731643830,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "прививки Дане "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716731660115,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "замена компота Дане, от диабета "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1716786579349,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "карты найти "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1717827651860,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "погасить ипотеку чтоб уменьшить платеж или срок "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 10,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1717827662918,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "налог вычет "
+        },
+        {
+          "countAccumulation": 1,
+          "countValue": 1,
+          "dateCountAccumulation": [
+            {
+              "myInteger": 1612024
+            }
+          ],
+          "done": true,
+          "id": 1717827670429,
+          "isCycling": false,
+          "lastDoneDate": 1612024,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "написать Проценко отмену "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 5,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1717925239450,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "Найти карту "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718006276313,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "подумать о ВНЖ и пенсии "
+        },
+        {
+          "countAccumulation": 0,
+          "countValue": 1,
+          "dateCountAccumulation": [],
+          "done": false,
+          "id": 1718536542844,
+          "isCycling": false,
+          "lastDoneDate": 0,
+          "maxAccumulation": 1,
+          "priority": 0,
+          "taskFolderId": 1687071889587,
+          "text": "рефинансирование ипотеки"
+        }
+      ],
+      "id": 1687071889587,
+      "isDaily": false,
+      "name": "[ToDo] Month"
+    }
+  ],
+  "reportObjectList": []
+}
