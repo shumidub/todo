@@ -64,10 +64,10 @@ public class SyncDialog extends androidx.fragment.app.DialogFragment {
 
 
         view.findViewById(R.id.btnRestore).setOnClickListener((v)->{
-            jsonSyncUtil.realmBdFromJson();
-            ((MainActivity)getActivity()).invalidateOptionsMenu();
-
-
+            // Use SAF picker — scoped storage on API 30+ won't let us silently read backup
+            // files we didn't create (e.g. a backup made by a previous app install).
+            ((MainActivity)getActivity()).pickBackupForRestore();
+            dialog.cancel();
         });
 
 

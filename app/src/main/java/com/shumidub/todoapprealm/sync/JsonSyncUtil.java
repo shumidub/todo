@@ -2,6 +2,7 @@ package com.shumidub.todoapprealm.sync;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -11,6 +12,10 @@ import com.shumidub.todoapprealm.App;
 import com.shumidub.todoapprealm.realmcontrollers.ContainersControllers.ContainersRealmController;
 import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by A.shumidub on 19.03.18.
@@ -144,5 +149,54 @@ public class JsonSyncUtil {
     }
 
 
+    public void realmBdFromJsonUri(Uri uri){
+        if (uri == null){
+            ((MainActivity)activity).showToast("Backup not picked");
+            return;
+        }
+
+        String json = readJsonFromUri(uri);
+        if (TextUtils.isEmpty(json)){
+            ((MainActivity)activity).showToast("Picked file is empty or unreadable");
+            return;
+        }
+
+        GsonBuilder builder = new GsonBuilder().setPrettyPrinting();
+        Gson gson = builder.create();
+
+        App.initRealm();
+
+        App.realm.executeTransaction((transaction) -> {
+            ContainersRealmController.deleteFromRealmAllContainers();
+            RealmFoldersContainer restored = gson.fromJson(json, RealmFoldersContainer.class);
+            App.realm.insertOrUpdate(restored);
+            App.realmFoldersContainer = App.realm.where(RealmFoldersContainer.class).findFirst();
+            Log.d("DTAG44444", "realm container count = "
+                    + App.realm.where(RealmFoldersContainer.class).findAll().size());
+        });
+
+        ((MainActivity)activity).showToast("Restored!");
+
+        App.getApp().onCreate();
+        ((MainActivity)activity).finish();
+        ((MainActivity)activity).resetAllView();
+        App.getApp().onCreate();
+        Intent intent = new Intent(activity, MainActivity.class);
+        activity.startActivity(intent);
+    }
+
+    private String readJsonFromUri(Uri uri){
+        try (InputStream is = activity.getContentResolver().openInputStream(uri);
+             ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+            if (is == null) return "";
+            byte[] chunk = new byte[8192];
+            int read;
+            while ((read = is.read(chunk)) != -1) buffer.write(chunk, 0, read);
+            return buffer.toString("UTF-8");
+        } catch (IOException e) {
+            Log.e("JsonSyncUtil", "readJsonFromUri failed", e);
+            return "";
+        }
+    }
 
 }

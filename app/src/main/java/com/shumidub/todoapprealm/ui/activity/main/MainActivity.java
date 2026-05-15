@@ -5,12 +5,14 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.List;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import com.shumidub.todoapprealm.sync.JsonSyncUtil;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
@@ -62,6 +64,18 @@ public class MainActivity extends AppCompatActivity {
                 // No-op: the app keeps working without these — they only gate export/backup features
                 // (legacy external storage) and notification posting on API 33+.
             });
+
+    private final ActivityResultLauncher<String[]> pickBackupLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri == null) return;
+                new JsonSyncUtil(this).realmBdFromJsonUri(uri);
+            });
+
+    public void pickBackupForRestore() {
+        // SAF picker — works on any API level, no permission needed, user-mediated access
+        // even across scoped storage and "ownerless" MediaStore entries.
+        pickBackupLauncher.launch(new String[]{"application/json", "text/plain", "text/*", "*/*"});
+    }
 
 
     @Override
