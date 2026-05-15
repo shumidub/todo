@@ -1,7 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+
+
+    <!--бархат - bad green can use dark green somethere-->
+    <!--<color name="colorPrimary">#11644D</color>-->
+    <!--<color name="colorPrimaryLigth">#59b390</color>-->
+    <!--<color name="colorPrimaryDark">#11644D</color>-->
+    <!--<color name="colorBackgroundActivity">#11644D</color>-->
+    <!--<color name="colorAccent">#e47c5d</color>-->
+    <!--<color name="colorActionMode">#e47c5d</color>-->
+
+
+
+    <!--GREEN YELLOW 97-->
+    <!--<color name="colorPrimary">#328665</color>-->
+    <!--<color name="colorPrimaryLigth">#59b390</color>-->
+    <!--<color name="colorPrimaryDark">#50b48d</color>-->
+    <!--<color name="colorBackgroundActivity">#59b390</color>-->
+    <!--<color name="colorAccent">#f0ddaa</color>-->
+    <!--<color name="colorActionMode">#0769be</color>-->
+
+
+    <!--GREEN ORANGE 97 -->
+    <!--<color name="colorPrimary">#328665</color>-->
+    <!--<color name="colorPrimaryLigth">#59b390</color>-->
+    <!--<color name="colorPrimaryDark">#50b48d</color>-->
+    <!--<color name="colorBackgroundActivity">#59b390</color>-->
+    <!--<color name="colorAccent">#e47c5d</color>-->
+    <!--<color name="colorActionMode">#e47c5d</color>-->
+
+
+    green barsht 2 - 98
+    <color name="colorPrimary">#267c52</color>
+    <color name="colorPrimaryLigth">#267c52</color>
+    <color name="colorPrimaryDark">#267c52</color>
+    <color name="colorPrimaryDarker">#086337</color>
+    <color name="colorBackgroundActivity">#599c74</color>
+    <color name="colorBackgroundActivity80Transparent">#4f599c74</color>
+    <color name="colorAccent">#e47c5d</color>
+    <color name="colorActionMode">#16633e</color>
+
+
+
+    <!--Yellow  99 -->
+    <!--<color name="colorPrimary">#F2D680</color>-->
+    <!--<color name="colorPrimaryLigth">#F2D680</color>-->
+    <!--<color name="colorPrimaryDark">#EB9C4D</color>-->
+    <!--<color name="colorBackgroundActivity">#F2D680</color>-->
+    <!--<color name="colorAccent">#e47c5d</color>-->
+    <!--<color name="colorActionMode">#e47c5d</color>-->
+
+    <!--last yellow   100-->
+    <!--<color name="colorPrimary">#FFC08C</color>-->
+    <!--<color name="colorPrimaryLigth">#FFD37A</color>-->
+    <!--<color name="colorPrimaryDark">#FFD37A</color>-->
+    <!--<color name="colorBackgroundActivity">#FFD37A</color>-->
+    <!--<color name="colorAccent">#e47c5d</color>-->
+    <!--<color name="colorActionMode">#e47c5d</color>-->
+
+    <!--OLD BLUE 100 -->
+    <!--<color name="colorPrimary">#3F51B5</color>-->
+    <!--<color name="colorPrimaryLigth">#e73f51b5</color>-->
+    <!--<color name="colorPrimaryDark">#303F9F</color>-->
+    <!--<color name="colorBackgroundActivity">#e73f66b5</color>-->
+    <!--<color name="colorAccent">#daff41c0</color>-->
+    <!--<color name="colorActionModeOldGood">#3285cc</color>-->
+    <!--<color name="colorActionMode">#0769be</color>-->
+
+
+
+
+
+
+
+
     <color name="colorGray">#ae817d7f</color>
+    <color name="colorDarkGray">#414041</color>
+    <color name="colorLightGray">#160027ff</color>
+    <color name="colorWhite">#ffffff</color>
+    <color name="colorTransparent">#00ffffff</color>
+
+
+
+
+    <color name="colorBlack">#101010</color>
+    <color name="colorWhiteTransparent">#07ffffff</color>
+
+
+    <color name="colorCountValue100per">#0e9e00</color>
+    <color name="colorCountValue80per">#f7e51f</color>
+    <color name="colorCountValue60per">#f2641d</color>
+    <color name="colorCountValue0per">#d20808</color>
+
+    <!-- Dialog surface palette -->
+    <color name="colorDialogSurface">#1F4F38</color>
+    <color name="colorDialogOnSurface">#F1F8F4</color>
+    <color name="colorDialogOnSurfaceVariant">#C7E0D1</color>
+    <color name="colorDialogStroke">#3F8C66</color>
+    <color name="colorDialogScrim">#80000000</color>
+
 </resources>

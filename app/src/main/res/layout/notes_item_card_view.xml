@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/item_card_view"
+    android:layout_marginBottom="4dp"
+    android:background="@drawable/card_view_background">
+
+    <TextView
+        android:id="@+id/tv_note_text"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="left"
+        android:layout_marginStart="4dp"
+        android:text="text"
+        android:textSize="16dp"
+        android:padding="8dp"
+        />
+
+</androidx.cardview.widget.CardView>
+

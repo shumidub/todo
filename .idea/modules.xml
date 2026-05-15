@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ToDoAppRealm.iml" filepath="$PROJECT_DIR$/ToDoAppRealm.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://C:\Android\2pr\androidstudioworkspace\repo\ToDoAppRealm\.idea\todo.iml" filepath="C:\Android\2pr\androidstudioworkspace\repo\ToDoAppRealm\.idea\todo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/todo7777.iml" filepath="$PROJECT_DIR$/todo7777.iml" />
     </modules>
   </component>
 </project>

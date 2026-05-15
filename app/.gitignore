@@ -1,1 +1,7 @@
 /build
+/.idea
+/gradle/wrapper
+/.idea/
+/.idea/misc.xml
+/.idea/modules.xml
+

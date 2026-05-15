@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+    <androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="38dp"
+    android:id="@+id/item_card_view"
+    app:cardPreventCornerOverlap="true"
+    android:layout_marginBottom="4dp"
+    card_view:cardBackgroundColor="#00000000"
+    android:background="@drawable/card_view_background"
+    >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical">
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    
+                    android:id="@+id/tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:lines="1"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginEnd="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="2dp"
+                    android:text="text"
+                    android:layout_gravity="center_vertical"
+                    android:textSize="16sp"
+                    android:layout_weight="0.8"
+                    android:ellipsize="end"
+                    />
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_gravity="center"
+                    android:layout_weight="2.5">
+
+                    <TextView
+                        android:id="@+id/task_priority"
+                        android:layout_width="10dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:text="!"
+                        android:layout_weight="1"
+                        android:textSize="12sp"
+                        />
+
+                    <TextView
+                        android:id="@+id/task_value"
+                        android:layout_width="10dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="1"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:layout_weight="1"
+                        android:textSize="12sp"
+                        android:textColor="@color/colorAccent"
+                        />
+
+
+                    <TextView
+                        android:id="@+id/task_accumulation"
+                        android:layout_width="18dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:text="0/0"
+                        android:maxLines="1"
+                        android:layout_weight="1"
+                        android:textSize="12sp"
+                        android:textColor="@color/colorAccent"
+                        />
+
+
+                    <TextView
+                        android:id="@+id/task_cycling"
+                        android:layout_width="16dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="right"
+                        android:paddingRight="2dp"
+                        android:text="C"
+                        android:layout_weight="1"
+                        android:textSize="12sp"
+                        android:visibility="gone"
+                        />
+
+
+
+
+                </LinearLayout>
+
+                <CheckBox
+                    android:id="@+id/checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.05"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:paddingRight="16dp"
+                    />
+
+            </LinearLayout>
+
+
+
+
+
+
+
+        </LinearLayout>
+
+</androidx.cardview.widget.CardView>
+
+
+
+
+
+
+
+
+

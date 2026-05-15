@@ -1,6 +1,4 @@
 <resources>
-    <string name="app_name">app</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="app_name">100todo(a6)</string>
+    <string name="back_button_pressed_notify">Press once again to exit! All changes will not be saved</string>
 </resources>

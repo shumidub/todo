@@ -1,0 +1,43 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    tools:context=".ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment">
+
+
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+                <include layout="@layout/empty_state"></include>
+        </LinearLayout>
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="6dp"
+            android:paddingTop="?attr/actionBarSize"
+            android:clipToPadding="false"
+            android:id="@+id/rv"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent">
+        </androidx.recyclerview.widget.RecyclerView>
+
+
+
+
+
+
+
+
+
+
+
+
+</LinearLayout>
+
+
