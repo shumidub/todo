@@ -1,4 +1,5 @@
 package com.shumidub.todoapprealm.ui.dialog.note_dialog;
+import androidx.appcompat.app.AlertDialog;
 
 
 import android.content.Context;
@@ -75,7 +76,7 @@ public class EditNoteDialog extends AddNoteDialog {
                 }
             }
         };
-        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener((v)->{
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener((v)->{
             if (etText.getText().toString().isEmpty()) {
                 tilText.setErrorEnabled(true);
                 tilText.setError("Should be filled");

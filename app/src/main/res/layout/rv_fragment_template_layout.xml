@@ -16,12 +16,16 @@
         </LinearLayout>
 
 
-        <android.support.v7.widget.RecyclerView
-            android:padding="6dp"
+        <androidx.recyclerview.widget.RecyclerView
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="6dp"
+            android:paddingTop="?attr/actionBarSize"
+            android:clipToPadding="false"
             android:id="@+id/rv"
             android:layout_height="match_parent"
             android:layout_width="match_parent">
-        </android.support.v7.widget.RecyclerView>
+        </androidx.recyclerview.widget.RecyclerView>
 
 
 

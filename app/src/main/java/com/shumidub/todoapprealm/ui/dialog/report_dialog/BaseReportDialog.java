@@ -1,11 +1,12 @@
 package com.shumidub.todoapprealm.ui.dialog.report_dialog;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.design.widget.TextInputLayout;
+import com.google.android.material.textfield.TextInputLayout;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -30,7 +31,7 @@ import io.reactivex.annotations.NonNull;
  *
  */
 
-public class BaseReportDialog extends android.support.v4.app.DialogFragment {
+public class BaseReportDialog extends androidx.fragment.app.DialogFragment {
 
     public static final String ADD_REPORT_TITLE = "Add new report";
     public static final String EDIT_REPORT_TITLE = "Edit report";
@@ -94,7 +95,7 @@ public class BaseReportDialog extends android.support.v4.app.DialogFragment {
 
 
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
         builder .setView(view);
 
         dialog = builder.create();
@@ -158,10 +159,10 @@ public class BaseReportDialog extends android.support.v4.app.DialogFragment {
     }
 
     protected void notifyDataChanged() {
-        List<android.support.v4.app.Fragment> fragments
+        List<androidx.fragment.app.Fragment> fragments
                 = (getActivity()).getSupportFragmentManager().getFragments();
 
-        for (android.support.v4.app.Fragment fragment : fragments) {
+        for (androidx.fragment.app.Fragment fragment : fragments) {
             if (fragment instanceof ReportFragment) {
                 ((ReportFragment) fragment).notifyDataChanged();
             }

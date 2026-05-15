@@ -1,12 +1,13 @@
 package com.shumidub.todoapprealm.ui.dialog.syncdialog;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import android.view.KeyEvent;
 import android.view.View;
 
@@ -26,7 +27,7 @@ import java.util.List;
  *
  */
 
-public class SyncDialog extends android.support.v4.app.DialogFragment {
+public class SyncDialog extends androidx.fragment.app.DialogFragment {
 
 
     AlertDialog dialog;
@@ -42,7 +43,7 @@ public class SyncDialog extends android.support.v4.app.DialogFragment {
         View view = getActivity().getLayoutInflater()
                 .inflate(R.layout.sync_dialog, null);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
         builder.setView(view)
                .setNegativeButton("Cancel", (dialog, i) -> dialog.cancel());
 
@@ -79,7 +80,6 @@ public class SyncDialog extends android.support.v4.app.DialogFragment {
 //            view.findViewById(R.id.btnRestore).setEnabled(false);
 //        }
 
-        dialog.getWindow().setBackgroundDrawableResource(R.color.colorPrimaryDark);
 //
 //        view.findViewById(R.id.btnBackup).setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorPrimaryDarker));
 //        view.findViewById(R.id.btnRestore).setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorPrimaryDarker));

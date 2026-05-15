@@ -92,4 +92,11 @@
     <color name="colorCountValue60per">#f2641d</color>
     <color name="colorCountValue0per">#d20808</color>
 
+    <!-- Dialog surface palette -->
+    <color name="colorDialogSurface">#1F4F38</color>
+    <color name="colorDialogOnSurface">#F1F8F4</color>
+    <color name="colorDialogOnSurfaceVariant">#C7E0D1</color>
+    <color name="colorDialogStroke">#3F8C66</color>
+    <color name="colorDialogScrim">#80000000</color>
+
 </resources>

@@ -4,7 +4,8 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.support.v7.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -102,7 +103,7 @@ public class TaskActionModeCallback  {
                 MenuItem editList = menu.add("edit ");
                 editList.setIcon(R.drawable.ic_edit);
                 editList.setOnMenuItemClickListener((MenuItem a) -> {
-                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(activity);
+                    AlertDialog.Builder dialogBuilder = new MaterialAlertDialogBuilder(activity);
                     dialogBuilder.setView(view);
                     dialog = dialogBuilder.create();
                     dialog.setCanceledOnTouchOutside(false);

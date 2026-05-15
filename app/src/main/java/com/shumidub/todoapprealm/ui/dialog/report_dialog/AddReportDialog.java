@@ -1,6 +1,7 @@
 package com.shumidub.todoapprealm.ui.dialog.report_dialog;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;

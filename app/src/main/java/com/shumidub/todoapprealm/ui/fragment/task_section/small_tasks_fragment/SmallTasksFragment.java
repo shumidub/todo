@@ -1,11 +1,12 @@
 package com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -164,7 +165,7 @@ public class SmallTasksFragment extends Fragment {
             if (view!=null){
                 long idTask = (Long) view.getTag();
                 TaskObject task = TasksRealmController.getTask(idTask);
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getContext());
                 builder.setMessage(task.getText()).create().show();
             }
         };

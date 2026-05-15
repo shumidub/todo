@@ -1,6 +1,7 @@
 package com.shumidub.todoapprealm.ui.dialog.task_folder_dialog;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -24,7 +25,7 @@ import io.reactivex.annotations.NonNull;
  * Created by Артем on 24.12.2017.
  */
 
-public class EditDelFolderDialog extends android.support.v4.app.DialogFragment{
+public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
 
     public static String ID_FOLDER = "idFolder";
     public static String MODE_LIST = "ModeList";
@@ -65,7 +66,7 @@ public class EditDelFolderDialog extends android.support.v4.app.DialogFragment{
             currentTextList = folderObject.getName();
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
         if (title == EDIT_LIST ){
             View view = getActivity().getLayoutInflater().inflate(R.layout.dialog_add_folder_layout, null);
             etName = view.findViewById(R.id.name);
@@ -135,7 +136,6 @@ public class EditDelFolderDialog extends android.support.v4.app.DialogFragment{
                 return false;
         });
 
-        dialog.getWindow().setBackgroundDrawableResource( R.color.colorBackgroundActivity );
         return dialog;
     }
 }

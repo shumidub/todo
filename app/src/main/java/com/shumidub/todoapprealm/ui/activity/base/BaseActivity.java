@@ -1,8 +1,8 @@
 package com.shumidub.todoapprealm.ui.activity.base;
 
 import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;

@@ -1,20 +1,32 @@
 package com.shumidub.todoapprealm.ui.activity.main;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.view.ActionMode;
+import java.util.ArrayList;
+import java.util.List;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.ViewPager;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,25 +57,62 @@ public class MainActivity extends AppCompatActivity {
 
     MenuItem dayScopeMenu;
 
+    private final ActivityResultLauncher<String[]> permissionsLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                // No-op: the app keeps working without these — they only gate export/backup features
+                // (legacy external storage) and notification posting on API 33+.
+            });
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         onCreateActions();
+        requestRuntimePermissions();
+    }
+
+    private void requestRuntimePermissions() {
+        // Backup/restore JSON to Downloads:
+        //   - API >= 30 (R+): MediaStore.Downloads — no runtime permission, system handles access.
+        //   - API 29:         WRITE_EXTERNAL_STORAGE still applies for legacy paths.
+        //   - API < 29:       READ + WRITE storage required to touch Downloads via File API.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return;
+        }
+        List<String> needed = new ArrayList<>();
+        addIfMissing(needed, Manifest.permission.READ_EXTERNAL_STORAGE);
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+            addIfMissing(needed, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!needed.isEmpty()) {
+            permissionsLauncher.launch(needed.toArray(new String[0]));
+        }
+    }
+
+    private void addIfMissing(List<String> bucket, String permission) {
+        if (ContextCompat.checkSelfPermission(this, permission)
+                != PackageManager.PERMISSION_GRANTED) {
+            bucket.add(permission);
+        }
     }
 
 
     public void onCreateActions(){
         App.setDayScopeValue();
 
-        //todo need fix up view with open keyboard
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-
         setContentView(R.layout.activity_main);
 
+        // ActionBar + AppCompat already inset for the status bar (and camera cutout) with the
+        // default decor fitting; we only need to pad the bottom-most content for gesture nav and IME.
         rootLayout = findViewById(R.id.root_layout);
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, windowInsets) -> {
+            Insets nav = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars());
+            Insets ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(),
+                    Math.max(nav.bottom, ime.bottom));
+            return windowInsets;
+        });
+
         actionBar = getSupportActionBar();
 
 

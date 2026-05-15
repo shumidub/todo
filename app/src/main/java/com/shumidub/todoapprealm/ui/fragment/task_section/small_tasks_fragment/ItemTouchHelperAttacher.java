@@ -2,8 +2,8 @@ package com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment;
 
 import android.annotation.SuppressLint;
 import android.graphics.Canvas;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import android.util.Log;
 
 import com.shumidub.todoapprealm.App;
@@ -14,7 +14,7 @@ import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
 
 import java.util.List;
 
-import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_IDLE;
+import static androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_IDLE;
 
 /**
  * Created by A.shumidub on 27.02.18.

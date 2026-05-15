@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.shumidub.todoapprealm">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- Backup/restore JSON to/from Downloads. On API 29+ MediaStore.Downloads handles it
+         without runtime permission; only legacy API levels need the broad storage perms. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
 
 
     <application
@@ -16,21 +19,16 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".ui.activity.main.MainActivity"
-            android:theme="@style/SplashTheme"
+            android:theme="@style/AppTheme"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
-            android:label="100todo">
+            android:label="100todo"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             </activity>
-        <activity android:name=".ui.activity.splash.SplashActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme"
-            android:label="А4-splash"
-            android:noHistory="true">
-        </activity>
     </application>
 
 </manifest>

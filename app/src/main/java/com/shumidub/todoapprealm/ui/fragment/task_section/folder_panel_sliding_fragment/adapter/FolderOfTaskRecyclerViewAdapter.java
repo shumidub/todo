@@ -3,7 +3,7 @@ package com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;

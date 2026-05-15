@@ -4,7 +4,7 @@ package com.shumidub.todoapprealm.ui.actionmode.note;
 
 import android.app.Activity;
 import android.content.Context;
-import android.support.v7.view.ActionMode;
+import androidx.appcompat.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.inputmethod.InputMethodManager;

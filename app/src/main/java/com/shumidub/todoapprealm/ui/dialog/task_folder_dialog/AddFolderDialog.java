@@ -1,12 +1,13 @@
 package com.shumidub.todoapprealm.ui.dialog.task_folder_dialog;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -24,7 +25,7 @@ import io.reactivex.annotations.NonNull;
  * Created by Артем on 24.12.2017.
  */
 
-public class AddFolderDialog extends android.support.v4.app.DialogFragment {
+public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
 
     EditText etName;
     CheckBox cbIsDaily;
@@ -38,7 +39,7 @@ public class AddFolderDialog extends android.support.v4.app.DialogFragment {
         etName = view.findViewById(R.id.name);
         cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
         builder.setTitle("Add new folder ")
                 .setView(view)
 //              .setIcon(R.drawable.ic_launcher_cat)
@@ -72,8 +73,6 @@ public class AddFolderDialog extends android.support.v4.app.DialogFragment {
                 });
 
         AlertDialog dialog = builder.create();
-        dialog.getWindow().setBackgroundDrawableResource( R.color.colorBackgroundActivity );
-        dialog.getWindow().setStatusBarColor( Color.YELLOW );
 
 
         dialog.setCanceledOnTouchOutside(false);

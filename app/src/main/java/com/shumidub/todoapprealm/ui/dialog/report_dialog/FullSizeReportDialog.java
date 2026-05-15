@@ -1,10 +1,11 @@
 package com.shumidub.todoapprealm.ui.dialog.report_dialog;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.app.Dialog;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
@@ -50,7 +51,7 @@ public class FullSizeReportDialog extends DialogFragment {
     @Nullable
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
         View view = getActivity().getLayoutInflater().inflate(R.layout.report_full_size_dialog, null, false);
 
         tvDate = view.findViewById(R.id.tv_date);

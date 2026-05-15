@@ -5,14 +5,14 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.view.ActionMode;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.view.ActionMode;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -112,18 +112,11 @@ public class ReportFragment extends Fragment{
         sync.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         sync.setIcon(R.drawable.ic_sync);
         sync.setOnMenuItemClickListener((MenuItem a) -> {
-
-            if (permissionIsAllowed() == true){
+            if (storagePermissionGrantedOrUnneeded()) {
                 new SyncDialog().show(getActivity().getSupportFragmentManager(), "SYNC_DIALOG");
-            }else{
+            } else {
                 requiredWritePermisson();
-                if (permissionIsAllowed() == true){
-                    new SyncDialog().show(getActivity().getSupportFragmentManager(), "SYNC_DIALOG");
-                }else {
-                    ((MainActivity) getActivity()).showToast("Need allow permission!");
-                }
             }
-
             return true;
         });
     }
@@ -140,16 +133,17 @@ public class ReportFragment extends Fragment{
     }
 
 
-    private boolean permissionIsAllowed(){
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        } else{
+    private boolean storagePermissionGrantedOrUnneeded() {
+        // API 29+ writes via MediaStore.Downloads — no runtime permission required.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             return true;
         }
+        return ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void requiredWritePermisson(){
+    private void requiredWritePermisson() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) return;
         ActivityCompat.requestPermissions(getActivity(),
                 new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 200);
     }
