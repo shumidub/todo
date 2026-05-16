@@ -27,9 +27,19 @@ import io.reactivex.annotations.NonNull;
 
 public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
 
+    private static final String ARG_TASK_GROUP = "task_group";
+
     EditText etName;
     CheckBox cbIsDaily;
     MainActivity activity;
+
+    public static AddFolderDialog newInstance(int taskGroup) {
+        AddFolderDialog d = new AddFolderDialog();
+        Bundle args = new Bundle();
+        args.putInt(ARG_TASK_GROUP, taskGroup);
+        d.setArguments(args);
+        return d;
+    }
 
     @NonNull
     @Override
@@ -46,7 +56,8 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
                 .setPositiveButton("Add", (dialogInterface, i) -> {
                         String text = ((EditText) getDialog().findViewById(R.id.name)).getText().toString();
                         if (!text.isEmpty()){
-                            long idFolder = FolderTaskRealmController.addFolder(text, cbIsDaily.isChecked());
+                            int group = getArguments() == null ? 0 : getArguments().getInt(ARG_TASK_GROUP, 0);
+                            long idFolder = FolderTaskRealmController.addFolder(text, cbIsDaily.isChecked(), group);
 //                            Toast.makeText(getContext(),"Done", Toast.LENGTH_SHORT).show();
                             activity = (MainActivity) getActivity();
                             activity.showToast("Done");

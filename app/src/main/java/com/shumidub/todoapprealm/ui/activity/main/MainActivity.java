@@ -39,7 +39,6 @@ import com.shumidub.todoapprealm.realmmodel.report.ReportObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.actionmode.EmptyActionModeCallback;
 import com.shumidub.todoapprealm.ui.fragment.note_fragment.FolderNoteFragment;
-import com.shumidub.todoapprealm.ui.fragment.report_section.report_fragment.ReportFragment;
 import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -112,8 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void onCreateActions(){
-        App.setDayScopeValue();
-
         setContentView(R.layout.activity_main);
 
         // ActionBar + AppCompat already inset for the status bar (and camera cutout) with the
@@ -133,8 +130,13 @@ public class MainActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.viewpager);
         mainPagerAdapter = new MainPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(mainPagerAdapter);
-        viewPager.setOffscreenPageLimit(5);
+        viewPager.setOffscreenPageLimit(1);
         viewPager.setCurrentItem(1);
+
+        rootLayout.post(() -> {
+            App.setDayScopeValue();
+            if (dayScopeMenu != null) dayScopeMenu.setTitle("" + App.dayScope);
+        });
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -181,17 +183,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                else if (position == 1){
+                else if (position == 1 || position == 2){
 
                     for (Fragment fragment: getSupportFragmentManager ().getFragments()){
-                        if (fragment instanceof FolderSlidingPanelFragment){
+                        if (fragment instanceof FolderSlidingPanelFragment
+                                && ((FolderSlidingPanelFragment) fragment).getTaskGroup() == position - 1){
                             actionBar.setTitle( ((FolderSlidingPanelFragment) fragment).getValidTitle() );
                         }
                     }
-                }
-
-                else if (position == 2){
-                    actionBar.setTitle("Reports");
                 }
 
 
@@ -272,25 +271,15 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         int currentFragmentItem = viewPager.getCurrentItem();
 
-        if (currentFragmentItem == 1){
+        if (currentFragmentItem == 1 || currentFragmentItem == 2){
             for (Fragment fragment: getSupportFragmentManager ().getFragments()){
-                if (fragment instanceof FolderSlidingPanelFragment){
+                if (fragment instanceof FolderSlidingPanelFragment
+                        && ((FolderSlidingPanelFragment) fragment).getTaskGroup() == currentFragmentItem - 1){
                     SlidingUpPanelLayout slidingUpPanelLayout = ((FolderSlidingPanelFragment) fragment).slidingUpPanelLayout;
                     if ( slidingUpPanelLayout.getPanelState()== SlidingUpPanelLayout.PanelState.EXPANDED){
                         slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
                         return;
                     } else{
-                        onBackPressedWithTimer();
-                        return;
-                    }
-                }
-            }
-        } else if (currentFragmentItem ==2){
-            for (Fragment fragment: getSupportFragmentManager ().getFragments()){
-                if (fragment instanceof ReportFragment) {
-                    if (((ReportFragment) fragment).actionModeIsEnabled) {
-                        ((ReportFragment) fragment).finishActionMode();
-                    } else {
                         onBackPressedWithTimer();
                         return;
                     }

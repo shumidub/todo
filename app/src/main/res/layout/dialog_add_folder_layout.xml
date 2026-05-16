@@ -34,4 +34,13 @@
         android:text="Daily"
         android:checked="true"/>
 
+    <CheckBox
+        android:id="@+id/checkbox_tasks2"
+        style="@style/Widget.App.CheckBox.Dialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="On Tasks2 tab"
+        android:visibility="gone"/>
+
 </LinearLayout>

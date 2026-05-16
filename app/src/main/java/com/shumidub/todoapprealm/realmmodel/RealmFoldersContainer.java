@@ -16,6 +16,8 @@ import io.realm.RealmObject;
 
 public class RealmFoldersContainer extends RealmObject implements Serializable{
     public RealmList<FolderTaskObject> folderOfTasksList;
+    /** Folders shown on the second Tasks tab. Added after the Reports tab was removed. */
+    public RealmList<FolderTaskObject> folderOfTasksList2;
     public RealmList<FolderNotesObject> folderOfNotesList;
     public RealmList<ReportObject> reportObjectList;
 

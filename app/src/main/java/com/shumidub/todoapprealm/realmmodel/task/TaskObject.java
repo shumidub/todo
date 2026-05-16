@@ -24,6 +24,17 @@ public class TaskObject extends RealmObject {
     private int maxAccumulation; //
     private int countAccumulation; //
     private RealmList<RealmInteger> dateCountAccumulation;
+    /** Additional folder ids besides the primary {@link #taskFolderId}.
+     *  Nullable for backwards compatibility with backups created before multi-category support. */
+    private RealmList<Long> extraFolderIds;
+
+    public RealmList<Long> getExtraFolderIds() {
+        return extraFolderIds;
+    }
+
+    public void setExtraFolderIds(RealmList<Long> extraFolderIds) {
+        this.extraFolderIds = extraFolderIds;
+    }
 
 
     public int getCountAccumulation() {

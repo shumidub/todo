@@ -18,10 +18,18 @@ import android.widget.TextView;
 
 import com.shumidub.todoapprealm.App;
 import com.shumidub.todoapprealm.R;
+import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController;
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController;
+import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
+import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
 import com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment.SmallTasksFragment;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import io.realm.RealmList;
 
 
 /**
@@ -127,6 +135,14 @@ public class TaskActionModeCallback  {
                 });
 
 
+                MenuItem categories = menu.add("categories ");
+                categories.setIcon(R.drawable.ic_add);
+                categories.setOnMenuItemClickListener((MenuItem a) -> {
+                    showCategoriesDialog((MainActivity) activity, task, smallTasksFragment);
+                    return true;
+                });
+
+
                 MenuItem deleteList = menu.add("delete ");
                 deleteList.setIcon(R.drawable.ic_del);
                 deleteList.setOnMenuItemClickListener((MenuItem a) -> {
@@ -210,6 +226,54 @@ public class TaskActionModeCallback  {
         taskCycling = !taskCycling;
         if (taskCycling) view.setTextColor(accentColor);
         else view.setTextColor(defaultColor);
+    }
+
+    private void showCategoriesDialog(MainActivity activity, TaskObject task, SmallTasksFragment smallTasksFragment) {
+        List<FolderTaskObject> folders = FolderTaskRealmController.getAllFolders();
+        if (folders.isEmpty()) {
+            activity.showToast("No folders");
+            return;
+        }
+
+        final List<Long> folderIds = new ArrayList<>();
+        final CharSequence[] folderNames = new CharSequence[folders.size()];
+        final boolean[] checked = new boolean[folders.size()];
+
+        List<Long> current = TasksRealmController.getCategoryIds(task);
+
+        for (int i = 0; i < folders.size(); i++) {
+            FolderTaskObject f = folders.get(i);
+            folderIds.add(f.getId());
+            int group = FolderTaskRealmController.getFolderGroup(f);
+            String tag = group == 1 ? " [Tasks2]" : (group == 0 ? " [Tasks1]" : "");
+            folderNames[i] = f.getName() + tag;
+            checked[i] = current.contains(f.getId());
+        }
+
+        new MaterialAlertDialogBuilder(activity)
+                .setTitle("Categories")
+                .setMultiChoiceItems(folderNames, checked, (d, which, isChecked) -> checked[which] = isChecked)
+                .setPositiveButton("OK", (d, w) -> {
+                    // primary = first checked; preserve current primary's position if still checked
+                    List<Long> selected = new ArrayList<>();
+                    long currentPrimary = task.getTaskFolderId();
+                    int primaryIdx = folderIds.indexOf(currentPrimary);
+                    if (primaryIdx >= 0 && checked[primaryIdx]) selected.add(currentPrimary);
+                    for (int i = 0; i < checked.length; i++) {
+                        if (checked[i] && folderIds.get(i) != currentPrimary) selected.add(folderIds.get(i));
+                    }
+                    if (selected.isEmpty()) {
+                        activity.showToast("Pick at least one category");
+                        return;
+                    }
+                    TasksRealmController.setTaskCategories(task, selected);
+                    smallTasksFragment.notifyDataChanged();
+                    for (FolderSlidingPanelFragment p : App.folderSlidingPanelFragments) {
+                        p.notifySmallTasksViewPagerListsChanged();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     public void onEditTaskEditClick(Context context, SmallTasksFragment smallTasksFragment, ActionMode actionMode,

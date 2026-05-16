@@ -1,14 +1,10 @@
 package com.shumidub.todoapprealm.ui.fragment.report_section.report_fragment;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
-import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.view.ActionMode;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -30,7 +26,6 @@ import com.shumidub.todoapprealm.ui.actionmode.report.ReportActionModeCallback;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
 import com.shumidub.todoapprealm.ui.dialog.report_dialog.AddReportDialog;
 import com.shumidub.todoapprealm.ui.dialog.report_dialog.FullSizeReportDialog;
-import com.shumidub.todoapprealm.ui.dialog.syncdialog.SyncDialog;
 
 import java.util.List;
 
@@ -107,18 +102,6 @@ public class ReportFragment extends Fragment{
 
             return true;
         });
-
-        MenuItem sync = menu.add(1,1,1,"Sync ");
-        sync.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-        sync.setIcon(R.drawable.ic_sync);
-        sync.setOnMenuItemClickListener((MenuItem a) -> {
-            if (storagePermissionGrantedOrUnneeded()) {
-                new SyncDialog().show(getActivity().getSupportFragmentManager(), "SYNC_DIALOG");
-            } else {
-                requiredWritePermisson();
-            }
-            return true;
-        });
     }
 
     public void notifyDataChanged(){
@@ -132,21 +115,6 @@ public class ReportFragment extends Fragment{
 
     }
 
-
-    private boolean storagePermissionGrantedOrUnneeded() {
-        // API 29+ writes via MediaStore.Downloads — no runtime permission required.
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            return true;
-        }
-        return ContextCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void requiredWritePermisson() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) return;
-        ActivityCompat.requestPermissions(getActivity(),
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 200);
-    }
 
     public static void setId(long idReport){
         id = idReport;

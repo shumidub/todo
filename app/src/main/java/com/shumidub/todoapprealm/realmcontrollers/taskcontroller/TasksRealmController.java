@@ -4,8 +4,12 @@ import android.util.Log;
 import com.shumidub.todoapprealm.App;
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import io.reactivex.annotations.NonNull;
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -174,21 +178,24 @@ public class TasksRealmController {
         long taskId = task.getId();
         String taskText = task.getText();
 
-        if (App.realm.isInTransaction()) {
-            task.getDateCountAccumulation().clear();
-            task.deleteFromRealm();
-            if(task.isValid() && FolderTaskRealmController.getFolder(taskId).getTasks().contains(task)){
-                FolderTaskRealmController.getFolder(taskId).getTasks().remove(task);
-            }
-
-        } else {
-            App.realm.executeTransaction((transaction) -> {
-                task.getDateCountAccumulation().clear();
-                task.deleteFromRealm();
-                if( task.isValid() && FolderTaskRealmController.getFolder(taskId).getTasks().contains(task)){
-                    FolderTaskRealmController.getFolder(taskId).getTasks().remove(task);
+        Runnable body = () -> {
+            // remove the task from every folder that references it (primary + extras)
+            for (FolderTaskObject folder : App.realm.where(FolderTaskObject.class).findAll()) {
+                if (folder.getTasks() != null && folder.getTasks().contains(task)) {
+                    folder.getTasks().remove(task);
                 }
-            });
+            }
+            if (task.isValid()) {
+                task.getDateCountAccumulation().clear();
+                if (task.getExtraFolderIds() != null) task.getExtraFolderIds().clear();
+                task.deleteFromRealm();
+            }
+        };
+
+        if (App.realm.isInTransaction()) {
+            body.run();
+        } else {
+            App.realm.executeTransaction((transaction) -> body.run());
         }
 
         if (App.realm.where(TaskObject.class).equalTo("id", taskId).findFirst() == null){
@@ -231,6 +238,66 @@ public class TasksRealmController {
                 .equalTo("id", folderId)
                 .findFirst())
                 .folderTasks;
+    }
+
+    /** All folder ids this task belongs to — primary first, then extras. Never empty. */
+    public static List<Long> getCategoryIds(TaskObject task) {
+        List<Long> ids = new ArrayList<>();
+        ids.add(task.getTaskFolderId());
+        RealmList<Long> extras = task.getExtraFolderIds();
+        if (extras != null) {
+            for (Long id : extras) {
+                if (id != null && id != task.getTaskFolderId() && !ids.contains(id)) ids.add(id);
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Set the full list of folders this task belongs to.
+     * The first id in {@code folderIds} becomes the primary {@code taskFolderId};
+     * the rest are stored as extras. Existing folders not in the list lose the task.
+     */
+    public static void setTaskCategories(TaskObject task, List<Long> folderIds) {
+        if (folderIds == null || folderIds.isEmpty()) return;
+        App.initRealm();
+
+        // de-dupe preserving order
+        Set<Long> ordered = new LinkedHashSet<>(folderIds);
+        List<Long> finalIds = new ArrayList<>(ordered);
+
+        App.realm.executeTransaction((r) -> {
+            long newPrimary = finalIds.get(0);
+            Set<Long> newSet = new HashSet<>(finalIds);
+
+            // remove from folders no longer assigned
+            for (FolderTaskObject folder : App.realm.where(FolderTaskObject.class).findAll()) {
+                long fid = folder.getId();
+                boolean contains = folder.getTasks() != null && folder.getTasks().contains(task);
+                if (contains && !newSet.contains(fid)) {
+                    folder.getTasks().remove(task);
+                }
+            }
+
+            // add to folders newly assigned
+            for (Long fid : finalIds) {
+                FolderTaskObject folder = FolderTaskRealmController.getFolder(fid);
+                if (folder == null) continue;
+                if (folder.getTasks() == null) continue;
+                if (!folder.getTasks().contains(task)) folder.getTasks().add(task);
+            }
+
+            task.setTaskFolderId(newPrimary);
+
+            if (task.getExtraFolderIds() == null) {
+                task.setExtraFolderIds(new RealmList<>());
+            }
+            RealmList<Long> extras = task.getExtraFolderIds();
+            extras.clear();
+            for (int i = 1; i < finalIds.size(); i++) {
+                extras.add(finalIds.get(i));
+            }
+        });
     }
 
     public static void setTaskPriority(TaskObject taskObject, int priority){

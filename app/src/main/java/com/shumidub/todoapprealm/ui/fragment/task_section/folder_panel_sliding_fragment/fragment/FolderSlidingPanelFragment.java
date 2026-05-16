@@ -1,13 +1,15 @@
 package com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment;
 
 
+import android.Manifest;
 import android.animation.StateListAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Rect;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.ActionBar;
@@ -21,7 +23,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -39,6 +40,7 @@ import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_f
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
 import com.shumidub.todoapprealm.ui.actionmode.task.FolderActionModeCallback;
 import com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment.SmallTaskFragmentPagerAdapter;
+import com.shumidub.todoapprealm.ui.dialog.syncdialog.SyncDialog;
 import com.shumidub.todoapprealm.ui.dialog.task_folder_dialog.AddFolderDialog;
 import com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment.SmallTasksFragment;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -56,12 +58,8 @@ import io.realm.RealmList;
 
 public class FolderSlidingPanelFragment extends Fragment implements IViewFolderSlidingPanelFragment {
 
-    LinearLayout rootLayout;
     LinearLayout emptyState;
     View view;
-
-    ConstraintLayout.LayoutParams layoutParams;
-    int keyboardHeight = 500;
 
     // ACTIONBAR AND ACTIONMODE
     ActionBar actionBar;
@@ -112,12 +110,36 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     int priority = 0;
     boolean cycling = false;
 
+    /** Which Tasks tab this fragment represents. 0 = Tasks1, 1 = Tasks2. */
+    private int taskGroup = 0;
+    private static final String ARG_TASK_GROUP = "task_group";
+
+    public static FolderSlidingPanelFragment newInstance(int taskGroup) {
+        FolderSlidingPanelFragment f = new FolderSlidingPanelFragment();
+        Bundle args = new Bundle();
+        args.putInt(ARG_TASK_GROUP, taskGroup);
+        f.setArguments(args);
+        return f;
+    }
+
+    public int getTaskGroup() { return taskGroup; }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getArguments() != null) taskGroup = getArguments().getInt(ARG_TASK_GROUP, 0);
         resetTasksCountAccumulation();
         App.folderSlidingPanelFragment = this;
+        if (!App.folderSlidingPanelFragments.contains(this)) {
+            App.folderSlidingPanelFragments.add(this);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        App.folderSlidingPanelFragments.remove(this);
+        if (App.folderSlidingPanelFragment == this) App.folderSlidingPanelFragment = null;
+        super.onDestroy();
     }
 
     @Nullable
@@ -171,8 +193,8 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                 if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) setTitle("Tasks");
                 if (newState == SlidingUpPanelLayout.PanelState.EXPANDED){
                     finishActionMode();
-                    if (FolderTaskRealmController.getFoldersList().size()>0) {
-                        setTitle(FolderTaskRealmController.getFoldersList().get(smallTasksViewPager.getCurrentItem()).getName());
+                    if (FolderTaskRealmController.getFoldersList(taskGroup).size()>0) {
+                        setTitle(FolderTaskRealmController.getFoldersList(taskGroup).get(smallTasksViewPager.getCurrentItem()).getName());
                     }
                 }
             }
@@ -182,7 +204,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         findFolderViews(view);
         llm = new LinearLayoutManager(getContext());
         rvFolders.setLayoutManager(llm);
-        folderObjects = FolderTaskRealmController.getFoldersList();
+        folderObjects = FolderTaskRealmController.getFoldersList(taskGroup);
 
         //set empty state for folder // todo need redesign view
 //        setEmptyStateIfFoldersIsEmpty(view);
@@ -224,14 +246,14 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                     tvTaskCycling.setTextColor(getResources().getColor(R.color.colorWhite));
                     folderOfTaskRVAdapter.notifyDataSetChanged();
 
-                    smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getActivity().getSupportFragmentManager());
+                    smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getChildFragmentManager(), taskGroup);
                     smallTasksViewPager.setAdapter(smallTaskFragmentPagerAdapter);
 
 
                 } else {
                     idFolderFromTag = (Long) holder.itemView.findViewById(R.id.tv_note_text).getTag();
                     // setTasksAndRV(); //todo check if it need
-                    smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getActivity().getSupportFragmentManager());
+                    smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getChildFragmentManager(), taskGroup);
                     smallTasksViewPager.setAdapter(smallTaskFragmentPagerAdapter);
                     smallTasksViewPager.setCurrentItem(position);
                     setTitle(FolderTaskRealmController.getFolder(idFolderFromTag).getName());
@@ -264,7 +286,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         App.initRealm();
         realmFoldersContainer = App.realm.where(RealmFoldersContainer.class).findFirst();
         //todo try is it working, or need not use linked variable
-        RealmList<FolderTaskObject> folderOfTasksLis = realmFoldersContainer.folderOfTasksList;
+        RealmList<FolderTaskObject> folderOfTasksLis = FolderTaskRealmController.getFoldersList(taskGroup);
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
                     ItemTouchHelper.UP | ItemTouchHelper.DOWN ,0) {
 
@@ -321,7 +343,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
         ///////////////////////    SMALL TASKS VIEWS (onViewCreated)     //////////////////////
         smallTasksViewPager = view.findViewById(R.id.view_pager_small_tasks);
-        smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getActivity().getSupportFragmentManager());
+        smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getChildFragmentManager(), taskGroup);
         smallTasksViewPager.setAdapter(smallTaskFragmentPagerAdapter);
         smallTasksViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -330,59 +352,20 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             @Override
             public void onPageSelected(int position) {
                 finishActionMode();
-                setTitle(FolderTaskRealmController.getFoldersList().get(position).getName());
+                setTitle(FolderTaskRealmController.getFoldersList(taskGroup).get(position).getName());
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {}
         });
 
-        //set root view changer on keyboard opens
-
-        layoutParams
-                = (ConstraintLayout.LayoutParams) rvFolders.getLayoutParams();
-        rootLayout = ((MainActivity)getActivity()).rootLayout;
-        rootLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int height = rootLayout.getHeight();
-//                Log.w("Foo", String.format("layout height: %d", height));
-                Rect r = new Rect();
-                rootLayout.getWindowVisibleDisplayFrame(r);
-                int visible = r.bottom - r.top;
-                if (height - visible > 200){
-                    keyboardHeight = height - visible;
-                }
-//                Log.w("Foo", String.format("visible height: %d", visible));
-//                Log.w("Foo", String.format("keyboard height: %d", height - visible));
-            }
-        });
-
-
-
         KeyboardVisibilityEvent.setEventListener(
                 getActivity(),
-                //todo need thing about logig
                 (boolean isOpen) -> {
-                        if (isOpen && slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED && et.isFocused()  ){
-
-
-
-
-                            MainActivity activity = (MainActivity) getActivity();
-
-                            int topMargin = keyboardHeight - tvBottomText.getHeight() + activity.getPixelsFromDPs(4);
-
-                            activity.setPageCanChangedScrolled(false);
-                            layoutParams.setMargins(0,topMargin,0,0);
-                            rvFolders.setLayoutParams(layoutParams);
-
-                        }
-                        else {
-                            ((MainActivity)getActivity()).setPageCanChangedScrolled(true);
-                            layoutParams.setMargins(0,0,0,0);
-                            rvFolders.setLayoutParams(layoutParams);
-                        }
+                    boolean lockPaging = isOpen
+                            && slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED
+                            && et.isFocused();
+                    ((MainActivity) getActivity()).setPageCanChangedScrolled(!lockPaging);
                 });
 
 
@@ -408,12 +391,12 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        MenuItem add = menu.add(2,2,2,"add ");
+        MenuItem add = menu.add(2,2,3,"add ");
         add.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         add.setIcon(R.drawable.ic_add);
         add.setOnMenuItemClickListener((v)->{
             if (!(slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED)) {
-                AddFolderDialog addFolderDialog = new AddFolderDialog();
+                AddFolderDialog addFolderDialog = AddFolderDialog.newInstance(taskGroup);
                 addFolderDialog.show(getActivity().getSupportFragmentManager(), "addfolder");
                 InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.toggleSoftInputFromWindow(
@@ -421,6 +404,30 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                         InputMethodManager.SHOW_FORCED, 0);
             }
          return true;});
+
+        MenuItem sync = menu.add(2,3,1,"Sync ");
+        sync.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        sync.setIcon(R.drawable.ic_sync);
+        sync.setOnMenuItemClickListener((MenuItem a) -> {
+            if (storagePermissionGrantedOrUnneeded()) {
+                new SyncDialog().show(getActivity().getSupportFragmentManager(), "SYNC_DIALOG");
+            } else {
+                requiredWritePermisson();
+            }
+            return true;
+        });
+    }
+
+    private boolean storagePermissionGrantedOrUnneeded() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) return true;
+        return ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requiredWritePermisson() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) return;
+        ActivityCompat.requestPermissions(getActivity(),
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 200);
     }
 
     //FOLDER
@@ -513,7 +520,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
         smallTasksViewPager.removeAllViews();
 //        smallTaskFragmentPagerAdapter.notifyDataSetChanged();
-        smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getActivity().getSupportFragmentManager());
+        smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getChildFragmentManager(), taskGroup);
         smallTasksViewPager.setAdapter(smallTaskFragmentPagerAdapter);
 
 

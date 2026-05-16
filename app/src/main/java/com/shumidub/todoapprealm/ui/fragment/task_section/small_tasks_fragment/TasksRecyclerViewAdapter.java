@@ -185,6 +185,8 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
 //                int color = taskObject.isCycling() ? Color.RED : Color.WHITE;
 //                holder.tvCycling.setTextColor(color);
 
+                bindCategoryStripes(holder, taskObject);
+
                 holder.checkBox.setChecked(taskObject.isDone());
 
                 if (taskObject.isCycling() && !taskObject.isDone()) holder.checkBox.setButtonDrawable(R.drawable.unchecked_accent_color_checkbox);
@@ -279,6 +281,12 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
                 ? tasks.size()+1 : 1;
     }
 
+    private void bindCategoryStripes(ViewHolder holder, TaskObject taskObject) {
+        if (holder.categoryStripes == null) return;
+        int extraCount = taskObject.getExtraFolderIds() == null ? 0 : taskObject.getExtraFolderIds().size();
+        holder.categoryStripes.setVisibility(extraCount > 0 ? View.VISIBLE : View.GONE);
+    }
+
     class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView textView;
@@ -288,6 +296,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         CheckBox checkBox;
         TextView textViewDoneTask;
         TextView tvAccumulation;
+        View categoryStripes;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -300,6 +309,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
                 tvCycling = itemView.findViewById(R.id.task_cycling);
                 textViewDoneTask = itemView.findViewById(R.id.tv_done_tasks);
                 tvAccumulation = itemView.findViewById(R.id.task_accumulation);
+                categoryStripes = itemView.findViewById(R.id.category_stripes);
             }
         }
     }

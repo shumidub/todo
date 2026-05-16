@@ -37,6 +37,7 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
     String currentTextList;
     EditText etName;
     CheckBox cbIsDaily;
+    CheckBox cbTasks2;
     long defaultFolderId;
     MainActivity activity;
     static FolderSlidingPanelFragment folderSlidingPanelFragment;
@@ -71,8 +72,11 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
             View view = getActivity().getLayoutInflater().inflate(R.layout.dialog_add_folder_layout, null);
             etName = view.findViewById(R.id.name);
             cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
+            cbTasks2 = view.findViewById(R.id.checkbox_tasks2);
             etName.setText(folderObject.getName());
             cbIsDaily.setChecked(folderObject.isDaily());
+            cbTasks2.setVisibility(View.VISIBLE);
+            cbTasks2.setChecked(FolderTaskRealmController.getFolderGroup(folderObject) == 1);
             builder.setView(view);
         } else if (title == DELETE_LIST ){
             builder.setMessage("Are you sure?");
@@ -84,8 +88,13 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
                     if (title == EDIT_LIST ) {
                         String text = etName.getText().toString();
                         FolderTaskRealmController.editFolder(folderObject, text, cbIsDaily.isChecked());
+                        int targetGroup = cbTasks2 != null && cbTasks2.isChecked() ? 1 : 0;
+                        FolderTaskRealmController.moveFolderToGroup(folderObject, targetGroup);
                         folderSlidingPanelFragment.finishActionMode();
-                        folderSlidingPanelFragment.notifySmallTasksViewPagerListsChanged();
+                        for (com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment p
+                                : com.shumidub.todoapprealm.App.folderSlidingPanelFragments) {
+                            p.notifySmallTasksViewPagerListsChanged();
+                        }
 
                         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(getDialog().getWindow().getDecorView().getWindowToken(), 0);

@@ -20,28 +20,21 @@ import io.realm.RealmList;
 
 public class SmallTaskFragmentPagerAdapter extends FragmentStatePagerAdapter {
 
+    private final int taskGroup;
 
     public SmallTaskFragmentPagerAdapter(FragmentManager fm) {
+        this(fm, 0);
+    }
+
+    public SmallTaskFragmentPagerAdapter(FragmentManager fm, int taskGroup) {
         super(fm);
+        this.taskGroup = taskGroup;
     }
 
 
     @Override
     public Fragment getItem(int position) {
-
-        ArrayList<Long> arrayList = new ArrayList<>();
-
-//        for (int i = 0; i<App.folderOfTasksListFromContainer.size(); i++){
-//            arrayList.add(App.folderOfTasksListFromContainer.get(i).getId());
-//        }
-//
-//        Log.d("DTAG2425", "folderIdArray = : " + arrayList.toString());
-
-        long id = App.folderOfTasksListFromContainer.get(position).getId();
-//
-//        Log.d("DTAG2425", "getItem: folderID = " + id);
-//        Log.d("DTAG2425", " ");
-
+        long id = FolderTaskRealmController.getFoldersList(taskGroup).get(position).getId();
         return SmallTasksFragment.newInstance (id);
     }
 
@@ -49,13 +42,11 @@ public class SmallTaskFragmentPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public int getItemPosition(Object object) {
         return super.getItemPosition(object);
-
     }
 
     @Override
     public int getCount() {
-        int size = App.folderOfTasksListFromContainer.size();
-        return size;
+        return FolderTaskRealmController.getFoldersList(taskGroup).size();
     }
 
 
