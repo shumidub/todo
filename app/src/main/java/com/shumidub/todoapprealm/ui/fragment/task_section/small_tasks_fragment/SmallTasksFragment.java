@@ -202,6 +202,11 @@ public class SmallTasksFragment extends Fragment {
         tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
         tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
 
+        if (isInCornflowerTab()) {
+            tasksRecyclerViewAdapter.useCornflowerPalette(true);
+            applyCornflowerToFragmentView();
+        }
+
         Log.d("DTAG458", "setTasksAndRV: ATTACHEDDD" + rvTasks.getAdapter().getItemCount());
 
         setItemTouchHelperAttacher();
@@ -268,6 +273,19 @@ public class SmallTasksFragment extends Fragment {
 //    public void finishActionMode(){
 //        ((MainActivity) getActivity()).startSupportActionMode(new EmptyActionModeCallback());
 //    }
+
+    private boolean isInCornflowerTab() {
+        Fragment parent = getParentFragment();
+        return parent instanceof com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment
+                && ((com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment) parent).getTaskGroup() == 1;
+    }
+
+    private void applyCornflowerToFragmentView() {
+        if (getView() == null) return;
+        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
+                new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
+        getView().setBackgroundColor(p.bg);
+    }
 
     private void setEmptyStateIfNeed(){
 

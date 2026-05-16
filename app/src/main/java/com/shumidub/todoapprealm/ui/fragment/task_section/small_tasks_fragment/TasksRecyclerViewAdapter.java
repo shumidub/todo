@@ -15,6 +15,8 @@ import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
+import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
+import androidx.cardview.widget.CardView;
 
 
 import java.util.List;
@@ -36,6 +38,12 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     private ItemTouchHelper itemTouchHelper;
     private ItemTouchHelper.SimpleCallback itemTouchHelperSimpleCallback;
     MainActivity activity;
+    private CornflowerPalette palette;
+
+    public void useCornflowerPalette(boolean enabled) {
+        palette = enabled ? new CornflowerPalette(activity) : null;
+        notifyDataSetChanged();
+    }
 
 
     public interface OnItemLongClicked{
@@ -186,6 +194,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
 //                holder.tvCycling.setTextColor(color);
 
                 bindCategoryStripes(holder, taskObject);
+                applyPaletteIfNeeded(holder);
 
                 holder.checkBox.setChecked(taskObject.isDone());
 
@@ -194,6 +203,12 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
 
                 if (taskObject.isCycling() && taskObject.isDone()) holder.checkBox.setButtonDrawable(R.drawable.checked_accent_color_checkbox);
                 else if (!taskObject.isCycling() && taskObject.isDone()) holder.checkBox.setButtonDrawable(R.drawable.checked_gray_checkbox);
+
+                if (palette != null && taskObject.isCycling()) {
+                    holder.checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(palette.accent));
+                } else {
+                    holder.checkBox.setButtonTintList(null);
+                }
 
                 setTasksTextColor(holder, taskObject.isDone());
 
@@ -279,6 +294,20 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
                 ((tasks != null && !tasks.isEmpty() && tasks.size() > 0))
                 || (doneTasks!=null && !doneTasks.isEmpty() && doneTasks.size()>0)
                 ? tasks.size()+1 : 1;
+    }
+
+    private void applyPaletteIfNeeded(ViewHolder holder) {
+        if (palette == null) return;
+        View root = holder.itemView;
+        if (root instanceof CardView) {
+            ((CardView) root).setCardBackgroundColor(palette.surface);
+        } else {
+            root.setBackgroundColor(palette.surface);
+        }
+        if (holder.textView != null) holder.textView.setTextColor(palette.inputText);
+        if (holder.tvCount != null) holder.tvCount.setTextColor(palette.counter);
+        if (holder.tvAccumulation != null) holder.tvAccumulation.setTextColor(palette.counter);
+        if (holder.categoryStripes != null) holder.categoryStripes.setBackgroundColor(palette.accent);
     }
 
     private void bindCategoryStripes(ViewHolder holder, TaskObject taskObject) {

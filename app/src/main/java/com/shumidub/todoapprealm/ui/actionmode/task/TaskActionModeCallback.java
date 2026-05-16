@@ -111,7 +111,7 @@ public class TaskActionModeCallback  {
                 MenuItem editList = menu.add("edit ");
                 editList.setIcon(R.drawable.ic_edit);
                 editList.setOnMenuItemClickListener((MenuItem a) -> {
-                    AlertDialog.Builder dialogBuilder = new MaterialAlertDialogBuilder(activity);
+                    AlertDialog.Builder dialogBuilder = ((MainActivity) activity).dialogBuilder();
                     dialogBuilder.setView(view);
                     dialog = dialogBuilder.create();
                     dialog.setCanceledOnTouchOutside(false);
@@ -250,7 +250,7 @@ public class TaskActionModeCallback  {
             checked[i] = current.contains(f.getId());
         }
 
-        new MaterialAlertDialogBuilder(activity)
+        activity.dialogBuilder()
                 .setTitle("Categories")
                 .setMultiChoiceItems(folderNames, checked, (d, which, isChecked) -> checked[which] = isChecked)
                 .setPositiveButton("OK", (d, w) -> {

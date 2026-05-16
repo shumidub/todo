@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-
+                applyTabChrome(position);
             }
 
             @Override
@@ -204,6 +204,89 @@ public class MainActivity extends AppCompatActivity {
 
 
         actionBar.setTitle("Tasks");
+        applyTabChrome(viewPager.getCurrentItem());
+    }
+
+    /** Build a MaterialAlertDialogBuilder applying the Cornflower overlay when on Tasks2. */
+    public com.google.android.material.dialog.MaterialAlertDialogBuilder dialogBuilder() {
+        if (viewPager != null && viewPager.getCurrentItem() == 2) {
+            return new com.google.android.material.dialog.MaterialAlertDialogBuilder(this,
+                    R.style.ThemeOverlay_App_MaterialAlertDialog_Cornflower);
+        }
+        return new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
+    }
+
+    /** Activity context wrapped with the Cornflower overlay theme when on Tasks2, for layout inflation. */
+    public android.content.Context dialogContext() {
+        if (viewPager != null && viewPager.getCurrentItem() == 2) {
+            return new androidx.appcompat.view.ContextThemeWrapper(this,
+                    R.style.ThemeOverlay_App_MaterialAlertDialog_Cornflower);
+        }
+        return this;
+    }
+
+    @Override
+    public void onSupportActionModeStarted(androidx.appcompat.view.ActionMode mode) {
+        super.onSupportActionModeStarted(mode);
+        tintActionModeBarIfCornflower();
+    }
+
+    @Override
+    public void onActionModeStarted(android.view.ActionMode mode) {
+        super.onActionModeStarted(mode);
+        tintActionModeBarIfCornflower();
+    }
+
+    private void tintActionModeBarIfCornflower() {
+        if (viewPager == null || viewPager.getCurrentItem() != 2) return;
+        // Run on next frame so the action-mode bar is actually attached to the window.
+        getWindow().getDecorView().post(() -> {
+            View decor = getWindow().getDecorView();
+            View bar = decor.findViewById(androidx.appcompat.R.id.action_mode_bar);
+            if (bar == null) {
+                int frameworkId = getResources().getIdentifier("action_mode_bar", "id", "android");
+                if (frameworkId != 0) bar = decor.findViewById(frameworkId);
+            }
+            if (bar == null) bar = findFirstActionModeBar(decor);
+            if (bar != null) {
+                com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
+                        new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this);
+                bar.setBackgroundColor(p.bg);
+            }
+        });
+    }
+
+    private View findFirstActionModeBar(View v) {
+        if (v == null) return null;
+        try {
+            String name = getResources().getResourceEntryName(v.getId());
+            if (name != null && name.contains("action_mode")) return v;
+        } catch (Exception ignored) { }
+        if (v instanceof android.view.ViewGroup) {
+            android.view.ViewGroup g = (android.view.ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                View found = findFirstActionModeBar(g.getChildAt(i));
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
+    private void applyTabChrome(int position) {
+        if (rootLayout == null || actionBar == null) return;
+        if (position == 2) {
+            com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
+                    new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this);
+            rootLayout.setBackgroundColor(p.bg);
+            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
+            getWindow().setStatusBarColor(p.bg);
+        } else {
+            int green = androidx.core.content.ContextCompat.getColor(this, R.color.colorBackgroundActivity);
+            rootLayout.setBackgroundColor(green);
+            int primary = androidx.core.content.ContextCompat.getColor(this, R.color.colorPrimary);
+            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(primary));
+            getWindow().setStatusBarColor(primary);
+        }
     }
 
 

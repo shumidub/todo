@@ -49,7 +49,7 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
         etName = view.findViewById(R.id.name);
         cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
 
-        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
+        AlertDialog.Builder builder = ((MainActivity) getActivity()).dialogBuilder();
         builder.setTitle("Add new folder ")
                 .setView(view)
 //              .setIcon(R.drawable.ic_launcher_cat)

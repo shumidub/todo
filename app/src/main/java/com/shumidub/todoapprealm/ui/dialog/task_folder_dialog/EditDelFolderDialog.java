@@ -67,7 +67,7 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
             currentTextList = folderObject.getName();
         }
 
-        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
+        AlertDialog.Builder builder = ((MainActivity) getActivity()).dialogBuilder();
         if (title == EDIT_LIST ){
             View view = getActivity().getLayoutInflater().inflate(R.layout.dialog_add_folder_layout, null);
             etName = view.findViewById(R.id.name);

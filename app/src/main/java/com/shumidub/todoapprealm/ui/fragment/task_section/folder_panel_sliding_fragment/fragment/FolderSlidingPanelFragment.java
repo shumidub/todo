@@ -112,6 +112,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
     /** Which Tasks tab this fragment represents. 0 = Tasks1, 1 = Tasks2. */
     private int taskGroup = 0;
+    private com.shumidub.todoapprealm.ui.theme.CornflowerPalette palette;
     private static final String ARG_TASK_GROUP = "task_group";
 
     public static FolderSlidingPanelFragment newInstance(int taskGroup) {
@@ -210,7 +211,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 //        setEmptyStateIfFoldersIsEmpty(view);
 
         //set adapter for folder rv
-        folderOfTaskRVAdapter = new FolderOfTaskRecyclerViewAdapter(folderObjects, getActivity());
+        folderOfTaskRVAdapter = new FolderOfTaskRecyclerViewAdapter(folderObjects, getActivity(), taskGroup);
         rvFolders.setAdapter(folderOfTaskRVAdapter);
         //todo empty state
 
@@ -368,7 +369,49 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                     ((MainActivity) getActivity()).setPageCanChangedScrolled(!lockPaging);
                 });
 
+        if (taskGroup == 1) applyCornflowerPalette(view);
+    }
 
+    private void applyCornflowerPalette(View root) {
+        palette = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
+        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p = palette;
+
+        root.setBackgroundColor(p.bg);
+        View cl = root.findViewById(R.id.cl);
+        if (cl != null) cl.setBackgroundColor(p.bg);
+
+        View footer = root.findViewById(R.id.ll_footer);
+        if (footer != null) footer.setBackgroundColor(p.surfaceMuted);
+
+        TextView bottomText = root.findViewById(R.id.bottom_text);
+        if (bottomText != null) bottomText.setTextColor(p.text);
+
+        View bottomAddArea = root.findViewById(R.id.ll_bottom);
+        if (bottomAddArea != null) bottomAddArea.setBackgroundColor(p.surfaceMuted);
+
+        if (et != null) {
+            et.setTextColor(p.text);
+            et.setHintTextColor(p.textSoft);
+            et.setBackgroundTintList(android.content.res.ColorStateList.valueOf(p.accent));
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                android.graphics.drawable.Drawable cursor = new android.graphics.drawable.ColorDrawable(p.accent) {
+                    @Override public int getIntrinsicWidth() { return (int) (2 * getResources().getDisplayMetrics().density); }
+                };
+                et.setTextCursorDrawable(cursor);
+            }
+        }
+        if (tvBottomText != null) tvBottomText.setTextColor(p.text);
+        if (tvTaskCountValue != null) tvTaskCountValue.setTextColor(p.text);
+        if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setTextColor(p.text);
+        if (tvTaskPriority != null) tvTaskPriority.setTextColor(p.text);
+        if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
+    }
+
+    /** Returns the accent the bottom-panel click handlers should use — cornflower on Tasks2,
+     *  default colorAccent otherwise. */
+    private int activeAccent() {
+        if (palette != null) return palette.accent;
+        return getResources().getColor(R.color.colorAccent);
     }
 
 
@@ -482,7 +525,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         view.setText("" + i);
 
         if (i<2) view.setTextColor(getResources().getColor(R.color.colorWhite));
-        else view.setTextColor(getResources().getColor(R.color.colorAccent));
+        else view.setTextColor(activeAccent());
     }
 
     public void onTaskPriorityClick(View view) {
@@ -499,13 +542,13 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             ((TextView) view).setText(text);
         } else ((TextView) view).setText("!");
 
-        if (priority>0) ((TextView) view).setTextColor(getResources().getColor(R.color.colorAccent));
+        if (priority>0) ((TextView) view).setTextColor(activeAccent());
         else ((TextView) view).setTextColor(getResources().getColor(R.color.colorWhite));
     }
 
     public void onTaskCyclingClick(View view) {
         cycling = !cycling;
-        if (cycling) ((TextView) view).setTextColor(getResources().getColor(R.color.colorAccent));
+        if (cycling) ((TextView) view).setTextColor(activeAccent());
         else ((TextView) view).setTextColor(getResources().getColor(R.color.colorWhite));
     }
 

@@ -92,6 +92,17 @@
     <color name="colorCountValue60per">#f2641d</color>
     <color name="colorCountValue0per">#d20808</color>
 
+    <!-- Cornflower palette (Tasks2 tab) -->
+    <color name="cornflowerBg">#5C7CC0</color>
+    <color name="cornflowerSurface">#EEF1F8</color>
+    <color name="cornflowerSurfaceMuted">#5274B7</color>
+    <color name="cornflowerText">#F2F4FA</color>
+    <color name="cornflowerTextSoft">#BCF2F4FA</color>
+    <color name="cornflowerInputText">#1C2952</color>
+    <color name="cornflowerCounter">#7889B0</color>
+    <color name="cornflowerAccent">#E8B85C</color>
+    <color name="cornflowerDivider">#2EF2F4FA</color>
+
     <!-- Dialog surface palette -->
     <color name="colorDialogSurface">#1F4F38</color>
     <color name="colorDialogOnSurface">#F1F8F4</color>

@@ -104,6 +104,16 @@
         <item name="buttonTint">@color/colorAccent</item>
     </style>
 
+    <!-- Cornflower MaterialAlertDialog overlay — used when a dialog is spawned from the Tasks2 tab. -->
+    <style name="ThemeOverlay.App.MaterialAlertDialog.Cornflower" parent="ThemeOverlay.App.MaterialAlertDialog">
+        <item name="colorSurface">@color/cornflowerSurfaceMuted</item>
+        <item name="colorOnSurface">@color/cornflowerText</item>
+        <item name="android:textColorPrimary">@color/cornflowerText</item>
+        <item name="android:textColorSecondary">@color/cornflowerTextSoft</item>
+        <item name="android:colorBackground">@color/cornflowerSurfaceMuted</item>
+        <item name="colorAccent">@color/cornflowerAccent</item>
+    </style>
+
 </resources>
 
 
