@@ -43,7 +43,7 @@ public class SyncDialog extends androidx.fragment.app.DialogFragment {
         View view = getActivity().getLayoutInflater()
                 .inflate(R.layout.sync_dialog, null);
 
-        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
+        AlertDialog.Builder builder = ((MainActivity) getActivity()).dialogBuilder();
         builder.setView(view)
                .setNegativeButton("Cancel", (dialog, i) -> dialog.cancel());
 
