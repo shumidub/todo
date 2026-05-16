@@ -62,7 +62,7 @@ public class TaskActionModeCallback  {
 
                 actionMode.setTitle(task.getText());
 
-                LayoutInflater inflater = activity.getLayoutInflater();
+                LayoutInflater inflater = LayoutInflater.from(((MainActivity) activity).dialogContext());
                 View view = inflater.inflate(R.layout.dialog_edit_task, null);
 
                 EditText etEditTask = view.findViewById(R.id.et);
@@ -79,7 +79,9 @@ public class TaskActionModeCallback  {
                 taskCycling = task.isCycling();
 
                 defaultColor = activity.getResources().getColor(R.color.colorWhite);
-                accentColor =  activity.getResources().getColor(R.color.colorAccent);
+                accentColor = TaskActionModeCallback.this.activity.isCornflowerTab()
+                        ? new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(activity).accent
+                        : activity.getResources().getColor(R.color.colorAccent);
 
                 int tvTaskCyclingColor  = taskCycling ? accentColor : defaultColor;
 

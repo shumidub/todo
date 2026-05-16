@@ -64,10 +64,10 @@
     </style>
 
     <style name="Widget.App.Button.Dialog.Positive" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:textColor">?attr/colorAccent</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.025</item>
-        <item name="rippleColor">@color/colorAccent</item>
+        <item name="rippleColor">?attr/colorAccent</item>
     </style>
 
     <style name="Widget.App.Button.Dialog.Negative" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
@@ -82,15 +82,15 @@
 
     <!-- Floating-label EditText used inside dialogs. -->
     <style name="Widget.App.TextInputLayout.Dialog" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxStrokeColor">@color/colorAccent</item>
+        <item name="boxStrokeColor">?attr/colorAccent</item>
         <item name="boxStrokeWidth">1dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
         <item name="boxCornerRadiusTopStart">12dp</item>
         <item name="boxCornerRadiusTopEnd">12dp</item>
         <item name="boxCornerRadiusBottomStart">12dp</item>
         <item name="boxCornerRadiusBottomEnd">12dp</item>
-        <item name="hintTextColor">@color/colorAccent</item>
-        <item name="android:textColorHint">@color/colorDialogOnSurfaceVariant</item>
+        <item name="hintTextColor">?attr/colorAccent</item>
+        <item name="android:textColorHint">?android:attr/textColorSecondary</item>
     </style>
 
     <style name="Widget.App.EditText.Dialog" parent="Widget.AppCompat.EditText">
@@ -100,8 +100,8 @@
     </style>
 
     <style name="Widget.App.CheckBox.Dialog" parent="Widget.AppCompat.CompoundButton.CheckBox">
-        <item name="android:textColor">@color/colorDialogOnSurface</item>
-        <item name="buttonTint">@color/colorAccent</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="buttonTint">?attr/colorAccent</item>
     </style>
 
     <!-- Cornflower MaterialAlertDialog overlay — used when a dialog is spawned from the Tasks2 tab. -->
@@ -112,6 +112,9 @@
         <item name="android:textColorSecondary">@color/cornflowerTextSoft</item>
         <item name="android:colorBackground">@color/cornflowerSurfaceMuted</item>
         <item name="colorAccent">@color/cornflowerAccent</item>
+        <!-- Material button text & TextInputLayout stroke resolve via colorPrimary inside the dialog. -->
+        <item name="colorPrimary">@color/cornflowerAccent</item>
+        <item name="colorControlActivated">@color/cornflowerAccent</item>
     </style>
 
 </resources>

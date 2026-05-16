@@ -207,6 +207,10 @@ public class MainActivity extends AppCompatActivity {
         applyTabChrome(viewPager.getCurrentItem());
     }
 
+    public boolean isCornflowerTab() {
+        return viewPager != null && viewPager.getCurrentItem() == 2;
+    }
+
     /** Build a MaterialAlertDialogBuilder applying the Cornflower overlay when on Tasks2. */
     public com.google.android.material.dialog.MaterialAlertDialogBuilder dialogBuilder() {
         if (viewPager != null && viewPager.getCurrentItem() == 2) {
@@ -258,6 +262,8 @@ public class MainActivity extends AppCompatActivity {
 
     private View findFirstActionModeBar(View v) {
         if (v == null) return null;
+        String cls = v.getClass().getSimpleName();
+        if (cls.equals("ActionBarContextView") || cls.contains("ActionMode")) return v;
         try {
             String name = getResources().getResourceEntryName(v.getId());
             if (name != null && name.contains("action_mode")) return v;

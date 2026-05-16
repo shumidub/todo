@@ -45,7 +45,8 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        View view = getActivity().getLayoutInflater().inflate(R.layout.dialog_add_folder_layout, null);
+        View view = android.view.LayoutInflater.from(((MainActivity) getActivity()).dialogContext())
+                .inflate(R.layout.dialog_add_folder_layout, null);
         etName = view.findViewById(R.id.name);
         cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
 
