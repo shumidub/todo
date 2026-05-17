@@ -79,9 +79,13 @@ public class TaskActionModeCallback  {
                 taskCycling = task.isCycling();
 
                 defaultColor = activity.getResources().getColor(R.color.colorWhite);
-                accentColor = TaskActionModeCallback.this.activity.isCornflowerTab()
-                        ? new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(activity).accent
-                        : activity.getResources().getColor(R.color.colorAccent);
+                if (TaskActionModeCallback.this.activity.isCornflowerTab()) {
+                    accentColor = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(activity).accent;
+                } else if (TaskActionModeCallback.this.activity.isCanaryTab()) {
+                    accentColor = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(activity).accent;
+                } else {
+                    accentColor = activity.getResources().getColor(R.color.colorAccent);
+                }
 
                 int tvTaskCyclingColor  = taskCycling ? accentColor : defaultColor;
 
@@ -247,7 +251,13 @@ public class TaskActionModeCallback  {
             FolderTaskObject f = folders.get(i);
             folderIds.add(f.getId());
             int group = FolderTaskRealmController.getFolderGroup(f);
-            String tag = group == 1 ? " [Tasks2]" : (group == 0 ? " [Tasks1]" : "");
+            String tag;
+            switch (group) {
+                case 0: tag = " [Tasks1]"; break;
+                case 1: tag = " [Tasks2]"; break;
+                case 2: tag = " [Tasks3]"; break;
+                default: tag = ""; break;
+            }
             folderNames[i] = f.getName() + tag;
             checked[i] = current.contains(f.getId());
         }

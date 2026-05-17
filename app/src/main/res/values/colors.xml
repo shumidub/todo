@@ -103,6 +103,17 @@
     <color name="cornflowerAccent">#E8B85C</color>
     <color name="cornflowerDivider">#2EF2F4FA</color>
 
+    <!-- Canary palette (Tasks3 tab) -->
+    <color name="canaryBg">#FBE34A</color>
+    <color name="canarySurface">#FFFEEC</color>
+    <color name="canarySurfaceMuted">#F0D63D</color>
+    <color name="canaryText">#2E2A08</color>
+    <color name="canaryTextSoft">#A32E2A08</color>
+    <color name="canaryInputText">#2E2A08</color>
+    <color name="canaryCounter">#94882F</color>
+    <color name="canaryAccent">#E94E3B</color>
+    <color name="canaryDivider">#242E2A08</color>
+
     <!-- Dialog surface palette -->
     <color name="colorDialogSurface">#1F4F38</color>
     <color name="colorDialogOnSurface">#F1F8F4</color>

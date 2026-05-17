@@ -28,6 +28,20 @@ public class TaskObject extends RealmObject {
      *  Nullable for backwards compatibility with backups created before multi-category support. */
     private RealmList<Long> extraFolderIds;
 
+    /** Id of the {@link SectionObject} this task belongs to, or 0 if the task is "free"
+     *  (not under any section). Added in SCHEMA_VERSION 4 (task-002). */
+    private long sectionId;
+
+    /** Ordering index within the parent folder used for stable drag-n-drop with sections.
+     *  Backfilled in the SCHEMA_VERSION 4 migration from RealmList index (task-002). */
+    private int position;
+
+    public long getSectionId() { return sectionId; }
+    public void setSectionId(long sectionId) { this.sectionId = sectionId; }
+
+    public int getPosition() { return position; }
+    public void setPosition(int position) { this.position = position; }
+
     public RealmList<Long> getExtraFolderIds() {
         return extraFolderIds;
     }

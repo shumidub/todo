@@ -16,6 +16,7 @@ import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmContr
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
 import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
+import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
 import androidx.cardview.widget.CardView;
 
 
@@ -38,11 +39,52 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     private ItemTouchHelper itemTouchHelper;
     private ItemTouchHelper.SimpleCallback itemTouchHelperSimpleCallback;
     MainActivity activity;
-    private CornflowerPalette palette;
+    private CornflowerPalette cornflowerPalette;
+    private CanaryPalette canaryPalette;
 
     public void useCornflowerPalette(boolean enabled) {
-        palette = enabled ? new CornflowerPalette(activity) : null;
+        cornflowerPalette = enabled ? new CornflowerPalette(activity) : null;
+        if (enabled) canaryPalette = null;
         notifyDataSetChanged();
+    }
+
+    public void useCanaryPalette(boolean enabled) {
+        canaryPalette = enabled ? new CanaryPalette(activity) : null;
+        if (enabled) cornflowerPalette = null;
+        notifyDataSetChanged();
+    }
+
+    /** True when any tab palette (Cornflower or Canary) is active. */
+    private boolean hasActivePalette() {
+        return cornflowerPalette != null || canaryPalette != null;
+    }
+
+    private int activeAccent() {
+        if (cornflowerPalette != null) return cornflowerPalette.accent;
+        if (canaryPalette != null) return canaryPalette.accent;
+        return activity.getResources().getColor(R.color.colorAccent);
+    }
+
+    private int activeSurface() {
+        if (cornflowerPalette != null) return cornflowerPalette.surface;
+        if (canaryPalette != null) return canaryPalette.surface;
+        return 0;
+    }
+
+    private int activeInputText() {
+        if (cornflowerPalette != null) return cornflowerPalette.inputText;
+        if (canaryPalette != null) return canaryPalette.inputText;
+        return 0;
+    }
+
+    private int activeCounter() {
+        if (cornflowerPalette != null) return cornflowerPalette.counter;
+        if (canaryPalette != null) return canaryPalette.counter;
+        return 0;
+    }
+
+    private boolean isTaskCyclingInActivePalette() {
+        return hasActivePalette();
     }
 
 
@@ -159,7 +201,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
                 }
 
                 holder.tvPriority.setText(textPriority);
-                int accentColor = palette != null ? palette.accent : activity.getResources().getColor(R.color.colorAccent);
+                int accentColor = activeAccent();
                 if (priorityFromTaskObject>0) holder.tvPriority.setTextColor(accentColor);
                 else holder.tvPriority.setTextColor(activity.getResources().getColor(R.color.colorWhite));
 
@@ -205,8 +247,8 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
                 if (taskObject.isCycling() && taskObject.isDone()) holder.checkBox.setButtonDrawable(R.drawable.checked_accent_color_checkbox);
                 else if (!taskObject.isCycling() && taskObject.isDone()) holder.checkBox.setButtonDrawable(R.drawable.checked_gray_checkbox);
 
-                if (palette != null && taskObject.isCycling()) {
-                    holder.checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(palette.accent));
+                if (hasActivePalette() && taskObject.isCycling()) {
+                    holder.checkBox.setButtonTintList(android.content.res.ColorStateList.valueOf(activeAccent()));
                 } else {
                     holder.checkBox.setButtonTintList(null);
                 }
@@ -295,17 +337,21 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     }
 
     private void applyPaletteIfNeeded(ViewHolder holder) {
-        if (palette == null) return;
+        if (!hasActivePalette()) return;
+        int surface = activeSurface();
+        int inputText = activeInputText();
+        int counter = activeCounter();
+        int accent = activeAccent();
         View root = holder.itemView;
         if (root instanceof CardView) {
-            ((CardView) root).setCardBackgroundColor(palette.surface);
+            ((CardView) root).setCardBackgroundColor(surface);
         } else {
-            root.setBackgroundColor(palette.surface);
+            root.setBackgroundColor(surface);
         }
-        if (holder.textView != null) holder.textView.setTextColor(palette.inputText);
-        if (holder.tvCount != null) holder.tvCount.setTextColor(palette.counter);
-        if (holder.tvAccumulation != null) holder.tvAccumulation.setTextColor(palette.counter);
-        if (holder.categoryStripes != null) holder.categoryStripes.setBackgroundColor(palette.accent);
+        if (holder.textView != null) holder.textView.setTextColor(inputText);
+        if (holder.tvCount != null) holder.tvCount.setTextColor(counter);
+        if (holder.tvAccumulation != null) holder.tvAccumulation.setTextColor(counter);
+        if (holder.categoryStripes != null) holder.categoryStripes.setBackgroundColor(accent);
     }
 
     private void bindCategoryStripes(ViewHolder holder, TaskObject taskObject) {

@@ -21,7 +21,7 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 3;
+        return 4;
     }
 
     @Override
@@ -29,6 +29,7 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
         if (position == 0) return new FolderNoteFragment();
         if (position == 1) return FolderSlidingPanelFragment.newInstance(0);
         if (position == 2) return FolderSlidingPanelFragment.newInstance(1);
+        if (position == 3) return FolderSlidingPanelFragment.newInstance(2);
         return null;
     }
 

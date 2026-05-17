@@ -205,6 +205,9 @@ public class SmallTasksFragment extends Fragment {
         if (isInCornflowerTab()) {
             tasksRecyclerViewAdapter.useCornflowerPalette(true);
             applyCornflowerToFragmentView();
+        } else if (isInCanaryTab()) {
+            tasksRecyclerViewAdapter.useCanaryPalette(true);
+            applyCanaryToFragmentView();
         }
 
         Log.d("DTAG458", "setTasksAndRV: ATTACHEDDD" + rvTasks.getAdapter().getItemCount());
@@ -248,6 +251,7 @@ public class SmallTasksFragment extends Fragment {
             tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
             tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
             if (isInCornflowerTab()) tasksRecyclerViewAdapter.useCornflowerPalette(true);
+            else if (isInCanaryTab()) tasksRecyclerViewAdapter.useCanaryPalette(true);
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
             rvTasks.scrollToPosition(position);
             isAllTaskShowing = true;
@@ -258,6 +262,7 @@ public class SmallTasksFragment extends Fragment {
             tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
             tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
             if (isInCornflowerTab()) tasksRecyclerViewAdapter.useCornflowerPalette(true);
+            else if (isInCanaryTab()) tasksRecyclerViewAdapter.useCanaryPalette(true);
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
             isAllTaskShowing = false;
         }
@@ -282,10 +287,31 @@ public class SmallTasksFragment extends Fragment {
                 && ((com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment) parent).getTaskGroup() == 1;
     }
 
+    private boolean isInCanaryTab() {
+        Fragment parent = getParentFragment();
+        return parent instanceof com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment
+                && ((com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment) parent).getTaskGroup() == 2;
+    }
+
+    /** taskGroup of parent FolderSlidingPanelFragment, or -1 if no parent. */
+    public int getTabTaskGroup() {
+        Fragment parent = getParentFragment();
+        return parent instanceof com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment
+                ? ((com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment) parent).getTaskGroup()
+                : -1;
+    }
+
     private void applyCornflowerToFragmentView() {
         if (getView() == null) return;
         com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
                 new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
+        getView().setBackgroundColor(p.bg);
+    }
+
+    private void applyCanaryToFragmentView() {
+        if (getView() == null) return;
+        com.shumidub.todoapprealm.ui.theme.CanaryPalette p =
+                new com.shumidub.todoapprealm.ui.theme.CanaryPalette(getContext());
         getView().setBackgroundColor(p.bg);
     }
 

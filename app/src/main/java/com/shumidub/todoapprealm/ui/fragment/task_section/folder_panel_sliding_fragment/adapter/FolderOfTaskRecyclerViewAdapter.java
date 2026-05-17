@@ -15,6 +15,7 @@ import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.RealmInteger;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
+import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
 import androidx.cardview.widget.CardView;
 
 
@@ -35,7 +36,8 @@ public class FolderOfTaskRecyclerViewAdapter
     OnHolderTextViewOnLongClickListener onHolderTextViewOnLongClickListener;
     Activity activity;
     private final int taskGroup;
-    private CornflowerPalette palette;
+    private CornflowerPalette cornflowerPalette;
+    private CanaryPalette canaryPalette;
 
 
     public interface OnHolderTextViewOnClickListener {
@@ -53,7 +55,8 @@ public class FolderOfTaskRecyclerViewAdapter
         this.realmListFolder = realmListFolder;
         this.activity = activity;
         this.taskGroup = taskGroup;
-        if (taskGroup == 1) palette = new CornflowerPalette(activity);
+        if (taskGroup == 1) cornflowerPalette = new CornflowerPalette(activity);
+        else if (taskGroup == 2) canaryPalette = new CanaryPalette(activity);
     }
 
     @Override
@@ -73,7 +76,8 @@ public class FolderOfTaskRecyclerViewAdapter
         ((ItemViewHolder) holder).textView.setText("" + realmListFolder.get(position).getName());
         ((ItemViewHolder) holder).textView.setTag(realmListFolder.get(position).getId());
 
-        if (palette != null) applyPaletteToFolderCard((ItemViewHolder) holder);
+        if (cornflowerPalette != null) applyCornflowerPaletteToCard((ItemViewHolder) holder);
+        else if (canaryPalette != null) applyCanaryPaletteToCard((ItemViewHolder) holder);
 
         ((ItemViewHolder) holder).textView.setOnClickListener(
                 (v)->onHolderTextViewOnClickListener.onClick(holder, position));
@@ -110,8 +114,10 @@ public class FolderOfTaskRecyclerViewAdapter
 
         String folderTaskCounts = String.format("%d / %d", done, all);
         ((ItemViewHolder) holder).tvFolderTaskCounts.setText(folderTaskCounts);
-        if (palette != null) {
-            ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(palette.counter);
+        if (cornflowerPalette != null) {
+            ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(cornflowerPalette.counter);
+        } else if (canaryPalette != null) {
+            ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(canaryPalette.counter);
         } else if (realmListFolder.get(position).isDaily){
             ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(activity.getApplicationContext().getResources().getColor(R.color.colorPrimaryDark));
         } else {
@@ -119,14 +125,24 @@ public class FolderOfTaskRecyclerViewAdapter
         }
     }
 
-    private void applyPaletteToFolderCard(ItemViewHolder holder) {
+    private void applyCornflowerPaletteToCard(ItemViewHolder holder) {
         View root = holder.itemView;
         if (root instanceof CardView) {
-            ((CardView) root).setCardBackgroundColor(palette.surface);
+            ((CardView) root).setCardBackgroundColor(cornflowerPalette.surface);
         } else {
-            root.setBackgroundColor(palette.surface);
+            root.setBackgroundColor(cornflowerPalette.surface);
         }
-        holder.textView.setTextColor(palette.inputText);
+        holder.textView.setTextColor(cornflowerPalette.inputText);
+    }
+
+    private void applyCanaryPaletteToCard(ItemViewHolder holder) {
+        View root = holder.itemView;
+        if (root instanceof CardView) {
+            ((CardView) root).setCardBackgroundColor(canaryPalette.surface);
+        } else {
+            root.setBackgroundColor(canaryPalette.surface);
+        }
+        holder.textView.setTextColor(canaryPalette.inputText);
     }
 
 

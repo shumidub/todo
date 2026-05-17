@@ -18,6 +18,8 @@ public class RealmFoldersContainer extends RealmObject implements Serializable{
     public RealmList<FolderTaskObject> folderOfTasksList;
     /** Folders shown on the second Tasks tab. Added after the Reports tab was removed. */
     public RealmList<FolderTaskObject> folderOfTasksList2;
+    /** Folders shown on the third Tasks tab (Canary palette / Tasks3). Added in SCHEMA_VERSION 4. */
+    public RealmList<FolderTaskObject> folderOfTasksList3;
     public RealmList<FolderNotesObject> folderOfNotesList;
     public RealmList<ReportObject> reportObjectList;
 

@@ -110,9 +110,10 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     int priority = 0;
     boolean cycling = false;
 
-    /** Which Tasks tab this fragment represents. 0 = Tasks1, 1 = Tasks2. */
+    /** Which Tasks tab this fragment represents. 0 = Tasks1, 1 = Tasks2, 2 = Tasks3. */
     private int taskGroup = 0;
-    private com.shumidub.todoapprealm.ui.theme.CornflowerPalette palette;
+    private com.shumidub.todoapprealm.ui.theme.CornflowerPalette cornflowerPalette;
+    private com.shumidub.todoapprealm.ui.theme.CanaryPalette canaryPalette;
     private static final String ARG_TASK_GROUP = "task_group";
 
     public static FolderSlidingPanelFragment newInstance(int taskGroup) {
@@ -373,11 +374,12 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                 });
 
         if (taskGroup == 1) applyCornflowerPalette(view);
+        else if (taskGroup == 2) applyCanaryPalette(view);
     }
 
     private void applyCornflowerPalette(View root) {
-        palette = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
-        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p = palette;
+        cornflowerPalette = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
+        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p = cornflowerPalette;
 
         root.setBackgroundColor(p.bg);
         View cl = root.findViewById(R.id.cl);
@@ -410,12 +412,58 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
     }
 
+    private void applyCanaryPalette(View root) {
+        canaryPalette = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(getContext());
+        com.shumidub.todoapprealm.ui.theme.CanaryPalette p = canaryPalette;
+
+        root.setBackgroundColor(p.bg);
+        View cl = root.findViewById(R.id.cl);
+        if (cl != null) cl.setBackgroundColor(p.bg);
+
+        View footer = root.findViewById(R.id.ll_footer);
+        if (footer != null) footer.setBackgroundColor(p.surfaceMuted);
+
+        TextView bottomText = root.findViewById(R.id.bottom_text);
+        if (bottomText != null) bottomText.setTextColor(p.text);
+
+        View bottomAddArea = root.findViewById(R.id.ll_bottom);
+        if (bottomAddArea != null) bottomAddArea.setBackgroundColor(p.surfaceMuted);
+
+        if (et != null) {
+            et.setTextColor(p.inputText);
+            et.setHintTextColor(p.textSoft);
+            et.setBackgroundTintList(android.content.res.ColorStateList.valueOf(p.accent));
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                android.graphics.drawable.Drawable cursor = new android.graphics.drawable.ColorDrawable(p.accent) {
+                    @Override public int getIntrinsicWidth() { return (int) (2 * getResources().getDisplayMetrics().density); }
+                };
+                et.setTextCursorDrawable(cursor);
+            }
+        }
+        if (tvBottomText != null) tvBottomText.setTextColor(p.text);
+        if (tvTaskCountValue != null) tvTaskCountValue.setTextColor(p.text);
+        if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setTextColor(p.text);
+        if (tvTaskPriority != null) tvTaskPriority.setTextColor(p.text);
+        if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
+    }
+
     /** Returns the accent the bottom-panel click handlers should use — cornflower on Tasks2,
-     *  default colorAccent otherwise. */
+     *  canary on Tasks3, default colorAccent otherwise. */
     private int activeAccent() {
-        if (palette != null) return palette.accent;
+        if (cornflowerPalette != null) return cornflowerPalette.accent;
+        if (canaryPalette != null) return canaryPalette.accent;
         return getResources().getColor(R.color.colorAccent);
     }
+
+    /** Active palette tint accent (Cornflower / Canary / default). Exposed for downstream callers
+     *  (task-001 BottomSheet, task-002 section header). */
+    public int getActiveAccent() { return activeAccent(); }
+
+    /** true if this fragment renders inside the Cornflower (Tasks2) tab. */
+    public boolean isCornflowerGroup() { return taskGroup == 1; }
+
+    /** true if this fragment renders inside the Canary (Tasks3) tab. */
+    public boolean isCanaryGroup() { return taskGroup == 2; }
 
 
     @Override

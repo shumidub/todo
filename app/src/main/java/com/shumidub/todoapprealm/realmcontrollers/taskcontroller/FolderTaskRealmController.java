@@ -29,28 +29,35 @@ public class FolderTaskRealmController {
         return getFoldersList(0);
     }
 
-    /** Get folders for a given tab. group=0 → Tasks1, group=1 → Tasks2. */
+    /** Get folders for a given tab. group=0 → Tasks1, group=1 → Tasks2, group=2 → Tasks3. */
     public static RealmList<FolderTaskObject> getFoldersList(int group){
         App.initRealm();
-        return group == 1 ? App.folderOfTasksList2FromContainer : App.folderOfTasksListFromContainer;
+        switch (group) {
+            case 1: return App.folderOfTasksList2FromContainer;
+            case 2: return App.folderOfTasksList3FromContainer;
+            default: return App.folderOfTasksListFromContainer;
+        }
     }
 
-    /** Tab index (0 or 1) the folder lives on. -1 if not in any container list. */
+    /** Tab index (0, 1, or 2) the folder lives on. -1 if not in any container list. */
     public static int getFolderGroup(FolderTaskObject folder){
         if (folder == null) return -1;
         if (App.folderOfTasksListFromContainer != null
                 && App.folderOfTasksListFromContainer.contains(folder)) return 0;
         if (App.folderOfTasksList2FromContainer != null
                 && App.folderOfTasksList2FromContainer.contains(folder)) return 1;
+        if (App.folderOfTasksList3FromContainer != null
+                && App.folderOfTasksList3FromContainer.contains(folder)) return 2;
         return -1;
     }
 
-    /** All folders across both tabs (Tasks1 first, then Tasks2). */
+    /** All folders across all tabs (Tasks1 first, then Tasks2, then Tasks3). */
     public static java.util.List<FolderTaskObject> getAllFolders(){
         App.initRealm();
         java.util.List<FolderTaskObject> all = new ArrayList<>();
         if (App.folderOfTasksListFromContainer != null) all.addAll(App.folderOfTasksListFromContainer);
         if (App.folderOfTasksList2FromContainer != null) all.addAll(App.folderOfTasksList2FromContainer);
+        if (App.folderOfTasksList3FromContainer != null) all.addAll(App.folderOfTasksList3FromContainer);
         return all;
     }
 
@@ -104,6 +111,7 @@ public class FolderTaskRealmController {
         App.realm.executeTransaction((r) -> {
             if (App.folderOfTasksListFromContainer != null) App.folderOfTasksListFromContainer.remove(folder);
             if (App.folderOfTasksList2FromContainer != null) App.folderOfTasksList2FromContainer.remove(folder);
+            if (App.folderOfTasksList3FromContainer != null) App.folderOfTasksList3FromContainer.remove(folder);
             getFoldersList(targetGroup).add(folder);
         });
     }
@@ -133,6 +141,9 @@ public class FolderTaskRealmController {
             }
             if (App.folderOfTasksList2FromContainer != null) {
                 App.folderOfTasksList2FromContainer.remove(folderObject);
+            }
+            if (App.folderOfTasksList3FromContainer != null) {
+                App.folderOfTasksList3FromContainer.remove(folderObject);
             }
             folderObject.deleteFromRealm();
             App.realm.where(FolderTaskObject.class).equalTo("id", folderId).findAll().deleteAllFromRealm();

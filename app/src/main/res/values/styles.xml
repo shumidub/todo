@@ -117,6 +117,18 @@
         <item name="colorControlActivated">@color/cornflowerAccent</item>
     </style>
 
+    <!-- Canary MaterialAlertDialog overlay — used when a dialog is spawned from the Tasks3 tab. -->
+    <style name="ThemeOverlay.App.MaterialAlertDialog.Canary" parent="ThemeOverlay.App.MaterialAlertDialog">
+        <item name="colorSurface">@color/canarySurfaceMuted</item>
+        <item name="colorOnSurface">@color/canaryText</item>
+        <item name="android:textColorPrimary">@color/canaryText</item>
+        <item name="android:textColorSecondary">@color/canaryTextSoft</item>
+        <item name="android:colorBackground">@color/canarySurfaceMuted</item>
+        <item name="colorAccent">@color/canaryAccent</item>
+        <item name="colorPrimary">@color/canaryAccent</item>
+        <item name="colorControlActivated">@color/canaryAccent</item>
+    </style>
+
 </resources>
 
 
