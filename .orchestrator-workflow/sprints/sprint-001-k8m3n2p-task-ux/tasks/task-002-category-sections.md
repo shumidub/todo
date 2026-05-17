@@ -410,6 +410,16 @@ Modify:
 5. **Realm RealmList vs explicit position field**: we now have two sources of truth for ordering — the existing `FolderTaskObject.folderTasks` RealmList **index** and the new `TaskObject.position` field. Decision: keep RealmList as the storage (deletion uses it), but ordering for display is driven exclusively by `position`. Adds/removes must keep both in sync; the migration backfill aligns them initially. Document this invariant in `SectionsRealmController` Javadoc.
 6. **`name` REQUIRED on existing rows**: irrelevant — SectionObject is new (no pre-existing rows in v3 DB).
 
+### 12. Design clarifications (Phase 3 user feedback — 2026-05-17)
+
+- **Sort within section** → **финал: undone сортируется по `position` ASC (drag-order), done всегда внизу секции.** Уточняет R4. Реализация: при flatten каждой секции отсортировать `tasks.where().equalTo("sectionId", id).sort("done", ASC, "position", ASC)`. Аналогично для задач без секции (`sectionId=0`). Risk 1 audit остаётся в силе: `getDoneTasks` / `getNotDoneTasks` callers получают `.sort("position", ASC)`.
+- **Drop на свёрнутую секцию** → **финал: при hover/drop на header свёрнутой секции — авто-expand.** Реализация в `ItemTouchHelperAttacher`/`SectionDragController`:
+  - При `onChildDraw` отслеживать, что target = collapsed section header.
+  - После N мс hover (≈400 мс) → `setCurrentlyCollapsed(section, false)` (persist), `notifyItemRangeInserted` для её задач, перерисовка.
+  - При drop на header (если ещё свёрнут) — раскрыть до выполнения move.
+  - Section-as-block drag по свёрнутому header'у — отдельный кейс: блок состоит только из самого header'а (задачи скрыты, но persist'ятся как принадлежащие секции), переносим только header в Realm-позиции; список содержимого следует за ним автоматически после следующего flatten.
+- Updated **Risk 3**: больше не "пользователь не видит результата" — теперь видит, секция раскрывается под курсором.
+
 ## Tests
 _skip (manual QA)_
 

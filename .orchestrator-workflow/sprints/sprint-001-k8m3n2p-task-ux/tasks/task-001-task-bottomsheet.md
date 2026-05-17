@@ -259,6 +259,16 @@ for (FolderSlidingPanelFragment p : App.folderSlidingPanelFragments) {
 - **Q6**: BottomSheet vs BottomSheetDialogFragment — берём `BottomSheetDialogFragment` (стандарт, поддерживает rotation, back-press, outside-tap). Подтверждено R5.
 - **Q7**: Palette для group=0 — берём цвета из существующих ресурсов `R.color.colorAccent`, `colorDialogOnSurface`, `colorDialogOnSurfaceVariant`. Точный mapping defaults — может потребовать review дизайнером (тут — пользователем). Если что-то не совпадёт визуально с обычным диалогом — корректируем в Phase 6.
 
+### 9. Design clarifications (Phase 3 user feedback — 2026-05-17)
+
+- **Q1 (done toggle)** → confirmed: используем `setTaskDoneOrParticullaryDone(task, done)` (accumulation-логика сохраняется, как у тапа чек-бокса).
+- **Q3 (save strategy)** → **финал: numeric поля live, текст на dismiss.** Конкретно:
+  - `priority`, `value` (count), `maxAccumulate`, `cycling`, `done` — пишутся в Realm **немедленно** при каждом изменении в UI через мелкие сеттеры (для priority и cycling использовать существующие методы `TasksRealmController`; для value/maxAccumulate написать `setTaskValue(task, int)`, `setTaskMaxAccumulation(task, int)`, если их нет — добавить как тонкие обёртки над `editTask`).
+  - **Текст** редактируется локально, на `onDismiss` → один `TasksRealmController.editTask(task, newText, current values...)` если текст изменился (diff vs original).
+  - Категории — live (как было в R12).
+  - **R6 уточняется**: "autosave при закрытии" касается **только текста**; остальные поля уже сохранены.
+- **Q5 (keyboard UX)** → confirmed: при `etText.OnFocusChangeListener` → `behavior.setState(STATE_EXPANDED)`. Также `dialog.getWindow().setSoftInputMode(SOFT_INPUT_ADJUST_RESIZE)`.
+
 ## Tests
 _skip (manual QA)_
 
