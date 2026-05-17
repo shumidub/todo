@@ -241,29 +241,34 @@ public class MainActivity extends AppCompatActivity {
         tintActionModeBarIfCornflower();
     }
 
-    private void tintActionModeBarIfCornflower() {
+    public void tintActionModeBarIfCornflower() {
         if (viewPager == null || viewPager.getCurrentItem() != 2) return;
-        // Run on next frame so the action-mode bar is actually attached to the window.
-        getWindow().getDecorView().post(() -> {
-            View decor = getWindow().getDecorView();
-            View bar = decor.findViewById(androidx.appcompat.R.id.action_mode_bar);
-            if (bar == null) {
-                int frameworkId = getResources().getIdentifier("action_mode_bar", "id", "android");
-                if (frameworkId != 0) bar = decor.findViewById(frameworkId);
-            }
-            if (bar == null) bar = findFirstActionModeBar(decor);
-            if (bar != null) {
-                com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
-                        new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this);
-                bar.setBackgroundColor(p.bg);
-            }
-        });
+        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
+                new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this);
+        Runnable tint = () -> applyActionModeBarColor(p.bg);
+        View decor = getWindow().getDecorView();
+        decor.post(tint);
+        decor.postDelayed(tint, 100);
+    }
+
+    private void applyActionModeBarColor(int color) {
+        View decor = getWindow().getDecorView();
+        View bar = decor.findViewById(androidx.appcompat.R.id.action_mode_bar);
+        if (bar == null) {
+            int fwId = getResources().getIdentifier("action_mode_bar", "id", "android");
+            if (fwId != 0) bar = decor.findViewById(fwId);
+        }
+        if (bar == null) bar = findFirstActionModeBar(decor);
+        if (bar != null) {
+            bar.setBackgroundColor(color);
+            bar.invalidate();
+        }
     }
 
     private View findFirstActionModeBar(View v) {
         if (v == null) return null;
-        String cls = v.getClass().getSimpleName();
-        if (cls.equals("ActionBarContextView") || cls.contains("ActionMode")) return v;
+        String cls = v.getClass().getName();
+        if (cls.contains("ActionBarContextView") || cls.contains("ActionModeBar")) return v;
         try {
             String name = getResources().getResourceEntryName(v.getId());
             if (name != null && name.contains("action_mode")) return v;

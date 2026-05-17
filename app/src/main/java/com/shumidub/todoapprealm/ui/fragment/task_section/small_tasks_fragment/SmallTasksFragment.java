@@ -247,6 +247,7 @@ public class SmallTasksFragment extends Fragment {
             tasksRecyclerViewAdapter = new TasksRecyclerViewAdapter((MainActivity) getActivity(),tasks,doneTasks, this);
             tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
             tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
+            if (isInCornflowerTab()) tasksRecyclerViewAdapter.useCornflowerPalette(true);
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
             rvTasks.scrollToPosition(position);
             isAllTaskShowing = true;
@@ -256,6 +257,7 @@ public class SmallTasksFragment extends Fragment {
             tasksRecyclerViewAdapter = new TasksRecyclerViewAdapter((MainActivity) getActivity(),tasks,doneTasks, this);
             tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
             tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
+            if (isInCornflowerTab()) tasksRecyclerViewAdapter.useCornflowerPalette(true);
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
             isAllTaskShowing = false;
         }

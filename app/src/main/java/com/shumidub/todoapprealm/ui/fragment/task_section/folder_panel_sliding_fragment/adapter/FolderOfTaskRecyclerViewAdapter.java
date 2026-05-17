@@ -96,9 +96,6 @@ public class FolderOfTaskRecyclerViewAdapter
 
 
     private void setFolderTaskCounts(ViewHolder holder, int position){
-        int todayDate = Integer.valueOf("" + Calendar.getInstance().get(Calendar.DAY_OF_YEAR) +
-                Calendar.getInstance().get(Calendar.YEAR));
-
         int done = 0;
         int all = 0;
 
@@ -107,30 +104,7 @@ public class FolderOfTaskRecyclerViewAdapter
         for (TaskObject task: realmList){
 
             all = all + (task.getCountValue() * task.getMaxAccumulation());
-
-            if (!realmListFolder.get(position).isDaily()) { // todo  not day folder
-
-                int equalDateCount = 0;
-                for (RealmInteger realmInteger : task.getDateCountAccumulation()) {
-                    equalDateCount++;
-                }
-                done = done + equalDateCount * task.getCountValue();
-
-            } else {
-
-                if (task.getLastDoneDate() == todayDate) {
-                    int equalDateCount = 0;
-                    for (RealmInteger realmInteger : task.getDateCountAccumulation()) {
-                        if (realmInteger.getMyInteger() == todayDate) {
-                            equalDateCount++;
-                        }
-                    }
-                    done = done + equalDateCount * task.getCountValue();
-                }
-            }
-
-
-
+            done = done + (task.getCountAccumulation() * task.getCountValue());
 
         }
 

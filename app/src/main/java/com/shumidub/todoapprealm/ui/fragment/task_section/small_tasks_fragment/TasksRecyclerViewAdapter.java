@@ -159,7 +159,8 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
                 }
 
                 holder.tvPriority.setText(textPriority);
-                if (priorityFromTaskObject>0) holder.tvPriority.setTextColor(activity.getResources().getColor(R.color.colorAccent));
+                int accentColor = palette != null ? palette.accent : activity.getResources().getColor(R.color.colorAccent);
+                if (priorityFromTaskObject>0) holder.tvPriority.setTextColor(accentColor);
                 else holder.tvPriority.setTextColor(activity.getResources().getColor(R.color.colorWhite));
 
 
@@ -184,7 +185,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
                             ((TextView) view).setText(priorityText);
                         } else ((TextView) view).setText("!");
 
-                        if (priority>0) ((TextView) view).setTextColor(activity.getResources().getColor(R.color.colorAccent));
+                        if (priority>0) ((TextView) view).setTextColor(accentColor);
                         else ((TextView) view).setTextColor(activity.getResources().getColor(R.color.colorWhite));
 
 
@@ -233,11 +234,8 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
                             smallTasksFragment.getActivity().invalidateOptionsMenu();
                             setTasksTextColor(holder, taskObject.isDone());
 
-                            Log.d("DTAG22222", "onBindViewHolder: sdfdsf1111");
-                            if (App.getFolderSlidingPanelFragment() != null){
-                                Log.d("DTAG22222", "onBindViewHolder: sdfdsf2222");
-                                App.getFolderSlidingPanelFragment()
-                                        .notifyFolderOfTasksRVAdapterDataSetChanged();
+                            for (com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment p : App.folderSlidingPanelFragments) {
+                                p.notifyFolderOfTasksRVAdapterDataSetChanged();
                             }
                         });
 

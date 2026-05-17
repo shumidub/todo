@@ -57,6 +57,7 @@ public class FolderActionModeCallback {
                     dialog.show(activity.getSupportFragmentManager(), "deletelist");
                     return true;
                 });
+                activity.tintActionModeBarIfCornflower();
                 return true;
             }
 

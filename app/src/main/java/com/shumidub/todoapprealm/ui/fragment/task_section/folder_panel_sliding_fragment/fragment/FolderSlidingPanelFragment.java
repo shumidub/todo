@@ -191,7 +191,10 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
             @Override
             public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
-                if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) setTitle("Tasks");
+                if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    setTitle("Tasks");
+                    folderOfTaskRVAdapter.notifyDataSetChanged();
+                }
                 if (newState == SlidingUpPanelLayout.PanelState.EXPANDED){
                     finishActionMode();
                     if (FolderTaskRealmController.getFoldersList(taskGroup).size()>0) {
