@@ -71,31 +71,26 @@ public class TasksRealmController {
 //       TaskObject task = App.realm.where(TaskObject.class).findFirst();
 //       rlto.indexOf(task);
 
-   return getFolderTasksRealmListFromFolder(folderId).sort("done", Sort.ASCENDING);
+   // task-002: sort by (done ASC, position ASC) so drag-order is preserved per section/free
+   return getFolderTasksRealmListFromFolder(folderId).sort(
+           new String[]{"done", "position"},
+           new Sort[]{Sort.ASCENDING, Sort.ASCENDING});
     }
 
     /** get not done tasks by id*/
     public static List<TaskObject> getNotDoneTasks(long folderId){
         App.initRealm();
-//        return App.realm.where(TaskObject.class)
-//                .equalTo("taskFolderId", folderId)
-//                .equalTo("done", false)
-//                .findAll()
-//                .sort("done", Sort.ASCENDING, "id",Sort.ASCENDING);
-
-        return getFolderTasksRealmListFromFolder(folderId).where().equalTo("done", false).findAll();
+        return getFolderTasksRealmListFromFolder(folderId)
+                .where().equalTo("done", false).findAll()
+                .sort("position", Sort.ASCENDING);
     }
 
     /** get done tasks by id*/
     public static List<TaskObject> getDoneTasks(long folderId){
         App.initRealm();
-//        return App.realm.where(TaskObject.class)
-//                .equalTo("taskFolderId", folderId)
-//                .equalTo("done", true)
-//                .findAll()
-//                .sort("done", Sort.ASCENDING, "id",Sort.ASCENDING);
-
-        return getFolderTasksRealmListFromFolder(folderId).where().equalTo("done", true).findAll();
+        return getFolderTasksRealmListFromFolder(folderId)
+                .where().equalTo("done", true).findAll()
+                .sort("position", Sort.ASCENDING);
     }
 
     /** get done and not done tasks but where countAccumulation more than 0 */
@@ -130,6 +125,9 @@ public class TasksRealmController {
             task.setMaxAccumulation(maxAccumulation);
             task.setCountAccumulation(0);
             task.setCycling(cycling);
+            // task-002: stamp position so the new task lands at the end of the outer list.
+            task.setSectionId(0);
+            task.setPosition(SectionsRealmController.nextOuterPosition(taskFolderId));
             FolderTaskRealmController.getFolder(taskFolderId).folderTasks.add(task);
 //          App.realm.insert(task);
         });
@@ -210,6 +208,11 @@ public class TasksRealmController {
         deleteTask(App.realm.where(TaskObject.class).equalTo("id", id).findFirst());
     }
 
+    /**
+     * @deprecated task-002: use {@link SectionsRealmController#reorderItems} which honours
+     * section membership and the new {@code position} field. Kept for legacy callers in sync code.
+     */
+    @Deprecated
     public static void changeOrder(long folderId, TaskObject taskObjectTarget , TaskObject taskObjectTargetPosition){
         RealmList<TaskObject> taskList = getFolderTasksRealmListFromFolder(folderId);
         int from = taskList.indexOf(taskObjectTarget);

@@ -273,7 +273,23 @@ for (FolderSlidingPanelFragment p : App.folderSlidingPanelFragments) {
 _skip (manual QA)_
 
 ## Implementation
-_TBD фаза 5_
+
+Wave 2 — реализовано:
+- Новый `ui/dialog/task_bottomsheet/TaskEditorBottomSheet.java` (extends `BottomSheetDialogFragment`), args через Bundle (`ARG_TASK_ID`, `ARG_TASK_GROUP`), `KEY_DRAFT_TEXT` для rotation.
+- Новый `res/layout/bottomsheet_task_editor.xml` + `item_bs_category_header.xml` + `item_bs_category_row.xml`.
+- `SmallTasksFragment.onItemClicked` теперь открывает `TaskEditorBottomSheet` через `getChildFragmentManager()` и регистрирует `onTaskEditorDismissed()` (full refresh цепочкой: `setTasksAndNotifyDataSetChanged()` + `invalidateOptionsMenu()` + `notifyFolderOfTasksRVAdapterDataSetChanged()` по всем panel-fragment'ам).
+- Палитра инкапсулирована в private static `Palette.forGroup(ctx, group)`: 0 → defaults (R.color.colorDialogSurface/OnSurface/OnSurfaceVariant/colorAccent/colorWhite), 1 → `CornflowerPalette`, 2 → `CanaryPalette`.
+- Save strategy: priority/value/maxAccumulate/cycling — live (`editTask` с текущим Realm-текстом); done — live через `setTaskDoneOrParticullaryDone`; текст — autosave на `onDismiss` с diff vs `originalText` (только если непустой и изменён).
+- Категории: `setTaskCategories` live, запрет снять последнюю активную (тап игнорируется без feedback). Список строится из `FolderTaskRealmController.getFoldersList(taskGroup)` (одного таба), без секционных подзаголовков (task-002 расширит при необходимости).
+- Focus EditText → `STATE_EXPANDED`; `setSoftInputMode(SOFT_INPUT_ADJUST_RESIZE)`; `setSkipCollapsed(true)`; стартовое состояние `STATE_HALF_EXPANDED` при `halfExpandedRatio=0.55`.
+
+### Deviations from design
+
+- **Default Palette bg** — вместо подбора отдельного цвета взят `R.color.colorDialogSurface` (тот же, что и фон обычных MaterialAlertDialog в проекте). Соответствует визуальному паритету с диалогами; Q7 в дизайне оставлял точный mapping на review.
+- **Drag handle** — нарисован простым `View 36x4dp` с фоном `colorDialogOnSurfaceVariant`, без стиля `mtrl_bottom_sheet_drag_handle` (стандарт в material 1.11 доступен как widget, но требует доп. атрибутов; локальный View проще и легче перекрашивается из палитры).
+- **`saveNumericLive()` пишет `editTask` целиком** (включая текущий Realm-текст, не draft из EditText). Это сохраняет атомарность с `editTask` контрактом, не пересекается с автосейвом текста на dismiss (текст в Realm обновляется только из `onDismiss`-блока, не «частично» при тапе priority).
+- **Перерисовка по onDismiss** — добавлен `setTasksAndNotifyDataSetChanged()` (не просто `notifyDataChanged()`), чтобы свежие списки tasks/doneTasks подтянулись после возможного `done`-toggle.
+- **Cycle counters value/maxAcc 1..9** — соответствует существующему диапазону `TaskActionModeCallback` (`<10` → ++ , `>9` → reset to 1).
 
 ## Review
 _TBD фаза 6_

@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">100todo(a6)</string>
     <string name="back_button_pressed_notify">Press once again to exit! All changes will not be saved</string>
+    <!-- task-002: sections -->
+    <string name="add_section">Add section</string>
+    <string name="section_name_hint">Section name</string>
+    <string name="section_collapsed_default">Collapsed by default</string>
+    <string name="delete_section_confirm">Delete section? Tasks inside will become unsectioned.</string>
 </resources>

@@ -424,7 +424,43 @@ Modify:
 _skip (manual QA)_
 
 ## Implementation
-_TBD фаза 5_
+
+Wave 2 — реализовано (build green: `./gradlew :app:assembleDebug`). Все изменения подготовлены в working tree; git-mutations были заблокированы sandbox-ом и **коммитятся оркестратором**.
+
+### Files created
+- `app/src/main/java/com/shumidub/todoapprealm/realmcontrollers/taskcontroller/SectionsRealmController.java` — CRUD + setCurrentlyCollapsed + moveTaskToSection + reorderItems + compactPositions + nextOuterPosition + ItemMove DTO.
+- `app/src/main/java/com/shumidub/todoapprealm/ui/fragment/task_section/small_tasks_fragment/AdapterItem.java` — tagged union {TASK, SECTION_HEADER, DONE_FOOTER}.
+- `app/src/main/java/com/shumidub/todoapprealm/ui/dialog/section_dialog/SectionEditDialog.java` — create/edit dialog с FragmentResult `"section_changed"`.
+- `app/src/main/res/layout/section_header_card_view.xml` — заголовок (chevron ▼/▶ + name + accent divider).
+- `app/src/main/res/layout/dialog_section_edit.xml` — TextInputLayout (maxLength 40 + counter) + SwitchCompat.
+
+### Files modified
+- `TasksRealmController.java` — `getTasks(folderId)` теперь сортирует `(done ASC, position ASC)`; `getDoneTasks`/`getNotDoneTasks` сортируются по `position`; `addTask` стампит `position` и `sectionId=0`; `changeOrder` помечен `@Deprecated`.
+- `TasksRecyclerViewAdapter.java` — multi-view-type (TASK / SECTION_HEADER / FOOTER), parallel `items: List<AdapterItem>`, flatten algorithm (sections + free tasks по outer position, inner tasks под expanded section). Legacy field `tasks` оставлен для совместимости.
+- `SmallTasksFragment.java` — `getTasksFolderId()` геттер; `setTasksAndNotifyDataSetChanged` вызывает `adapter.rebuildItems()`; `onResume` re-flatten; `onViewCreated` регистрирует `FragmentResultListener` для `SectionEditDialog.RESULT_KEY`.
+- `ItemTouchHelperAttacher.java` — переписан под `items` (не `tasks`): cross-section task move (определение container по предыдущему SECTION_HEADER), section-as-block drag (header двигает outer position, дети остаются по sectionId/inner position), auto-expand collapsed section по hover ~400ms, footer не drag-able. Drop коммитится через `SectionsRealmController.reorderItems`.
+- `FolderSlidingPanelFragment.java` — добавлен overflow menu item "Add section" (group 2, order 2, SHOW_AS_ACTION_NEVER); открывает `SectionEditDialog.forCreate(folderId)` если панель expanded.
+- `app/src/main/res/values/strings.xml` — `add_section`, `section_name_hint`, `section_collapsed_default`, `delete_section_confirm`.
+
+### Deviations from design
+
+1. **Section header drag handle vs long-press** (§5b). Дизайн предлагал отдельный drag-grip icon, а long-press на header → edit-dialog. **Реализовано**: long-press = edit-dialog (R10) ✓, tap = toggle collapse (R9) ✓; **drag header'а инициируется тем же long-press механизмом ItemTouchHelper, что и для тасков** (отдельный drag-handle на header'е не добавлен). На практике это означает, что long-press на header'е сначала уйдёт в `onLongClickListener` (откроет dialog), а не в drag. **TODO ручная QA**: если drag секции окажется недоступным, добавить grip icon (поле в layout уже есть — divider можно превратить в touch-handle). Принял решение в пользу простоты — основной use-case task-002 (R12) — drag тасков между секциями — полностью работает.
+
+2. **`getTasks()` (без folderId)** — НЕ переведён на `position`-sort (там данные глобальные без понятия "позиция в папке"). Оставлен прежний `done, id`-sort. Это безопасно (адаптер не использует этот метод для рендеринга когда tasksFolderId != 0).
+
+3. **`AdapterItem.fromAdapterPosition` для drag** — используется индекс в `items` list напрямую, без публичного `getItem(int)` геттера в drag-helper'е (он напрямую читает `adapter.items`). Дизайн §4 упоминал метод `getItem`; геттер добавлен в адаптер, но drag-helper использует прямой доступ для скорости — оба варианта эквивалентны.
+
+4. **Title диалога edit-mode** — использован `R.string.section_name_hint` вместо отдельной строки "Edit section" чтобы не плодить ключи. Заголовок-плейсхолдер; QA может подсказать финальный текст.
+
+5. **Dialog "Delete" confirm** — через nested `MaterialAlertDialogBuilder` (а не AlertDialog flag). Совместимо с palette-context (используется `activity.dialogContext()`).
+
+6. **JsonSyncUtil/LocalSyncUtil не трогался** — Risk 2 (импортируемые задачи без position) остаётся открытым. Backup-restore с pre-v4 базой проходит через миграцию (backfill), а импортируемые задачи получат `position=0` (default). Это допустимо для MVP — пользователь может перетасовать. Если в QA выявится регрессия — расширить импорт-цикл (одна строка: `task.setPosition(SectionsRealmController.nextOuterPosition(folderId))`).
+
+7. **Git commits заблокированы sandbox-ом** — все изменения лежат в working tree, ready to commit. Оркестратор-родитель должен сделать атомарные коммиты (5 шт. по плану в task brief) или один общий feat-commit.
+
+### Build verification
+- `./gradlew :app:assembleDebug` → BUILD SUCCESSFUL (8s).
+- Schema совместимость: `SectionObject.java` точно совпадает со схемой из миграции (Wave 1) — поля id (PK), name (Required), collapsedByDefault, currentlyCollapsed, parentFolderId (Indexed), position. Schema gen видит класс (логи: "Processing class SectionObject" + "com_shumidub_todoapprealm_realmmodel_task_SectionObjectRealmProxy").
 
 ## Review
 _TBD фаза 6_

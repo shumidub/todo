@@ -499,6 +499,21 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             }
          return true;});
 
+        // task-002: Add section (overflow only; no-op unless a folder is open)
+        MenuItem addSection = menu.add(2, 4, 2, R.string.add_section);
+        addSection.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        addSection.setOnMenuItemClickListener(v -> {
+            if (slidingUpPanelLayout.getPanelState() != SlidingUpPanelLayout.PanelState.EXPANDED) return true;
+            SmallTasksFragment current = (SmallTasksFragment) smallTaskFragmentPagerAdapter
+                    .getItem(smallTasksViewPager.getCurrentItem());
+            if (current != null && current.getTasksFolderId() != 0) {
+                com.shumidub.todoapprealm.ui.dialog.section_dialog.SectionEditDialog
+                        .forCreate(current.getTasksFolderId())
+                        .show(getActivity().getSupportFragmentManager(), "addsection");
+            }
+            return true;
+        });
+
         MenuItem sync = menu.add(2,3,1,"Sync ");
         sync.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         sync.setIcon(R.drawable.ic_sync);
