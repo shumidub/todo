@@ -4,7 +4,7 @@
 - **Task token:** 5d0d033
 - **Project:** todo100android
 - **Cross-project ref:** —
-- **Feature flag:** (определить на Phase 3, возможно не нужен — это bugfix)
+- **Feature flag:** not required (bugfix)
 - **Status:** pending
 
 ## Acceptance criteria
@@ -17,6 +17,10 @@
 - [ ] Регрессия должна быть зафиксирована и в случае комбинации с секциями (внутри секций тоже выполненные скрыты в default-режиме).
 
 ## Requirements
+
+> **Feature flag:** not required (bugfix).
+> **Session persistence of `isAllTaskShowing`:** out-of-scope for this task (текущее поведение `onViewCreated → isAllTaskShowing = false` — это не Wave2-регрессия; вынести в отдельный тикет если понадобится).
+> **Footer text:** out-of-scope. Текст "Done N tasks" остаётся без изменений.
 
 ### Контекст (как сейчас в коде)
 
@@ -39,6 +43,7 @@
 - Done-задачи **внутри секции** должны идти **в самом низу секции**, после всех её undone (как и сейчас работает через сортировку `done ASC` в Realm-запросе + bucketing по `sectionId` в `flatten`).
 - Done-задачи без секции (`sectionId == 0`) — в самом низу внешнего списка, перед футером.
 - Тоггл выключается повторным кликом по тому же футеру.
+- Done-задачи с `sectionId != 0` рендерятся под хэдером своей секции в bucket (как и предусмотрено `flatten()`). В этом режиме "Empty" placeholder **не показывается** для таких секций — done-задачи заполняют bucket. Проверка — Phase 7 manual QA: (a) включить show-completed, (b) убедиться что done с sectionId оказываются внутри своей секции, (c) что секция не пустая визуально.
 
 ### R3. Переключение режима — мгновенный rerender
 
@@ -48,13 +53,21 @@
 
 - Поведение идентично на всех трёх вкладках. `FolderSlidingPanelFragment` каждой вкладки внутри использует `SmallTasksFragment` — фильтрация done живёт **в одном месте** (адаптер + `tasks` поле), палитра не влияет на логику.
 
-### R5. Done-задачи внутри секций
+### R5. Done-задачи внутри секций + взаимодействие с "Empty" (coordinated with task-002 Q3, var A)
 
-- В default-режиме done-задачи скрыты — **даже если** секция содержит только done-задачи (т.е. ни одной undone). В этом случае секция формально пустая для `flatten()` (см. task-002 этого спринта, Q3 — `bySection.get(sectionId) == null` если нет undone). Интеракция с placeholder "Empty" из task-002 — **Open Question** (Q1 ниже).
+- В default-режиме done-задачи скрыты — **даже если** секция содержит только done-задачи (т.е. ни одной undone). В этом случае секция формально пустая для `flatten()` (см. task-002 этого спринта, Q3 — `bySection.get(sectionId) == null` если нет undone).
+- Для секции, у которой в default-режиме нет ни одной undone-задачи (только done или вообще пусто), показывается placeholder **"Empty"** под хэдером — вариант A, согласованный с task-002 Q3.
+- В show-completed-режиме done-задачи такой секции отрисуются под её хэдером, и **"Empty" не показывается** (bucket не пустой).
 
 ### R6. Done-фильтр не зависит от collapsed/expanded
 
-- Свёрнутые секции и так не показывают inner-tasks (см. `emitSection`, `!s.isCurrentlyCollapsed()`). Done-фильтр работает ортогонально: даже если секция expanded и в ней есть только done-задачи, в default-режиме показывается только хэдер (+ опционально "Empty" — см. R5/Q1).
+- Свёрнутые секции и так не показывают inner-tasks (см. `emitSection`, `!s.isCurrentlyCollapsed()`). Done-фильтр работает ортогонально: даже если секция expanded и в ней есть только done-задачи, в default-режиме показывается только хэдер + "Empty" (см. R5).
+
+### R7. Fix point — где класть фикс
+
+- **Решение:** добавить `tasksRecyclerViewAdapter.rebuildItems()` внутрь `SmallTasksFragment.notifyDataChanged()` **перед** `tasksRecyclerViewAdapter.notifyDataSetChanged()`.
+- **Файл:** `app/src/main/java/com/shumidub/todoapprealm/ui/fragment/task_section/small_tasks_fragment/SmallTasksFragment.java`, строки **252-275** (метод `notifyDataChanged()`).
+- **Почему здесь:** минимальный diff, чинит все call-sites одной строкой — checkbox-handler (`TasksRecyclerViewAdapter.bindTask()` строки 312-325) и `TaskActionModeCallback` (строки 156, 282, 299 — delete / categories / edit) дёргают `notifyDataChanged()` после мутаций Realm. После вызова `rebuildItems()` snapshot `items` пересоберётся из актуального `tasks` (RealmResults proxy с фильтром `done=false` в default-режиме), и done-задачи исчезнут как раньше.
 
 ### Diagnosis hints
 
@@ -86,16 +99,7 @@
 
 ## Open Questions
 
-1. **Q1 — Взаимодействие с "Empty" из task-002.**
-   **Answer (default — coordinated with task-002 Q3):** Вариант A. Если в секции нет undone-задач (а done скрыты в default-режиме), показываем "Empty". В show-completed-режиме done-задачи с `sectionId` отрисуются под хэдером, "Empty" не показывается.
-2. **Q2 — Сохранение `isAllTaskShowing` между сессиями.**
-   **Answer (default):** Out-of-scope. Текущее поведение `onViewCreated → isAllTaskShowing = false` — это не Wave2-регрессия. Вынести в отдельный тикет если будет нужно.
-3. **Q3 — Где класть фикс.**
-   **Answer (default):** Вариант A — добавить `tasksRecyclerViewAdapter.rebuildItems()` внутрь `SmallTasksFragment.notifyDataChanged()` перед `notifyDataSetChanged()`. Минимальный diff, чинит все call-sites одной строкой (checkbox + TaskActionModeCallback × 3).
-4. **Q4 — Текст футера в show-completed-режиме.**
-   **Answer (default):** Out-of-scope. Не меняем "Done N tasks". Фиксим только баг скрытия.
-5. **Q5 — Done-задачи с sectionId в show-completed.**
-   **Answer (default):** Если у done-задачи `sectionId != 0`, она отрендерится в bucket секции под хэдером (как и предусмотрено `flatten()`). Проверим в Phase 7 manual QA: (a) включить show-completed, (b) убедиться что done с sectionId оказываются внутри своей секции, (c) что секция не пустая визуально.
+All questions resolved in Phase 2 — see commit history.
 
 ## Design
 
