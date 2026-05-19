@@ -308,4 +308,4 @@ Verified:
 
 ## Manual verification
 
-<заполняется на Phase 7>
+Phase 7 regression: long-press on folder card crashed `EditDelFolderDialog` with `android.view.InflateException` on the new "Tab color" TextView (line #44 of `dialog_add_folder_layout.xml`) → fixed in commit c91a275. Root cause: `TextAppearance.App.Dialog.LabelSmall` referenced `?attr/colorOnSurfaceVariant`, a Material 3 token absent from `Theme.MaterialComponents.*.Bridge`; on the default (green) tab `MainActivity.dialogContext()` returned the raw activity context (no MaterialAlertDialog overlay applied for inflation), so the attribute failed to resolve at TextView inflate. Fix swaps the label to `?android:attr/textColorSecondary` (defined in every theme, remapped by each MaterialAlertDialog overlay to the equivalent muted variant) and wraps `dialogContext()`'s default branch with `ThemeOverlay.App.MaterialAlertDialog` so future Material attributes resolve consistently. `./gradlew assembleDebug` + `installDebug` succeed; app launches cleanly with no InflateException in logcat (verified on Pixel_9a AVD, default green tab path).
