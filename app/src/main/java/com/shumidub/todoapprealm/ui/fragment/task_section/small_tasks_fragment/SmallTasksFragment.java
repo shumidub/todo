@@ -261,6 +261,7 @@ public class SmallTasksFragment extends Fragment {
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
         }
         else{
+            tasksRecyclerViewAdapter.rebuildItems();
             tasksRecyclerViewAdapter.notifyDataSetChanged();
         }
 
