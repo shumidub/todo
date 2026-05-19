@@ -84,7 +84,176 @@ All questions resolved in Phase 2 — see commit history for the original Q&A.
 
 ## Design
 
-<заполняется на Phase 3>
+### Approach
+
+Замена `CheckBox @+id/checkbox_tasks2` в `dialog_add_folder_layout.xml` на блок из двух элементов: label "Tab color" + `MaterialButtonToggleGroup` с тремя `MaterialButton`-toggle-детьми (по одной на green/blue/yellow). Логику читает оба диалога (`AddFolderDialog`, `EditDelFolderDialog`) — отображение блока picker'а константно (всегда `visibility="visible"`); ничего toggle-видимости в EDIT vs. ADD не делаем, потому что picker имеет смысл в обоих режимах.
+
+**Структура нового блока в `dialog_add_folder_layout.xml`** (вставляется после `checkboxIsDaily`, на месте удалённого `checkbox_tasks2`):
+
+```
+<TextView
+    android:id="@+id/labelTabColor"
+    style="@style/TextAppearance.App.Dialog.LabelSmall"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:text="Tab color"/>
+
+<com.google.android.material.button.MaterialButtonToggleGroup
+    android:id="@+id/tabColorToggleGroup"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    app:singleSelection="true"
+    app:selectionRequired="true">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/tabColorGreen"
+        style="@style/Widget.App.Button.TabColorSwatch.Green"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="GREEN"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/tabColorBlue"
+        style="@style/Widget.App.Button.TabColorSwatch.Blue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="BLUE"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/tabColorYellow"
+        style="@style/Widget.App.Button.TabColorSwatch.Yellow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="YELLOW"/>
+
+</com.google.android.material.button.MaterialButtonToggleGroup>
+```
+
+`xmlns:app` уже доступен (LinearLayout root) — если auto-import linter ругается, добавить `xmlns:app="http://schemas.android.com/apk/res-auto"` в root.
+
+**Стили (новые, в `app/src/main/res/values/styles.xml`)**:
+
+1. `TextAppearance.App.Dialog.LabelSmall` — мелкий подписной стиль:
+   - parent: `TextAppearance.MaterialComponents.Caption`
+   - `android:textColor`: `?attr/colorOnSurfaceVariant` (резолвится в диалоге как `colorDialogOnSurfaceVariant` / `cornflowerTextSoft` / `canaryTextSoft` соответственно)
+   - `android:textSize`: `12sp`
+   - `android:letterSpacing`: `0.05`
+   - `android:textAllCaps`: `true`
+
+2. Базовый стиль `Widget.App.Button.TabColorSwatch`:
+   - parent: `Widget.MaterialComponents.Button.OutlinedButton` (даёт нужный API для `strokeColor`/`strokeWidth` и убирает теневой elevation)
+   - `android:textColor`: `@color/colorWhite` (контрастный к зелёному/синему; для жёлтого см. ниже override)
+   - `android:textSize`: `12sp`
+   - `android:letterSpacing`: `0.05`
+   - `android:insetTop`: `0dp`, `android:insetBottom`: `0dp` (плотная упаковка по высоте)
+   - `app:cornerRadius`: `8dp`
+   - `app:strokeWidth`: `0dp` (по умолчанию — без border)
+   - `app:strokeColor`: `@color/tabSwatchStrokeColor` (см. ниже color-state-list)
+   - `android:minHeight`: `40dp`
+   - `app:rippleColor`: `@color/colorWhiteTransparent`
+
+3. Конкретные стили:
+   - `Widget.App.Button.TabColorSwatch.Green` → `app:backgroundTint=@color/colorBackgroundActivity` (`#599c74`)
+   - `Widget.App.Button.TabColorSwatch.Blue` → `app:backgroundTint=@color/cornflowerBg` (`#5C7CC0`)
+   - `Widget.App.Button.TabColorSwatch.Yellow` → `app:backgroundTint=@color/canaryBg` (`#FFD93D`), плюс override `android:textColor=@color/canaryText` (тёмный текст на жёлтом фоне)
+
+**Selected-индикация** через `MaterialButtonToggleGroup`: новый color-state-list `app/src/main/res/color/tab_swatch_stroke_color.xml`:
+
+```
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:color="@color/colorWhite"/>
+    <item android:color="@color/colorTransparent"/>
+</selector>
+```
+
+И парный color-state-list для `strokeWidth` нельзя задать (это размерность, не цвет), поэтому управляем толщиной программно при чек-листенере (`button.setStrokeWidth(checked ? 2dp : 0dp)`) **или** проще: всегда `app:strokeWidth=2dp` + selector цвета (`@color/colorWhite` в checked, `@color/colorTransparent` в дефолте). Идём по второму варианту — без кода в фрагментах.
+
+Итог стилей: `Widget.App.Button.TabColorSwatch` получает `app:strokeWidth=2dp` + `app:strokeColor=@color/tab_swatch_stroke_color` (selector).
+
+**Контрастность текста**: GREEN (`#599c74`) и BLUE (`#5C7CC0`) — на белом тексте AA контраст ≥ 4.5:1; YELLOW (`#FFD93D`) — белый текст не пройдёт по контрасту, поэтому жёлтая кнопка переопределяет `textColor` на `@color/canaryText` (`#2E2406`), как в `CanaryPalette`-фрагменте.
+
+### Affected modules/files
+
+- `app/src/main/res/layout/dialog_add_folder_layout.xml` — удалить `CheckBox @+id/checkbox_tasks2`, добавить `TextView labelTabColor` + `MaterialButtonToggleGroup tabColorToggleGroup` с тремя `MaterialButton`-детьми. *Причина:* реализация UI requirement R1/R2/R7/R9.
+- `app/src/main/res/values/styles.xml` — добавить `TextAppearance.App.Dialog.LabelSmall` и набор `Widget.App.Button.TabColorSwatch[.Green|.Blue|.Yellow]`. *Причина:* стили нужны для tone-mapping и selected-индикации без логики в Java.
+- `app/src/main/res/color/tab_swatch_stroke_color.xml` (новый файл) — color-state-list для белой обводки выбранной кнопки. *Причина:* стандартный Android-механизм для state-зависимого цвета (R9).
+- `app/src/main/java/com/shumidub/todoapprealm/ui/dialog/task_folder_dialog/EditDelFolderDialog.java` — удалить поле `CheckBox cbTasks2` и его init, добавить поле `MaterialButtonToggleGroup tabColorToggleGroup`; в EDIT-ветке: после `cbIsDaily.setChecked(...)` — `tabColorToggleGroup = view.findViewById(R.id.tabColorToggleGroup)`, выставить checked-кнопку по `FolderTaskRealmController.getFolderGroup(folderObject)` (group → `R.id.tabColorGreen/Blue/Yellow`, fallback на green при `-1`). В `setPositiveButton`: заменить `int targetGroup = cbTasks2 != null && cbTasks2.isChecked() ? 1 : 0;` на `int targetGroup = resolveSelectedGroup(tabColorToggleGroup);` (private helper). *Причина:* R1.
+- `app/src/main/java/com/shumidub/todoapprealm/ui/dialog/task_folder_dialog/AddFolderDialog.java` — добавить поле `MaterialButtonToggleGroup tabColorToggleGroup`; в `onCreateDialog` после `cbIsDaily = view.findViewById(...)` — `tabColorToggleGroup = view.findViewById(R.id.tabColorToggleGroup)`, выставить checked-кнопку из `ARG_TASK_GROUP` (0 → green, 1 → blue, 2 → yellow). В `setPositiveButton`: заменить `int group = getArguments() == null ? 0 : getArguments().getInt(ARG_TASK_GROUP, 0);` на `int group = resolveSelectedGroup(tabColorToggleGroup);`. *Причина:* R2.
+
+**Не затрагиваются**: `FolderTaskRealmController`, `RealmFoldersContainer`, `App.java`, `RealmMigrations.java`, `MainPagerAdapter`, темы `ThemeOverlay.App.MaterialAlertDialog.Cornflower`/`.Canary`, палитры `colors.xml` (новых цветов не добавляем, ничего не переименовываем).
+
+### API/contracts
+
+**`EditDelFolderDialog.java`**:
+- Удаляется: `CheckBox cbTasks2;` (field), `cbTasks2 = view.findViewById(R.id.checkbox_tasks2);`, `cbTasks2.setVisibility(View.VISIBLE);`, `cbTasks2.setChecked(...)`, тернарник `cbTasks2 != null && cbTasks2.isChecked() ? 1 : 0`.
+- Добавляется: `MaterialButtonToggleGroup tabColorToggleGroup;` (field), init по `getFolderGroup`, чтение через helper.
+- Helper (private static в этом же файле, либо инлайн):
+  ```
+  private static int resolveSelectedGroup(MaterialButtonToggleGroup g){
+      int checkedId = g.getCheckedButtonId();
+      if (checkedId == R.id.tabColorBlue) return 1;
+      if (checkedId == R.id.tabColorYellow) return 2;
+      return 0; // green / fallback
+  }
+  ```
+- Init helper (для setChecked на нужную кнопку по group):
+  ```
+  private static void setCheckedByGroup(MaterialButtonToggleGroup g, int group){
+      int id = R.id.tabColorGreen;
+      if (group == 1) id = R.id.tabColorBlue;
+      else if (group == 2) id = R.id.tabColorYellow;
+      g.check(id);
+  }
+  ```
+- Все остальные действия `onPositiveClick` (editFolder, finishActionMode, notifySmallTasksViewPagerListsChanged, hideSoftInput, showToast) — без изменений. Вызов `moveFolderToGroup(folderObject, targetGroup)` — без изменений (контракт уже корректно обрабатывает 0/1/2 и no-op при `current == targetGroup`).
+
+**`AddFolderDialog.java`**:
+- Добавляется: `MaterialButtonToggleGroup tabColorToggleGroup;` (field), init после `cbIsDaily = ...`.
+- В `setPositiveButton` lambda: `int group = resolveSelectedGroup(tabColorToggleGroup);` вместо чтения `ARG_TASK_GROUP`. Сам `ARG_TASK_GROUP` остаётся — используется только для **начального** значения picker'а в `onCreateDialog`.
+- Вызов `FolderTaskRealmController.addFolder(text, isDaily, group)` — без изменений.
+- Дублируем те же два private static helper'а (`resolveSelectedGroup`, `setCheckedByGroup`), либо выносим в отдельный util-класс (Phase 5 — выбор разработчика, не блокирует acceptance).
+
+**Контракты `FolderTaskRealmController`**: не меняются. `getFolderGroup`, `moveFolderToGroup`, `addFolder` уже корректны.
+
+### Feature flag
+
+**Не требуется.** Это in-place замена UI-виджета (checkbox → toggle-group) в существующем диалоге, без альтернативного пути и без выкатки на пользователей "по частям". Маппинг данных в обе стороны идентичен (group ↔ button). См. `feature-flags.md` — flag нужен для path-divergence, чего здесь нет.
+
+### Need new ADR?
+
+**Да — маленькая ADR.** Это первое использование `MaterialButtonToggleGroup` в проекте; стоит зафиксировать паттерн чтобы Phase 5 и будущие задачи (например, color-picker для task-приоритета) шли по этой же дороге.
+
+#### Proposed ADR
+
+**ADR-0001 — Single-select choice через `MaterialButtonToggleGroup` в диалогах**
+
+- **Context**: Нужен компактный 3-way picker для выбора таба папки внутри `MaterialAlertDialog`. Альтернативы: `RadioGroup` + кастомные drawables, `Spinner`, `ChipGroup` с `singleSelection`, набор `MaterialButton` руками + одна-выбрана-логика.
+- **Decision**: Используем `com.google.android.material.button.MaterialButtonToggleGroup` (Material 1.11, уже в зависимостях) с `app:singleSelection=true` + `app:selectionRequired=true`. Selected-индикация через `app:strokeColor` (selector по `state_checked`) + `app:strokeWidth=2dp`. Цвета fill — через `app:backgroundTint` ссылающийся на существующие палитровые цвета (`colorBackgroundActivity`, `cornflowerBg`, `canaryBg`).
+- **Consequences**:
+  - Picker сохраняет визуальный язык табов независимо от `ThemeOverlay` текущего таба (swatch'и всегда в родных цветах).
+  - Будущие single-select pickers в проекте (приоритет, иконка папки и т.д.) идут по этому же паттерну.
+  - Зависимости не добавляются; min API 24 поддерживается.
+  - Нельзя задать toggle-state-dependent `strokeWidth` (только цвет) → используем постоянный `strokeWidth=2dp` + transparent цвет в дефолтном state.
+- **Alternatives rejected**:
+  - `ChipGroup` — выглядит "тегово", визуально слабее как color swatch.
+  - `RadioGroup` — нужен ручной drawable per state, более многословно в XML, не даёт material-ripple "из коробки".
+  - `Spinner` — не показывает все 3 опции одновременно, не передаёт цвет до раскрытия.
+
+ADR будет сохранён в `/Users/ashumidub/projects/todo100android/.orchestrator-workflow/adr/ADR-0001-material-button-toggle-group.md` (директория пока пустая) на Phase 5 — content выше — это draft для согласования.
+
+### Risks / alternatives
+
+- **R1 — Контраст текста на yellow swatch**: белый текст на `canaryBg=#FFD93D` — ~1.5:1 (fail). Решено: override `android:textColor=@color/canaryText` (#2E2406) только для yellow-стиля. На green/blue белый текст проходит AA.
+- **R2 — Selected-индикация через `strokeWidth` selector**: `app:strokeWidth` в Material `MaterialButton` принимает только статичное значение (dimen, не color-state-list-of-dimens). Решение: всегда `2dp`, цвет = selector (`white` selected / `transparent` иначе). Запасной вариант — слушать `addOnButtonCheckedListener` и звать `button.setStrokeWidth(checked ? 2dp : 0dp)` в коде (overhead на Phase 5; не выбираем как первый подход).
+- **R3 — `MaterialButtonToggleGroup` overrides `backgroundTint` через ThemeOverlay**: в редких случаях родительский `colorPrimary`/`colorSurface` могут перекрыть наш explicit `backgroundTint`. Mitigation: задаём `app:backgroundTint` напрямую на каждой кнопке (XML override) — это побеждает theme attribute. Проверено в Material 1.11.
+- **R4 — Размер диалога**: добавляем ~64dp вертикально (label 16dp + 4dp gap + button 40dp + margin 4dp). Текущий диалог низкий, place есть. Если будущий title станет длинным — кнопки переносятся не будут (singleline), `layout_weight=1` обеспечивает равные доли.
+- **R5 — `getCheckedButtonId()` возвращает `View.NO_ID` если ничего не выбрано**: невозможно благодаря `selectionRequired=true` + явный `check(...)` в init. Helper всё равно фоллбэчит на 0 (green) — defensive.
+- **Alternative для AddFolderDialog**: можно было бы оставить `ARG_TASK_GROUP` источником истины и сделать picker read-only. Отклонено — R2 явно требует, чтобы пользователь мог изменить выбор при создании.
 
 ## Tests
 
