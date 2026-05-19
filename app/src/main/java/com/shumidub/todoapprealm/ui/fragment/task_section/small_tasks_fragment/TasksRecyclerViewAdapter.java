@@ -16,8 +16,8 @@ import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.SectionsRealmCo
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController;
 import com.shumidub.todoapprealm.realmmodel.task.SectionObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
+import com.shumidub.todoapprealm.ui.actionmode.task.SectionActionModeCallback;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
-import com.shumidub.todoapprealm.ui.dialog.section_dialog.SectionEditDialog;
 import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
 import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
 import androidx.cardview.widget.CardView;
@@ -309,7 +309,8 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         holder.itemView.setOnLongClickListener(v -> {
             SectionObject s = SectionsRealmController.getSection(sectionId);
             if (s != null && s.isValid()) {
-                SectionEditDialog.forEdit(s).show(activity.getSupportFragmentManager(), "editsection");
+                activity.startSupportActionMode(
+                        new SectionActionModeCallback().getCallback(activity, smallTasksFragment, sectionId));
             }
             return true;
         });

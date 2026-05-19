@@ -15,4 +15,7 @@
     <string name="tab_color_green">GREEN</string>
     <string name="tab_color_blue">BLUE</string>
     <string name="tab_color_yellow">YELLOW</string>
+    <!-- sprint-002 polish: section ActionMode -->
+    <string name="action_edit_section">Edit section</string>
+    <string name="action_delete_section">Delete section</string>
 </resources>
