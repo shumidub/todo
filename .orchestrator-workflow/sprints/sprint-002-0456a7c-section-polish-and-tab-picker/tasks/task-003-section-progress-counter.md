@@ -185,7 +185,32 @@ Manual QA.
 
 ## Implementation
 
-<заполняется на Phase 5>
+### Files changed
+
+1. `app/src/main/res/layout/section_header_card_view.xml`
+   - Added `xmlns:tools` namespace on root `LinearLayout` (for `tools:text` preview).
+   - Added new `TextView @+id/section_progress` as the **last child** of the root `LinearLayout`, after the existing `View @+id/section_divider` (per Design R7 — divider is `width=0/height=0/gone`, so position is irrelevant for visual order).
+   - Attributes per R8: `layout_width="wrap_content"`, `layout_height="wrap_content"`, `paddingStart="8dp"`, `gravity="center_vertical"`, `textSize="12sp"`, `textStyle="normal"`, `textColor="#B3FFFFFF"` (semi-transparent white, alpha 70%), `maxLines="1"`, `tools:text="0/0"`.
+   - `section_name` keeps `layout_weight=1` — long names ellipsize, counter stays right-aligned (R13).
+
+2. `app/src/main/res/values/strings.xml`
+   - Added `<string name="section_progress_a11y">%1$d of %2$d tasks done</string>` under the sprint-002 task-003 section.
+   - English-only (no `values-ru/` exists in the project — confirmed via find).
+
+3. `app/src/main/java/com/shumidub/todoapprealm/ui/fragment/task_section/small_tasks_fragment/TasksRecyclerViewAdapter.java`
+   - Added private field `private Map<Long, int[]> sectionCounts = new HashMap<>();` next to `items`.
+   - In `flatten()`: at the top, after computing `folderId`, before the early-return fallback branch, populate `sectionCounts` by iterating `TasksRealmController.getTasks(folderId)` (all tasks, done + undone). Skip `sectionId == 0` (free-zone per R19). For each task increment `total`; if `isDone()` increment `done`. Wrapped in `if (folderId != 0)` so folderless adapters get an empty map. `sectionCounts.clear()` runs unconditionally on every rebuild — no stale data.
+   - In `SectionHeaderViewHolder`: added `public final TextView tvProgress;` initialized via `findViewById(R.id.section_progress)`.
+   - In `bindSectionHeader(...)`: after `tvChevron.setText(...)`, look up `sectionCounts.get(sectionId)`, fall back to `[0,0]` if missing, set `tvProgress.setText(done + "/" + total)` and `setContentDescription(activity.getString(R.string.section_progress_a11y, done, total))`. Guarded by `if (holder.tvProgress != null)` for forward-compat (R-8).
+
+### Wave 1 verification
+
+- Wave 1 view types `VIEW_TYPE_RAIL_TOP=3`, `VIEW_TYPE_RAIL_BOTTOM=4`, `VIEW_TYPE_SECTION_EMPTY=5` and `AdapterItem.Kind`s `RAIL_TOP / RAIL_BOTTOM / SECTION_EMPTY` are untouched.
+- Wave 1's `emitSection()` flow (header → rail_top → tasks/empty → rail_bottom) is untouched — `sectionCounts` is populated **before** the bucketing/emit phase.
+
+### Build
+
+- `./gradlew assembleDebug` — **BUILD SUCCESSFUL in 10s** (35 actionable tasks: 9 executed, 26 up-to-date). No new warnings related to this change.
 
 ## Review
 
