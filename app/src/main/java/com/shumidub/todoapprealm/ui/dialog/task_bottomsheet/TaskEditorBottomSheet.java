@@ -56,7 +56,7 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
     private TaskObject task;
     private Palette palette;
 
-    private LinearLayout root;
+    private View root;
     private TextView tvTitle;
     private TextView tvValue;
     private TextView tvMaxAcc;
@@ -211,6 +211,12 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
             behavior.setSkipCollapsed(true);
             behavior.setHalfExpandedRatio(0.55f);
             behavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
+            // Make the framework's design_bottom_sheet container transparent so the
+            // root view's rounded background isn't clipped by an opaque parent.
+            View sheet = dlg.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (sheet != null) {
+                sheet.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            }
         });
         if (dlg.getWindow() != null) {
             dlg.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
@@ -282,7 +288,8 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void applyPalette() {
-        root.setBackgroundColor(palette.bg);
+        // Tint the rounded drawable instead of replacing it with a flat color (preserves corner radius).
+        root.setBackgroundTintList(ColorStateList.valueOf(palette.bg));
         dragHandle.setBackgroundColor(palette.textSoft);
         tvTitle.setTextColor(palette.text);
         tvCategoriesLabel.setTextColor(palette.textSoft);
@@ -301,32 +308,32 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
     private void rebuildCategoryRows() {
         if (task == null || !task.isValid()) return;
         List<Long> activeIds = TasksRealmController.getCategoryIds(task);
-        List<FolderTaskObject> allFolders = new ArrayList<>(FolderTaskRealmController.getFoldersList(taskGroup));
+        // Show folders across ALL tabs (Tasks/Tasks2/Tasks3) with a tab tag suffix —
+        // matches the multi-choice "Categories" dialog used in TaskActionModeCallback.
+        List<FolderTaskObject> allFolders = FolderTaskRealmController.getAllFolders();
 
-        List<FolderTaskObject> current = new ArrayList<>();
-        List<FolderTaskObject> other = new ArrayList<>();
-
-        // 'current' preserves activeIds order (primary first)
+        List<Row> rows = new ArrayList<>();
+        // Active first (preserving activeIds order — primary first), then inactive in folder-list order.
         for (Long id : activeIds) {
             for (FolderTaskObject f : allFolders) {
-                if (f.getId() == id) { current.add(f); break; }
+                if (f.getId() == id) { rows.add(new Row(f, true)); break; }
             }
         }
         for (FolderTaskObject f : allFolders) {
-            if (!activeIds.contains(f.getId())) other.add(f);
+            if (!activeIds.contains(f.getId())) rows.add(new Row(f, false));
         }
 
-        List<Row> rows = new ArrayList<>();
-        if (!current.isEmpty()) {
-            rows.add(new Row(true, "Current", null, false));
-            for (FolderTaskObject f : current) rows.add(new Row(false, null, f, true));
-        }
-        if (!other.isEmpty()) {
-            rows.add(new Row(true, "Other", null, false));
-            for (FolderTaskObject f : other) rows.add(new Row(false, null, f, false));
-        }
         categoriesAdapter.setRows(rows);
         tvCategoriesLabel.setVisibility(rows.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    private static String tagForGroup(int group) {
+        switch (group) {
+            case 0: return " [Tasks1]";
+            case 1: return " [Tasks2]";
+            case 2: return " [Tasks3]";
+            default: return "";
+        }
     }
 
     private void onCategoryTap(FolderTaskObject folder, boolean wasActive) {
@@ -348,23 +355,16 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
     // -------- Row model --------
 
     private static final class Row {
-        final boolean isHeader;
-        final String headerText;
         final FolderTaskObject folder;
         final boolean active;
 
-        Row(boolean isHeader, String headerText, FolderTaskObject folder, boolean active) {
-            this.isHeader = isHeader;
-            this.headerText = headerText;
+        Row(FolderTaskObject folder, boolean active) {
             this.folder = folder;
             this.active = active;
         }
     }
 
-    private static final int TYPE_HEADER = 0;
-    private static final int TYPE_CATEGORY = 1;
-
-    private final class CategoriesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private final class CategoriesAdapter extends RecyclerView.Adapter<CategoryVH> {
 
         private List<Row> rows = new ArrayList<>();
 
@@ -373,44 +373,25 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
             notifyDataSetChanged();
         }
 
-        @Override
-        public int getItemViewType(int position) {
-            return rows.get(position).isHeader ? TYPE_HEADER : TYPE_CATEGORY;
-        }
-
         @NonNull
         @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            LayoutInflater inf = LayoutInflater.from(parent.getContext());
-            if (viewType == TYPE_HEADER) {
-                View v = inf.inflate(R.layout.item_bs_category_header, parent, false);
-                return new HeaderVH(v);
-            }
-            View v = inf.inflate(R.layout.item_bs_category_row, parent, false);
+        public CategoryVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_bs_category_row, parent, false);
             return new CategoryVH(v);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull CategoryVH c, int position) {
             Row row = rows.get(position);
-            if (holder instanceof HeaderVH) {
-                HeaderVH h = (HeaderVH) holder;
-                h.tv.setText(row.headerText);
-                h.tv.setTextColor(palette.textSoft);
-            } else {
-                CategoryVH c = (CategoryVH) holder;
-                String name = row.folder.getName() == null ? "" : row.folder.getName();
-                c.name.setText(name);
-                if (row.active) {
-                    c.mark.setText("✓");
-                    c.mark.setTextColor(palette.accent);
-                    c.name.setTextColor(palette.accent);
-                } else {
-                    c.mark.setText(" ");
-                    c.name.setTextColor(palette.text);
-                }
-                c.itemView.setOnClickListener(v -> onCategoryTap(row.folder, row.active));
-            }
+            String name = row.folder.getName() == null ? "" : row.folder.getName();
+            int group = FolderTaskRealmController.getFolderGroup(row.folder);
+            c.name.setText(name + tagForGroup(group));
+            c.check.setOnCheckedChangeListener(null);
+            c.check.setChecked(row.active);
+            c.check.setButtonTintList(ColorStateList.valueOf(palette.accent));
+            c.name.setTextColor(row.active ? palette.accent : palette.text);
+            c.itemView.setOnClickListener(v -> onCategoryTap(row.folder, row.active));
         }
 
         @Override
@@ -419,20 +400,12 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    private static final class HeaderVH extends RecyclerView.ViewHolder {
-        final TextView tv;
-        HeaderVH(View v) {
-            super(v);
-            tv = v.findViewById(R.id.bs_cat_header_text);
-        }
-    }
-
     private static final class CategoryVH extends RecyclerView.ViewHolder {
-        final TextView mark;
+        final CheckBox check;
         final TextView name;
         CategoryVH(View v) {
             super(v);
-            mark = v.findViewById(R.id.bs_cat_row_mark);
+            check = v.findViewById(R.id.bs_cat_row_check);
             name = v.findViewById(R.id.bs_cat_row_name);
         }
     }

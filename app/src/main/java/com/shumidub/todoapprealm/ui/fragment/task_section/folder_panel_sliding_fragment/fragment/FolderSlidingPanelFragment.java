@@ -485,8 +485,8 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        MenuItem add = menu.add(2,2,3,"add ");
-        add.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        MenuItem add = menu.add(2,2,3,"Add category");
+        add.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         add.setIcon(R.drawable.ic_add);
         add.setOnMenuItemClickListener((v)->{
             if (!(slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED)) {
@@ -504,18 +504,33 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         addSection.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         addSection.setOnMenuItemClickListener(v -> {
             if (slidingUpPanelLayout.getPanelState() != SlidingUpPanelLayout.PanelState.EXPANDED) return true;
-            SmallTasksFragment current = (SmallTasksFragment) smallTaskFragmentPagerAdapter
-                    .getItem(smallTasksViewPager.getCurrentItem());
-            if (current != null && current.getTasksFolderId() != 0) {
-                com.shumidub.todoapprealm.ui.dialog.section_dialog.SectionEditDialog
-                        .forCreate(current.getTasksFolderId())
-                        .show(getActivity().getSupportFragmentManager(), "addsection");
-            }
+            int pos = smallTasksViewPager.getCurrentItem();
+            java.util.List<FolderTaskObject> folders = FolderTaskRealmController.getFoldersList(taskGroup);
+            if (pos < 0 || pos >= folders.size()) return true;
+            long folderId = folders.get(pos).getId();
+            if (folderId == 0) return true;
+            // Subscribe right before showing the dialog so the per-fragment listener race
+            // (multiple SmallTasksFragments overwriting each other on the same result key)
+            // can't bite us. Refresh every SmallTasksFragment in this pager — cheap, robust.
+            getActivity().getSupportFragmentManager().setFragmentResultListener(
+                    com.shumidub.todoapprealm.ui.dialog.section_dialog.SectionEditDialog.RESULT_KEY,
+                    this,
+                    (key, bundle) -> {
+                        // FragmentStatePagerAdapter doesn't tag fragments — walk the live FM list.
+                        for (androidx.fragment.app.Fragment f : getChildFragmentManager().getFragments()) {
+                            if (f instanceof SmallTasksFragment) {
+                                ((SmallTasksFragment) f).setTasksAndNotifyDataSetChanged();
+                            }
+                        }
+                    });
+            com.shumidub.todoapprealm.ui.dialog.section_dialog.SectionEditDialog
+                    .forCreate(folderId)
+                    .show(getActivity().getSupportFragmentManager(), "addsection");
             return true;
         });
 
-        MenuItem sync = menu.add(2,3,1,"Sync ");
-        sync.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        MenuItem sync = menu.add(2,3,1,"Backup / Sync");
+        sync.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         sync.setIcon(R.drawable.ic_sync);
         sync.setOnMenuItemClickListener((MenuItem a) -> {
             if (storagePermissionGrantedOrUnneeded()) {

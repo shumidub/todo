@@ -5,27 +5,26 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingVertical="10dp"
+    android:paddingVertical="6dp"
     android:paddingHorizontal="4dp"
     android:background="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
 
-    <TextView
-        android:id="@+id/bs_cat_row_mark"
-        android:layout_width="20dp"
+    <CheckBox
+        android:id="@+id/bs_cat_row_check"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:text=" "
-        android:textColor="@color/colorDialogOnSurface"/>
+        android:clickable="false"
+        android:focusable="false"
+        android:duplicateParentState="true"/>
 
     <TextView
         android:id="@+id/bs_cat_row_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="4dp"
         android:textSize="15sp"
         android:textColor="@color/colorDialogOnSurface"/>
 

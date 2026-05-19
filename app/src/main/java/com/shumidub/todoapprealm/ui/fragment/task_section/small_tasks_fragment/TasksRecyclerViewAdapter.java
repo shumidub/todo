@@ -237,8 +237,8 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         holder.tvChevron.setText(section.isCurrentlyCollapsed() ? "▶" : "▼");
 
         int accent = activeAccent();
-        holder.tvName.setTextColor(accent);
-        holder.tvChevron.setTextColor(accent);
+        holder.tvName.setTextColor(android.graphics.Color.WHITE);
+        holder.tvChevron.setTextColor(android.graphics.Color.WHITE);
         if (holder.divider != null) holder.divider.setBackgroundColor(accent);
 
         holder.itemView.setOnClickListener(v -> {
