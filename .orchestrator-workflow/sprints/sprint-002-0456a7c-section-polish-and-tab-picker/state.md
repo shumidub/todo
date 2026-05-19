@@ -1,17 +1,17 @@
 # Sprint 002 state
 
 - **Sprint:** sprint-002-0456a7c-section-polish-and-tab-picker
-- **Current phase:** 5-implementation (Phase 4 TDD skipped per sprint-001 precedent — manual QA only)
+- **Current phase:** 7-manual-verification (handoff to user)
 - **Updated:** 2026-05-19
 
 ## Tasks
 
 | Task | Phase | Status | Notes |
 |------|-------|--------|-------|
-| task-001 — tab color picker | 5 | design locked, dispatched (Wave 1) | MaterialButtonToggleGroup + ADR-0001 |
-| task-002 — section rails + Empty | 5 | design locked, dispatched (Wave 1) | adds 3 view types + 2 new layouts |
-| task-003 — section progress counter | 5 | design locked, awaiting Wave 2 | rebases on top of task-002 flatten changes |
-| task-004 — fix done tasks auto-hide | 5 | design locked, dispatched (Wave 1) | one-line fix in SmallTasksFragment.notifyDataChanged |
+| task-001 — tab color picker | 7 | impl + review clean, awaiting user verification | MaterialButtonToggleGroup + ADR-0001; 1 review round (2 low nits fixed) |
+| task-002 — section rails + Empty | 7 | impl + review CLEAN, awaiting user verification | 3 new view types, no merge conflict with task-003 |
+| task-003 — section progress counter | 7 | impl + review CLEAN, awaiting user verification | X/Y in header, semi-transparent white |
+| task-004 — fix done tasks auto-hide | 7 | impl + review CLEAN, awaiting user verification | one-line fix in SmallTasksFragment.notifyDataChanged |
 
 ## Phase log
 
@@ -19,7 +19,8 @@
 - 2026-05-19 Phase 2 complete — 28 questions; 2 user / 26 default; requirements finalized (commits 10d345f + per-task finalization)
 - 2026-05-19 Phase 3 complete — all 4 designs READY: clean (commits 9940301, ff100b6, cad3e07, 642a130)
 - 2026-05-19 sprint-001 finishing touches committed as baseline (f2300cd)
-- 2026-05-19 Phase 5 started — Wave 1 dispatched (task-001 + task-002 + task-004 parallel)
+- 2026-05-19 Phase 5 complete — Wave 1 (task-001 c38b124+6c8c745+6f40df2, task-002 51ab10b+8cee11c, task-004 d5fc462+7d68a7e) + Wave 2 (task-003 3b9c891+a3e4e74). All builds green.
+- 2026-05-19 Phase 6 complete — reviewers: task-002 CLEAN, task-003 CLEAN, task-004 CLEAN, task-001 2 low nits → fixed (4ba7c97+9ee21f7) → CLEAN.
 
 ## Two-wave implementation strategy
 
@@ -32,10 +33,10 @@
 
 ## Review-fix rounds
 
-- task-001: 0
-- task-002: 0
-- task-003: 0
-- task-004: 0
+- task-001: 1 (2 low nits — externalize button labels, extract TabColorPickerHelper)
+- task-002: 0 (clean)
+- task-003: 0 (clean)
+- task-004: 0 (clean)
 
 ## Blocked
 
