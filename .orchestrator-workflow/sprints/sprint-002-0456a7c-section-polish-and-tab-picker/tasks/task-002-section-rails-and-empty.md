@@ -331,3 +331,5 @@ All clean. Verified against requirements / design / TBD / safety / edge cases.
 ## Manual verification
 
 <заполняется на Phase 7>
+
+Phase 7 visual tweak: rails now span full width (marginStart/End=0); symmetric 8dp spacing top and bottom around each rail. Approved values to be confirmed by user. Commit: 0730e07.
