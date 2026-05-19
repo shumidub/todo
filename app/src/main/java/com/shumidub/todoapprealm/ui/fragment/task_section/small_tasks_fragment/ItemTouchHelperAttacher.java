@@ -123,8 +123,11 @@ public class ItemTouchHelperAttacher {
                     return false;
                 }
 
-                // Auto-expand on hover over collapsed section
-                maybeScheduleAutoExpand(toItem);
+                // Auto-expand on hover over collapsed section — only when dragging a TASK.
+                // sprint-002 follow-up: when the dragged item is itself a section header,
+                // auto-expand the target on hover would be confusing (you can't drop a
+                // section inside another section) — design docs §5c / task-002 risk 3.
+                maybeScheduleAutoExpand(fromItem, toItem);
 
                 if (dragFrom == -1) dragFrom = fromPosition;
                 dragTo = toPosition;
@@ -136,7 +139,12 @@ public class ItemTouchHelperAttacher {
                 return true;
             }
 
-            private void maybeScheduleAutoExpand(AdapterItem toItem) {
+            private void maybeScheduleAutoExpand(AdapterItem fromItem, AdapterItem toItem) {
+                // Sections never auto-expand another section while being dragged.
+                if (fromItem != null && fromItem.kind == AdapterItem.Kind.SECTION_HEADER) {
+                    cancelAutoExpand();
+                    return;
+                }
                 if (toItem.kind != AdapterItem.Kind.SECTION_HEADER || toItem.section == null) {
                     cancelAutoExpand();
                     return;
