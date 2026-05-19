@@ -4,7 +4,7 @@
 - **Task token:** 31310a0
 - **Project:** todo100android
 - **Cross-project ref:** —
-- **Feature flag:** (определить на Phase 3)
+- **Feature flag:** not required (визуальное изменение, низкорискованное, revert коммитом)
 - **Status:** pending
 
 ## Acceptance criteria
@@ -18,22 +18,27 @@
 
 ## Requirements
 
+> **Feature flag:** not required. Изменение визуальное, низкорискованное, легко откатывается через revert коммита.
+
 ### Формат и расчёт
 - **R1. Формат счётчика:** `X/Y`, где `X` = число выполненных задач в секции, `Y` = общее число задач в секции. Пример: `2/5`. Разделитель — обычный слэш `/`, без пробелов вокруг.
 - **R2. Что считается «задачей секции»:** все `TaskObject` с `taskFolderId == parentFolder.id` И `sectionId == section.id` (живые managed-объекты Realm, не tombstoned). Cycling-задачи, priority-задачи, accumulation-задачи — считаются как обычные.
-- **R3. Что считается «выполненной» (X):** `TaskObject.isDone() == true` (поле `done` из модели; см. `TaskObject.java:100`). «Particullary done» (накопительный прогресс через `setTaskDoneOrParticullaryDone`) не выделяется в отдельный класс — учитываем только финальное `done == true`.
+- **R3. Что считается «выполненной» (X):** `TaskObject.isDone() == true` (поле `done` из модели; см. `TaskObject.java:100`). «Particullary done» (накопительный прогресс через `setTaskDoneOrParticullaryDone`) не выделяется в отдельный класс — учитываем только финальное `done == true`. Cycling-задачи, которые автоматически разчекаются в новый день, естественно уменьшат `X` при следующем `rebuildItems()`.
 - **R4. Счётчик считается одинаково и в collapsed, и в expanded состоянии секции.** Collapse/expand не меняет цифры, только видимость списка задач.
 - **R5. Source-of-truth:** счётчик читает данные из Realm заново при каждом ребилде items (`rebuildItems()` / `flatten()` в `TasksRecyclerViewAdapter`). Никакого in-memory кеша на стороне адаптера — это упростит инвалидацию.
 
 ### Расположение и стиль
 - **R6. Позиция:** в той же горизонтальной строке, что и chevron + section_name, у **правого края контейнера** (с учётом существующего `paddingEnd="12dp"` родителя `section_header_root`). Вертикально — центрирован относительно текста имени (тот же `gravity:center_vertical`).
-- **R7. Layout-механика:** добавляется новый `TextView` (id `section_progress`) как последний child `LinearLayout` в `section_header_card_view.xml`. Имя секции (`section_name`) сохраняет `layout_weight=1`, что заставит его сжиматься/эллипсизироваться при длинном имени, а счётчик всегда остаётся справа. `View` с id `section_divider` (сейчас `visibility:gone`) либо удаляется, либо остаётся перед счётчиком — конкретика на Phase 3 (см. координацию с task-002).
+- **R7. Layout-механика:** добавляется новый `TextView` (id `section_progress`) как последний child `LinearLayout` в `section_header_card_view.xml`. Имя секции (`section_name`) сохраняет `layout_weight=1`, что заставит его сжиматься/эллипсизироваться при длинном имени, а счётчик всегда остаётся справа. `View` с id `section_divider` (сейчас `visibility:gone`) остаётся перед счётчиком — task-003 не зависит от его судьбы, т.к. task-002 layout header'а не трогает (см. R15).
 - **R8. Типографика:**
   - `textSize` — `12sp` (на 2sp меньше, чем `14sp` у `section_name`).
-  - `textStyle` — `normal` (не bold; не `textAllCaps`).
-  - `textColor` — белый (`@color/colorWhite`, согласован с цветом, который задаёт адаптер для `section_name` через `holder.tvName.setTextColor(Color.WHITE)`). При активной палитре (Cornflower/Canary) — тот же цвет, без подмены: дизайн заголовка целиком белый.
+  - `textStyle` — `normal` (не bold; не `textAllCaps`; не моноширинный — изменения редкие, jitter не критичен).
+  - `textColor` — полупрозрачный белый `#B3FFFFFF` (alpha 70%). Визуально опускает счётчик относительно жирного uppercase имени секции, акцент остаётся на названии. При активной палитре (Cornflower/Canary) — без подмены.
   - `maxLines` — `1`. Эллипс не нужен (формат `X/Y` короткий; даже трёхзначные значения занимают <8 символов).
   - `paddingStart` — `8dp`, чтобы был зазор от имени, если оно вплотную упёрлось в счётчик.
+
+### Доступность
+- **R8a. ContentDescription для TalkBack:** на счётчике установить `contentDescription` через локализованную строку `R.string.section_progress_a11y` формата `"%1$d of %2$d tasks done"` (англ.) и соответствующего перевода ru. Имя секции остаётся с собственным contentDescription, не объединяется.
 
 ### Триггеры обновления
 - **R9. Счётчик пересчитывается, и UI обновляется при следующих событиях** (всё проходит через существующий `SmallTasksFragment.setTasksAndNotifyDataSetChanged()` → `adapter.rebuildItems()` → `notifyDataChanged()`):
@@ -47,14 +52,14 @@
 - **R10. Не триггерит обновление:** изменение priority задачи, изменение текста, изменение count/accumulation. (Они не влияют на X/Y, поэтому если адаптер не сделает rebuild — норма.)
 
 ### Edge cases
-- **R11. Пустая секция (`Y == 0`):** счётчик показывается как `0/0`. Скрывать счётчик нельзя — пустая секция в этом спринте получает Empty placeholder (см. task-002), и видимый `0/0` явно показывает, что счётчик «жив», просто задач нет.
+- **R11. Пустая секция (`Y == 0`):** счётчик показывается как `0/0` **всегда**. Скрывать счётчик нельзя — пустая секция в этом спринте получает Empty placeholder (см. task-002), и видимый `0/0` явно показывает, что счётчик «жив», просто задач нет.
 - **R12. Все задачи выполнены (`X == Y`, `Y > 0`):** счётчик показывается как есть (например `5/5`). Никакой особой подсветки или замены текста в этом тикете — только цифры.
 - **R13. Длинное имя секции:** имя эллипсизируется (поведение из `section_name`: `maxLines=1`, `ellipsize=end`), счётчик не сжимается и всегда видим.
 - **R14. Невалидная секция в Realm:** в `bindSectionHeader` уже стоит guard `section != null && section.isValid()`. Если объект отозван — биндинг ранний return, счётчик не показывается (виновник — race с deleteSection; следующий refresh уберёт строку из списка).
 
 ### Координация с task-002 (rails + empty)
-- **R15.** task-002 (rails в начале/конце expanded секции) и task-003 (счётчик) **оба меняют визуал заголовка секции**. task-002 трогает `section_header_card_view.xml` минимально (или вообще не трогает — rails рендерятся под/над списком задач, не в самом header'е). task-003 добавляет новый `TextView` в layout header'а.
-- **R16.** Конфликт реализаций сводится к одному файлу `section_header_card_view.xml`. Если task-002 удалит/переиспользует `View#section_divider`, task-003 учитывает финальное состояние layout-а (Phase 3 определит порядок merge — рекомендуется task-003 после task-002, т.к. диапазон изменений у task-003 меньше).
+- **R15.** task-002 использует **отдельные view types** в адаптере (rails + empty placeholder рендерятся как самостоятельные RecyclerView items) и **не трогает** `section_header_card_view.xml`. task-003 имеет полный контроль над layout-ом header'а — мерж-конфликта нет, задачи могут идти параллельно.
+- **R16.** Атомарность коммитов: task-002 коммитит изменения адаптера и новые layout-ы для rails/empty; task-003 коммитит только `section_header_card_view.xml` + bind-логику счётчика в `TasksRecyclerViewAdapter.bindSectionHeader` + строку в `strings.xml`. Пересечения по файлам нет.
 - **R17.** Расчёт `X/Y` использует только sectionId/done — не зависит от rails или Empty placeholder из task-002. Логика независима.
 
 ### Scope
@@ -63,20 +68,7 @@
 
 ## Open Questions
 
-- **Q1. `0/0` на пустой секции.**
-  **Answer (default):** Показывать `0/0` всегда. Хорошо комбинируется с "Empty" placeholder из task-002, показывает что счётчик "жив".
-- **Q2. Cycling done tasks.**
-  **Answer (default):** Считаем по `isDone()` (R3). Если задача автоматически разчекается в новый день — X уменьшится сам при следующем `rebuildItems()`.
-- **Q3. ContentDescription для TalkBack.**
-  **Answer (default):** Добавляем `contentDescription` на счётчик вида `"X of Y tasks done"` (локализованная строка `R.string.section_progress_a11y` с placeholders). Имя секции остаётся отдельным contentDescription.
-- **Q4. Цвет счётчика.**
-  **Answer (default):** Полупрозрачный белый `#B3FFFFFF` (alpha 70%). Визуально опускает счётчик относительно жирного uppercase имени, акцент остаётся на названии секции.
-- **Q5. Моноширинный шрифт.**
-  **Answer (default):** Не моноширинный. Изменения редкие, jitter не критичен.
-- **Q6. Координация с task-002.**
-  **Answer (default):** task-002 берёт отдельные view types в адаптере (не трогает `section_header_card_view.xml` — см. task-002 Q6). task-003 модифицирует layout хэдера. Конфликта нет, можно параллельно. Если оба агента запущены одновременно — каждый коммитит атомарно в свой набор файлов.
-- **Q7. Feature flag.**
-  **Answer (default):** Не нужен. Изменение визуальное, низкорискованное, легко откатывается через revert коммита.
+All questions resolved in Phase 2 — see commit history.
 
 ## Design
 
