@@ -214,7 +214,59 @@ Manual QA.
 
 ## Review
 
-<заполняется на Phase 6>
+Reviewer: background reviewer agent. Commits inspected: `3b9c891` (feat), `a3e4e74` (impl log), `642a130` (design), `78c4f6b` (req final), `d0abede` (req draft). Linear history on master, atomic per-phase commits.
+
+### Requirements compliance
+- [x] R1 формат `X/Y`: `holder.tvProgress.setText(done + "/" + total)` — без пробелов, обычный слэш.
+- [x] R2/R3 `X = isDone()==true`, `Y` = total в секции — `flatten()` итерирует `TasksRealmController.getTasks(folderId)` (all), инкремент total всегда, done — под `t.isDone()`.
+- [x] R5 source-of-truth = Realm-таблица; `sectionCounts.clear()` в начале каждого `flatten()`, никакого stale.
+- [x] R6/R7 расположение: новый `TextView` — последний child корневого `LinearLayout`, после `section_divider` (`width=0/height=0/gone`), `section_name` сохраняет `layout_weight=1`. Counter `wrap_content` без weight — всегда справа.
+- [x] R8 типографика: `textSize=12sp`, `textStyle=normal`, `textColor=#B3FFFFFF`, `maxLines=1`, `paddingStart=8dp`, `gravity=center_vertical`. Без bold, без monospace, без textAllCaps. Соответствует.
+- [x] R8a contentDescription через `R.string.section_progress_a11y` (`%1$d of %2$d tasks done`), не объединяется с именем секции.
+- [x] R11 `0/0` для пустой секции: при отсутствии задач секция не появляется в `sectionCounts` → `pair == null` → `done=0, total=0` → отрисовывается `0/0`. Проверено логикой.
+- [x] R18 все 3 таба (Tasks/Tasks2/Tasks3): все используют один `SmallTasksFragment` + `TasksRecyclerViewAdapter`, изменение применяется uniformly.
+- [x] R19 free-zone `sid==0` пропускается явным `if (sid == 0) continue`.
+
+### Design compliance
+- [x] `sectionCounts: Map<Long, int[]>` — приватное поле, очищается+перестраивается в `flatten()` до bucketing'а Wave 1.
+- [x] Используется `TasksRealmController.getTasks(folderId)` — возвращает все (done+undone), а не отфильтрованный `adapter.tasks`. Корректно в `showAllTasks` режиме (нет двойного учёта).
+- [x] `SectionHeaderViewHolder.tvProgress` инициализируется `findViewById(R.id.section_progress)`, guard `if (holder.tvProgress != null)` в bind — forward-compat.
+
+### Wave 1 coexistence
+- [x] `flatten()`: подсчёт `sectionCounts` происходит ПЕРЕД bucketing'ом и `emitSection()` — не вмешивается в рельсы/empty.
+- [x] View types `VIEW_TYPE_RAIL_TOP=3`, `VIEW_TYPE_RAIL_BOTTOM=4`, `VIEW_TYPE_SECTION_EMPTY=5` и `AdapterItem.Kind.RAIL_TOP / RAIL_BOTTOM / SECTION_EMPTY` не тронуты.
+- [x] `bindSectionHeader` — единственная точка биндинга header; добавлен счётчик; `onBindViewHolder` правильно диспатчит SECTION_HEADER.
+
+### Atomicity / коммиты
+- [x] Атомарные коммиты на master, разделены по фазам (req draft → req final → design → feat → impl log). Conventional Commits соблюдён.
+- [x] Diff узкий: 3 файла (layout, strings, adapter), +48/-0. Ничего лишнего не задето.
+
+### Test adequacy
+- [x] Manual QA как и обозначено в task md. JUnit-/instrumentation-тестов не предусмотрено — приемлемо для визуального изменения.
+
+### Realm / threading
+- [x] `getTasks(folderId)` — обычный Realm-запрос, lazy, lazy iterator. Main-thread read OK (read-only, не пишем).
+- [x] Перфоманс: O(N) одна линейная итерация на rebuild по уже-запрашиваемой папке. Для типичного объёма задач — пренебрежимо. Single-pass build без вложенных запросов.
+
+### Edge cases
+- [x] 0-задач-секция → `0/0` (через null-pair branch).
+- [x] Длинные имена: `section_name` сохраняет `layout_weight=1` + `ellipsize=end` + `maxLines=1`; counter `wrap_content` — всегда виден справа.
+- [x] Invalid section mid-bind: existing guard `if (section == null || !section.isValid()) return;` на самом первом шаге `bindSectionHeader` — counter не выставляется, race safe.
+- [x] Cycling-задачи: разчёкаются при следующем `rebuildItems()` → автоматический пересчёт.
+
+### Readability / hygiene
+- [x] Поле `sectionCounts` named descriptively, документировано Javadoc'ом с привязкой к R5/R1-R4.
+- [x] Inline-комментарии с привязкой к R-номерам в `flatten()` и `bindSectionHeader`.
+- [x] Map очищается в начале каждого `flatten()` (`sectionCounts.clear()`), а не аппендится — без утечек/stale.
+- [x] `int[]` вместо отдельного DTO — минимально, но достаточно для двух интов; внутренняя деталь, не утекает наружу.
+
+### Minor observations (non-blocking)
+- Diff показывает 33 строки adapter-изменений; коммит-сообщение упоминает 48 строк (включая layout+strings) — соответствует `git show --stat` итогу. Всё ОК.
+- `getTasks(folderId)` возвращает `RealmResults<TaskObject>` (managed). Итерация безопасна на main-thread; объекты не сохраняются за пределами цикла.
+- `getTasks(folderId)` дёргается _до_ early-return ветки `folderId == 0 || tasks == null`, но защита `if (folderId != 0)` снаружи блока — лишних запросов нет.
+- Counter content-description при invalid-section не обновится (early return). Это правильное поведение — секция всё равно не отрисуется в следующем rebuild.
+
+**All clean. READY for manual verification.**
 
 ## Manual verification
 
