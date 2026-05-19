@@ -86,15 +86,24 @@
 
 ## Open Questions
 
-1. **Q1 — толщина rail.** AC говорит "1-2dp". Рекомендую `1dp` (hairline-style, не агрессивно). Альтернатива: `2dp` если на скриншоте видно толще. Решение — Phase 3 по скриншоту дизайна.
-2. **Q2 — vertical margins вокруг rails.** Рекомендация: top rail `marginTop=2dp / marginBottom=2dp`; bottom rail `marginTop=2dp / marginBottom=6dp`. Если из скриншота другие значения — корректировать.
-3. **Q3 — "пустая секция" учитывает done tasks?** В адаптере секция считается пустой если `bySection.get(sectionId) == null` (только undone-задачи проверяются — done сидят в footer и общем `doneTasks` без `sectionId`-разделения). Если у секции есть done-задачи но нет undone — текущая логика покажет "Empty". Это нормально? Или нужно подсчитать (undone + done в этой секции) и показывать "Empty" только когда оба нуль? **Рекомендация:** оставить как "только undone" — done вообще не привязаны к секциям в текущей модели (см. `getDoneTasks` без `sectionId`-фильтра).
-4. **Q4 — типографика "Empty".** Italic 14sp, white alpha 60%? Или просто gray 14sp regular? Скрин нужен. Также: одна строка центрированная или с большими paddings (12dp top/bottom)?
-5. **Q5 — контраст на Canary (yellow) tab.** Белая 1dp линия на ярко-жёлтом фоне — может теряться. Варианты: (a) оставить белой везде (per AC4); (b) подкрашивать в `activeAccent()` (нарушает AC4); (c) увеличить толщину до 2dp только на Canary. **Рекомендация:** оставить белой — это явное требование AC.
-6. **Q6 — реализация rails: отдельный view type vs часть header layout vs часть task layout?** **Рекомендация — отдельный view type** (см. R7): простая интеграция с flatten, симметрия, нет конфликтов с task-003. Альтернатива (top rail внутри `section_header_card_view.xml`, bottom rail внутри последнего `task_card_view.xml`) — сложнее, breaks reuse of task layout.
-7. **Q7 — bottom rail у последней секции списка.** Если секция последняя (после неё ничего, либо сразу `done_footer`) — рисовать bottom rail или нет? AC2 говорит "после последней задачи секции" — формально да, рисовать. Но визуально может быть избыточно перед footer'ом. **Рекомендация:** всегда рисовать (предсказуемая структура), даже если следующий item — footer.
-8. **Q8 — поведение при drag задачи через rail.** Если пользователь перетаскивает задачу и она hover'ит над rail item — какой sectionId присваивается? Top rail секции S → tasks становится первой в S. Bottom rail секции S → tasks становится последней в S. **Требует уточнения** в `ItemTouchHelperAttacher` (sprint-001 task-002 §5c определял container по предыдущему SECTION_HEADER — rail тоже нужно учесть).
-9. **Q9 — анимация при collapse/expand.** Когда пользователь сворачивает секцию, rails и empty должны исчезнуть. Использовать `notifyItemRangeRemoved` для аккуратной анимации, или просто `notifyDataSetChanged` (как сейчас в `setTasksAndNotifyDataSetChanged`)? **Рекомендация:** оставить `notifyDataSetChanged` для простоты (текущий подход), оптимизацию — отдельной задачей.
+1. **Q1 — толщина rail.**
+   **Answer (default):** `1dp` hairline.
+2. **Q2 — vertical margins вокруг rails.**
+   **Answer (default):** Top rail `marginTop=2dp / marginBottom=2dp`; bottom rail `marginTop=2dp / marginBottom=6dp`. Корректировка после визуального просмотра в Phase 7.
+3. **Q3 — "пустая секция" учитывает done tasks?**
+   **Answer (default — coordinated with task-004 Q1):** "Empty" показывается ⇔ `flatten()` не эмиттит ни одной task-item под секцией. В default-режиме (done скрыты) секция, в которой все задачи done, считается пустой и показывает "Empty". В show-completed-режиме те же done-задачи отрисуются под хэдером по `sectionId`, и "Empty" не показывается. Это согласовано с task-004 Var A.
+4. **Q4 — типографика "Empty".**
+   **Answer (default):** `14sp italic`, цвет `#99FFFFFF` (white alpha 60%), `gravity=center_horizontal`, vertical padding `12dp` сверху и снизу. Без иконок.
+5. **Q5 — контраст на Canary (yellow) tab.**
+   **Answer (default):** Оставить белой везде (per AC4). При слабом контрасте в Phase 7 — поднимем отдельный тикет.
+6. **Q6 — реализация rails: view type vs часть header layout.**
+   **Answer (default):** Отдельные view types в RecyclerView (`VIEW_TYPE_RAIL_TOP`, `VIEW_TYPE_RAIL_BOTTOM`, `VIEW_TYPE_SECTION_EMPTY`). `section_header_card_view.xml` не трогается — task-002 и task-003 не конфликтуют.
+7. **Q7 — bottom rail у последней секции списка.**
+   **Answer (default):** Всегда рисовать. Предсказуемая структура секции.
+8. **Q8 — drag задачи через rail.**
+   **Answer (default):** Rails — `getMovementFlags=0` (не двигаются и не accept drop как самостоятельные цели). При drag над rail item — задача попадает в ту же секцию (top rail → первой в секции, bottom rail → последней). Детали логики drop-target — на Phase 3 design.
+9. **Q9 — анимация при collapse/expand.**
+   **Answer (default):** `notifyDataSetChanged` (как сейчас в `setTasksAndNotifyDataSetChanged`). Оптимизация под `notifyItemRangeRemoved/Inserted` — out-of-scope.
 
 ## Design
 

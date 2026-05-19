@@ -86,25 +86,16 @@
 
 ## Open Questions
 
-1. **Q1 — Взаимодействие с "Empty" placeholder из task-002.** В default-режиме, если секция expanded и содержит только done-задачи (ни одной undone), то по логике task-004 показывается только хэдер (done скрыты). Но task-002 (sprint-002) планирует "Empty" placeholder для пустых expanded-секций. Считается ли такая секция "пустой" с точки зрения placeholder?
-   - Вариант A: показывать "Empty" (только undone считаются — текущая инклинация task-002 Q3, рекомендация "оставить как только undone").
-   - Вариант B: не показывать "Empty" (done-задачи "есть", просто скрыты тоггом — секция не пустая концептуально).
-   - **Рекомендация:** Вариант A (соответствует task-002 Q3). Но требуется явное подтверждение пользователя, чтобы зафиксировать поведение в обоих task'ах.
-
-2. **Q2 — Должен ли тоггл `isAllTaskShowing` сохраняться между сессиями фрагмента / переходами между папками / re-creation активити?**
-   - Сейчас: `onViewCreated` всегда сбрасывает `isAllTaskShowing = false`. Это значит при возврате в категорию режим сбросится.
-   - Считается ли это багом task-004 (тоже "регрессия после sprint-001")?
-   - **Рекомендация:** считать out-of-scope для task-004 (это давнее поведение, не Wave2-регрессия), вынести в отдельный тикет при необходимости.
-
-3. **Q3 — Где именно класть фикс?**
-   - Вариант A: добавить `tasksRecyclerViewAdapter.rebuildItems()` внутрь `SmallTasksFragment.notifyDataChanged()` перед `notifyDataSetChanged()`. Чинит все call-sites одной строкой.
-   - Вариант B: заменить call-sites `notifyDataChanged()` на `setTasksAndNotifyDataSetChanged()` (checkbox-handler, TaskActionModeCallback × 3).
-   - Вариант C: убрать `notifyDataChanged()` совсем, везде использовать `setTasksAndNotifyDataSetChanged()`.
-   - **Рекомендация:** Вариант A (минимальный diff, низкий риск). Решение зафиксировать на Phase 3.
-
-4. **Q4 — Тоггл футера в показывающем-completed-режиме — должна ли надпись измениться?** Сейчас при `isAllTaskShowing == true` футер всё ещё пишет "Done N tasks" и клик по нему скрывает done. Есть ли UX-требование сменить текст на "Hide done" / "Скрыть выполненные"? **Рекомендация:** out-of-scope, фиксим только баг скрытия.
-
-5. **Q5 — При показывающем-completed-режиме и пустой секции — done-задачи этой секции должны рендериться?** В текущем `flatten` они попадут в bucket по `sectionId` и отрендерятся под хэдером (если их sectionId совпадает). Проблема: задача когда-то была в секции, потом помечена done — её `sectionId` всё ещё указывает на секцию? Нужна проверка через manual QA / в Phase 3.
+1. **Q1 — Взаимодействие с "Empty" из task-002.**
+   **Answer (default — coordinated with task-002 Q3):** Вариант A. Если в секции нет undone-задач (а done скрыты в default-режиме), показываем "Empty". В show-completed-режиме done-задачи с `sectionId` отрисуются под хэдером, "Empty" не показывается.
+2. **Q2 — Сохранение `isAllTaskShowing` между сессиями.**
+   **Answer (default):** Out-of-scope. Текущее поведение `onViewCreated → isAllTaskShowing = false` — это не Wave2-регрессия. Вынести в отдельный тикет если будет нужно.
+3. **Q3 — Где класть фикс.**
+   **Answer (default):** Вариант A — добавить `tasksRecyclerViewAdapter.rebuildItems()` внутрь `SmallTasksFragment.notifyDataChanged()` перед `notifyDataSetChanged()`. Минимальный diff, чинит все call-sites одной строкой (checkbox + TaskActionModeCallback × 3).
+4. **Q4 — Текст футера в show-completed-режиме.**
+   **Answer (default):** Out-of-scope. Не меняем "Done N tasks". Фиксим только баг скрытия.
+5. **Q5 — Done-задачи с sectionId в show-completed.**
+   **Answer (default):** Если у done-задачи `sectionId != 0`, она отрендерится в bucket секции под хэдером (как и предусмотрено `flatten()`). Проверим в Phase 7 manual QA: (a) включить show-completed, (b) убедиться что done с sectionId оказываются внутри своей секции, (c) что секция не пустая визуально.
 
 ## Design
 

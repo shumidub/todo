@@ -71,13 +71,20 @@
 
 ## Open Questions
 
-1. Какой виджет UX уместен для 3-way выбора цвета папки в существующем диалоге (RadioGroup с горизонтальной ориентацией / `MaterialButtonToggleGroup` с тремя toggle-button'ами / три чипа `Chip` с `chipBackgroundColor` / три кастомных `View`-swatch'а с border на selected) — и какие ограничения по высоте/touch target / accessibility (TalkBack labels) для каждого варианта?
-2. Как визуально передать "цвет" каждой опции — только текстом ("Green" / "Blue" / "Yellow"), цветным background самой кнопки (зелёный/синий/жёлтый fill), цветным кружком-swatch'ом рядом с текстом, или зеркалом палитры таба (использовать `colorBackgroundActivity` / `cornflowerBg` / `canaryBg` напрямую)? Что лучше читается на разных табах (зелёный picker на зелёном фоне Tasks → нужен ли border)?
-3. Когда пользователь меняет цвет папки в EditDelFolderDialog и Done — нужна ли явная обратная связь о перемещении (Toast "Moved to Tasks2" / Snackbar с действием Undo / автоматический переход на новый таб через `viewPager.setCurrentItem`), или достаточно текущего "Done"-тоста и того, что папка просто исчезает из видимого списка?
-4. Нужна ли над picker'ом текстовая подпись-label (например "Tab" / "Color" / "Tasks group"), и если да — какой стиль текста использовать (`?attr/textAppearanceLabelSmall` Material / inline hint / без подписи если виджет очевиден)?
-5. Как picker должен реагировать на per-tab ThemeOverlay диалога (Cornflower на Tasks2, Canary на Tasks3, дефолт на Tasks) — все три swatch'а всегда показаны "родными" цветами палитр независимо от темы диалога, или selected-индикация (рамка/тень) использует `colorAccent` текущего overlay, и в чём приоритет конфликта (например, выбран yellow swatch, диалог открыт из Cornflower-таба — выделение синее или жёлтое)?
-6. Нужно ли в AddFolderDialog учитывать редкий кейс, когда пользователь сменил цвет, но Tasks/Tasks2/Tasks3 fragments ещё не инициализированы (offscreenPageLimit + холодный старт)? Существующий `notifySmallTasksViewPagerListsChanged()` итерирует только по живым fragments — есть ли риск, что новая папка появится в Tasks3, но при свайпе туда таб покажет stale state?
-7. Acceptance criterion в шапке утверждает "поле group уже есть" — но в `FolderTaskObject.java` отдельного `group`-поля нет, group выводится из принадлежности к одному из трёх `RealmList` в `RealmFoldersContainer`. Это противоречие в формулировке (требует ли это явного добавления поля `group` в модель + миграции — что усложнит задачу — или нужно оставить как сейчас и просто переформулировать criterion)?
+1. Какой виджет UX уместен для 3-way выбора цвета папки в существующем диалоге?
+   **Answer (user):** `MaterialButtonToggleGroup` с тремя toggle-button'ами в горизонтальный ряд, single-select, цветной fill каждой кнопки. Selected — рамка/border.
+2. Как визуально передать "цвет" каждой опции?
+   **Answer (user):** Цветной background самой кнопки (green / blue / yellow fill), текстовая надпись внутри кнопки (`GREEN` / `BLUE` / `YELLOW` или короче — определит Phase 3 design).
+3. Нужна ли явная обратная связь о перемещении папки на другой таб?
+   **Answer (user):** Нет. Сохраняется текущее поведение — папка просто исчезает с текущего таба. Пользователь сам свайпнет на нужный.
+4. Нужна ли над picker'ом текстовая подпись-label?
+   **Answer (default):** Да, мини-label "Tab color" в стиле `?attr/textAppearanceLabelSmall` (или эквивалент), как у других полей диалога. Это даёт явный контекст что выбираем.
+5. Реакция picker'а на per-tab ThemeOverlay диалога?
+   **Answer (default):** Все три swatch'а **всегда показаны родными цветами палитр** (зелёный = `colorBackgroundActivity` из base theme, синий = `cornflowerBg`, жёлтый = `canaryBg`), независимо от темы текущего диалога. Selected-индикация — толстый белый border (~2dp) поверх fill, не зависит от текущего overlay.
+6. AddFolderDialog cold-start risk с offscreenPageLimit?
+   **Answer (default):** Игнорируем — существующий `notifySmallTasksViewPagerListsChanged()` работает корректно для живых fragments, остальные при создании сами подтянут данные через стандартный lifecycle. Не блокер.
+7. Противоречие в acceptance criterion про "поле group уже есть"?
+   **Answer (default):** Переформулируем: group выводится из RealmList membership (`folderOfTasksList` / `...List2` / `...List3` в `RealmFoldersContainer`). Поле в модели НЕ добавляется, миграция НЕ нужна. AC в шапке имел в виду именно это — формулировка просто была неточной, фиксим в R6.
 
 ## Design
 
