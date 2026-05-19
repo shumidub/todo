@@ -109,6 +109,22 @@ public final class SectionsRealmController {
         App.realm.executeTransaction(r -> s.setCurrentlyCollapsed(collapsed));
     }
 
+    /**
+     * Reset every section's {@code currentlyCollapsed} back to its
+     * {@code collapsedByDefault} preference. Called once at app start
+     * so manual collapse/expand from the previous session does not persist.
+     */
+    public static void resetAllCollapseStates() {
+        App.initRealm();
+        App.realm.executeTransaction(r -> {
+            for (SectionObject s : r.where(SectionObject.class).findAll()) {
+                if (s.isCurrentlyCollapsed() != s.isCollapsedByDefault()) {
+                    s.setCurrentlyCollapsed(s.isCollapsedByDefault());
+                }
+            }
+        });
+    }
+
     public static void moveTaskToSection(TaskObject task, long newSectionId, int newPosition) {
         if (task == null || !task.isValid()) return;
         App.initRealm();

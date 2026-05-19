@@ -197,9 +197,8 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     private void emitSection(List<AdapterItem> out, SectionObject s, Map<Long, List<TaskObject>> bySection) {
         out.add(AdapterItem.ofSection(s));
         if (!s.isCurrentlyCollapsed()) {
-            // sprint-002 task-002: rails around expanded section body; "Empty" placeholder
-            // if no task-items would be emitted under this section.
-            out.add(AdapterItem.ofRailTop(s));
+            // sprint-002 task-002: bottom rail only (top rail removed per Phase 7 feedback);
+            // "Empty" placeholder if no task-items would be emitted under this section.
             List<TaskObject> inner = bySection.get(s.getId());
             if (inner == null || inner.isEmpty()) {
                 out.add(AdapterItem.ofSectionEmpty(s));

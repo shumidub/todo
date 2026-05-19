@@ -80,6 +80,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Reset section collapse states once per cold start.
+        // Wrapped: Realm errors here must not block the activity from drawing.
+        try {
+            com.shumidub.todoapprealm.realmcontrollers.taskcontroller.SectionsRealmController.resetAllCollapseStates();
+        } catch (Throwable t) {
+            android.util.Log.w("MainActivity", "resetAllCollapseStates failed", t);
+        }
         onCreateActions();
         requestRuntimePermissions();
     }
