@@ -104,9 +104,13 @@
         <item name="buttonTint">?attr/colorAccent</item>
     </style>
 
-    <!-- Small caption-like label used inside dialogs (e.g. "Tab color" above picker). -->
+    <!-- Small caption-like label used inside dialogs (e.g. "Tab color" above picker).
+         Uses ?android:attr/textColorSecondary (always defined; overlays remap it to
+         colorDialogOnSurfaceVariant / cornflowerTextSoft / canaryTextSoft) instead of
+         ?attr/colorOnSurfaceVariant which is Material 3 only and missing on the Bridge
+         parent theme — that mismatch crashed TextView inflate on the default tab. -->
     <style name="TextAppearance.App.Dialog.LabelSmall" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
         <item name="android:textSize">12sp</item>
         <item name="android:letterSpacing">0.05</item>
         <item name="android:textAllCaps">true</item>

@@ -233,7 +233,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /** Activity context wrapped with the per-tab overlay theme (Cornflower for Tasks2,
-     *  Canary for Tasks3), for layout inflation. */
+     *  Canary for Tasks3), for layout inflation. The default tab is wrapped with the
+     *  base MaterialAlertDialog overlay so Material-only attributes (colorOnSurface,
+     *  colorOnSurfaceVariant, etc.) resolve during inflation — the raw AppTheme is the
+     *  Bridge variant and doesn't expose all Material 3 tokens. */
     public android.content.Context dialogContext() {
         if (viewPager != null) {
             int pos = viewPager.getCurrentItem();
@@ -246,7 +249,8 @@ public class MainActivity extends AppCompatActivity {
                         R.style.ThemeOverlay_App_MaterialAlertDialog_Canary);
             }
         }
-        return this;
+        return new androidx.appcompat.view.ContextThemeWrapper(this,
+                R.style.ThemeOverlay_App_MaterialAlertDialog);
     }
 
     @Override
