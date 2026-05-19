@@ -260,7 +260,38 @@ Manual QA.
 
 ## Implementation
 
-<заполняется на Phase 5>
+### Files changed
+
+**New layouts:**
+- `app/src/main/res/layout/section_rail_top_view.xml` — 1dp white `<View>`, `marginStart/End=8dp`, `marginTop=2dp`, `marginBottom=2dp`, `background=#FFFFFF`.
+- `app/src/main/res/layout/section_rail_bottom_view.xml` — same as top rail but `marginBottom=6dp`.
+- `app/src/main/res/layout/section_empty_card_view.xml` — `<TextView>` with `text=@string/section_empty`, `gravity=center_horizontal`, `paddingTop/Bottom=12dp`, `textSize=14sp`, `textStyle=italic`, `textColor=#99FFFFFF`.
+
+**Modified:**
+- `app/src/main/res/values/strings.xml` — added `<string name="section_empty">Empty</string>` (sprint-002 task-002 block).
+- `app/src/main/java/.../small_tasks_fragment/AdapterItem.java` — added three new `Kind` values (`RAIL_TOP`, `RAIL_BOTTOM`, `SECTION_EMPTY`) and three static factories (`ofRailTop`, `ofRailBottom`, `ofSectionEmpty`). Each carries owning `SectionObject` via the existing `section` field.
+- `app/src/main/java/.../small_tasks_fragment/TasksRecyclerViewAdapter.java`:
+  - New view-type constants: `VIEW_TYPE_RAIL_TOP=3`, `VIEW_TYPE_RAIL_BOTTOM=4`, `VIEW_TYPE_SECTION_EMPTY=5`.
+  - `emitSection()` rewritten: for expanded sections emits `SECTION_HEADER` → `RAIL_TOP` → (tasks OR `SECTION_EMPTY` if bucket empty) → `RAIL_BOTTOM`. Collapsed sections emit only `SECTION_HEADER` (unchanged).
+  - `onCreateViewHolder()` inflates the three new layouts and returns stateless `RailViewHolder` / `SectionEmptyViewHolder`.
+  - `onBindViewHolder()` short-circuits on the three new kinds (static layouts, nothing to bind).
+  - `getItemViewType()` switch extended with three new cases.
+  - Two new inner classes: `RailViewHolder extends ViewHolder` and `SectionEmptyViewHolder extends ViewHolder` (no fields).
+- `app/src/main/java/.../small_tasks_fragment/ItemTouchHelperAttacher.java`:
+  - `getMovementFlags()` returns `0` for `RailViewHolder` and `SectionEmptyViewHolder` (non-draggable, per R8).
+  - `commitMove()` walk-upward loop extended: if the item directly above the drop position is a rail/empty item, its `section` is used as the destination container (short-circuit). The original `SECTION_HEADER` resolution remains for drops outside any section body.
+
+### Key decisions
+
+- **Two rail layouts vs one + programmatic margin**: chose two static layout files (`section_rail_top_view.xml`, `section_rail_bottom_view.xml`) per Design — keeps adapter code free of margin manipulation; only difference is `marginBottom` (2dp vs 6dp).
+- **ViewHolders for rails/empty are stateless**: no `findViewById`, no bind logic — `onBindViewHolder` short-circuits early.
+- **Container-resolution short-circuit for rail/empty in drag drop**: walks upward and uses `above.section.getId()` when the first non-task above is a rail/empty item. Falls through to existing `SECTION_HEADER` resolution otherwise. Behaviour for free-task drops is unchanged.
+- **Empty placeholder excluded from drag count helpers**: `computeOuterPositionAt` / `computePositionInContainer` count only `SECTION_HEADER` + `TASK` items, so rails/empty are ignored automatically — no changes needed there.
+- **No Realm-schema changes**: rails/empty are pure UI structure. Feature flag not used (low-risk, revertable by one commit).
+
+### Build status
+
+`./gradlew assembleDebug` — **BUILD SUCCESSFUL in 9s** (no errors, no warnings introduced).
 
 ## Review
 
