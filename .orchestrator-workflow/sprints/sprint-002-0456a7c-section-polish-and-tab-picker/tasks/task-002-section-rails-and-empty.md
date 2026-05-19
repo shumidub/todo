@@ -92,7 +92,167 @@ All questions resolved in Phase 2 — see commit history.
 
 ## Design
 
-<заполняется на Phase 3>
+### Approach
+
+Реализуем rails и empty-плейсхолдер как **три новых view-types** в `TasksRecyclerViewAdapter` (вариант "отдельные view-types" из R7, без флага на едином `VIEW_TYPE_RAIL`). Это держит bind-логику простой (каждый ViewHolder отвечает за один layout) и легко расширяемо.
+
+**Новые view-types:**
+- `VIEW_TYPE_RAIL_TOP = 3` — белая 1dp линия под заголовком expanded-секции
+- `VIEW_TYPE_RAIL_BOTTOM = 4` — белая 1dp линия после последней задачи / Empty
+- `VIEW_TYPE_SECTION_EMPTY = 5` — текст "Empty" между rails при пустой секции
+
+(Существующие константы: `VIEW_TYPE_TASK=1`, `VIEW_TYPE_SECTION_HEADER=2`, `VIEW_TYPE_EMPTY=99`, `FOOTER_VIEW=123` — не пересекаются.)
+
+**Новые `AdapterItem.Kind`-ы:** `RAIL_TOP`, `RAIL_BOTTOM`, `SECTION_EMPTY`.
+
+Каждый из трёх новых `AdapterItem` несёт ссылку на owning section (поле `section` уже есть — переиспользуем; либо тонкий новый long-field `sectionId`, см. ниже). Это нужно для drag-n-drop резолва секции при drop над rail-айтемом (R8).
+
+### `flatten()` — структура эмита
+
+Для каждой expanded-секции `S` (под её `SECTION_HEADER`) `flatten()` теперь эмитит:
+
+```
+SECTION_HEADER(S)
+RAIL_TOP(S)
+{ TASK(t1), TASK(t2), ... }    // если есть задачи под S
+ИЛИ
+SECTION_EMPTY(S)               // если bucket S пуст
+RAIL_BOTTOM(S)
+```
+
+Для **collapsed**-секции эмитится только `SECTION_HEADER(S)` (без rails, без empty) — как сейчас.
+
+Свободные задачи (`sectionId == 0`) и `DONE_FOOTER` рисуются без изменений (R5).
+
+Реализация — расширение метода `emitSection()`:
+
+```java
+private void emitSection(List<AdapterItem> out, SectionObject s, Map<Long, List<TaskObject>> bySection) {
+    out.add(AdapterItem.ofSection(s));
+    if (!s.isCurrentlyCollapsed()) {
+        out.add(AdapterItem.ofRailTop(s));
+        List<TaskObject> inner = bySection.get(s.getId());
+        if (inner == null || inner.isEmpty()) {
+            out.add(AdapterItem.ofSectionEmpty(s));
+        } else {
+            for (TaskObject t : inner) out.add(AdapterItem.ofTask(t));
+        }
+        out.add(AdapterItem.ofRailBottom(s));
+    }
+}
+```
+
+Bucket `bySection.get(s.getId())` уже использует все undone-задачи — корректно отражает R3 ("в default-режиме секция с одними done-задачами считается пустой"). В show-completed-режиме (task-004 Var A) расширим bucket — out of scope здесь.
+
+### Modified files (методы/изменения)
+
+**`AdapterItem.java`** (~/projects/todo100android/app/src/main/java/com/shumidub/todoapprealm/ui/fragment/task_section/small_tasks_fragment/AdapterItem.java):
+- Расширить enum `Kind` тремя значениями: `RAIL_TOP, RAIL_BOTTOM, SECTION_EMPTY`.
+- Добавить три статических фабрики: `ofRailTop(SectionObject s)`, `ofRailBottom(SectionObject s)`, `ofSectionEmpty(SectionObject s)`. Каждая хранит `section` в существующем поле (для доступа к `sectionId` через `section.getId()` при drag-n-drop).
+- Если в будущем понадобится отвязка от Realm-объекта (detached) — добавить отдельное `public final long sectionId`, но сейчас Realm-ссылка валидна в пределах bind/drag-callback тика и достаточна.
+
+**`TasksRecyclerViewAdapter.java`** (строки ниже — текущие, после edit'а сдвинутся):
+- Добавить 3 константы view-types (после строки 51): `VIEW_TYPE_RAIL_TOP = 3`, `VIEW_TYPE_RAIL_BOTTOM = 4`, `VIEW_TYPE_SECTION_EMPTY = 5`.
+- `emitSection()` (строки 174–180) — переписать как показано выше.
+- `onCreateViewHolder()` (строки 189–206) — добавить три ветки:
+  - `VIEW_TYPE_RAIL_TOP` / `VIEW_TYPE_RAIL_BOTTOM` → inflate `R.layout.section_rail_view` → возвращать новый `RailViewHolder` (минимальный, наследник `ViewHolder`, без findViewById).
+  - `VIEW_TYPE_SECTION_EMPTY` → inflate `R.layout.section_empty_card_view` → возвращать новый `SectionEmptyViewHolder`.
+- `onBindViewHolder()` (строки 214–231) — для трёх новых kinds делать `return;` (статичный layout, ничего не бинд'ить). Можно явно: `if (it.kind == RAIL_TOP || RAIL_BOTTOM || SECTION_EMPTY) return;`.
+- `getItemViewType()` (строки 337–346) — расширить `switch`:
+  ```java
+  case RAIL_TOP: return VIEW_TYPE_RAIL_TOP;
+  case RAIL_BOTTOM: return VIEW_TYPE_RAIL_BOTTOM;
+  case SECTION_EMPTY: return VIEW_TYPE_SECTION_EMPTY;
+  ```
+- Новые inner ViewHolders: `RailViewHolder extends ViewHolder` и `SectionEmptyViewHolder extends ViewHolder` (по аналогии с `FooterViewHolder` — без полей).
+
+**`ItemTouchHelperAttacher.java`**:
+- `getMovementFlags()` (строки 81–85) — добавить early-return `0` для трёх новых view-types, по аналогии с `FooterViewHolder`:
+  ```java
+  if (viewHolder instanceof TasksRecyclerViewAdapter.RailViewHolder) return 0;
+  if (viewHolder instanceof TasksRecyclerViewAdapter.SectionEmptyViewHolder) return 0;
+  ```
+- `onMove()` (строки 95–134) — `toItem.kind` теперь может быть `RAIL_TOP / RAIL_BOTTOM / SECTION_EMPTY`. Не блокировать drop (rail — валидная drop-зона), но и не двигать сам rail-айтем (он не draggable, проверено через `getMovementFlags`). При перетаскивании задачи **на** rail-айтем — `notifyItemMoved` + `items.add/remove` отрабатывают как обычно; `containerSectionId` резолвится в `commitMove → computePositionInContainer` через walk-upward к ближайшему `SECTION_HEADER` (логика уже на месте, walk пропускает rails автоматически, т.к. они `!= SECTION_HEADER`).
+- Доп. защита: исключить drop **на** `DONE_FOOTER` уже есть; для rails отдельной защиты не нужно — rail-айтем не имеет `task`/`section` для miscompute, walk-upward проходит сквозь него.
+- `computeOuterPositionAt()` / `computePositionInContainer()` — не считают rails/empty (они != SECTION_HEADER и != TASK), значит индексы остаются корректными без правок.
+
+**`res/values/strings.xml`**:
+- Добавить `<string name="section_empty">Empty</string>`.
+- `values-ru/` folder **отсутствует** (проверено `ls app/src/main/res/`) — добавлять русскую локаль не нужно. Если в будущем появится — string-key уже готов.
+
+### New layouts
+
+**`res/layout/section_rail_view.xml`** (новый файл, используется для обоих RAIL_TOP и RAIL_BOTTOM; vertical margins задаются на корне; верхний/нижний rail отличаются только адаптерной позицией):
+
+```xml
+<View xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="1dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="2dp"
+    android:background="#FFFFFF" />
+```
+
+Замечание по vertical-margins: top rail хочет `marginTop=2dp / marginBottom=2dp` (R1), bottom rail — `marginTop=2dp / marginBottom=6dp` (R2). Различие в 4dp на нижнем margin'е. Варианты:
+- (a) Два отдельных layout-файла (`section_rail_top_view.xml`, `section_rail_bottom_view.xml`) — самый прямолинейный. **Выбираем этот вариант** — простота для статичных layout'ов, имена явные.
+- (b) Один layout + программно выставлять `bottomMargin` в `onCreateViewHolder` по типу — больше кода в адаптере.
+
+Итог: создаём **два** layout-файла:
+- `res/layout/section_rail_top_view.xml` — `marginTop=2dp`, `marginBottom=2dp`.
+- `res/layout/section_rail_bottom_view.xml` — `marginTop=2dp`, `marginBottom=6dp`.
+
+Корневой элемент — `<View>` (минимальный overhead, никаких children, RecyclerView сам аттачит к VH).
+
+**`res/layout/section_empty_card_view.xml`** (новый файл):
+
+```xml
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
+    android:gravity="center_horizontal"
+    android:text="@string/section_empty"
+    android:textSize="14sp"
+    android:textStyle="italic"
+    android:textColor="#99FFFFFF" />
+```
+
+Соответствует R3: italic 14sp, white alpha 60%, centered, vertical padding 12dp.
+
+### Drag-n-drop детали (R8)
+
+- `getMovementFlags = 0` для всех трёх новых VH — gestures игнорируются на самих rail/empty.
+- При drag задачи **через** rail-айтем: `onMove` пересортирует `items[]` локально (rail остаётся в списке как обычный AdapterItem, но физически не двигается из-за `flags=0` — на самом деле двигается **протаскиваемая задача**, rail "обходит" её).
+- В `commitMove → computePositionInContainer` walk-upward от drop-position до ближайшего `SECTION_HEADER` уже игнорирует не-SECTION_HEADER элементы — rails и empty не сбивают логику. Резолв container'а:
+  - drop **над** `RAIL_TOP(S)` → walk upward → ближайший SECTION_HEADER = S → containerSectionId = S.id.
+  - drop **над** `RAIL_BOTTOM(S)` → walk upward проходит сквозь tasks секции S → SECTION_HEADER = S → containerSectionId = S.id.
+  - drop **над** `SECTION_EMPTY(S)` → walk upward → SECTION_HEADER = S.
+- После `clearView` вызывается `setTasksAndNotifyDataSetChanged` → `flatten()` пересоздаёт rails/empty в правильных местах. Локальная мутация `items[]` в `onMove` — временная.
+
+**Edge case**: после `onMove` rail может временно оказаться в "неправильной" позиции в `items[]` (например, between two tasks of S because user dragged a task over it). Это не вызывает crash (ViewHolder корректно рендерится — у rails нет state binding), и authoritative re-flatten в `clearView` всё чинит. Принимаем как acceptable trade-off.
+
+### Feature flag
+
+**Не требуется.** Изменения UI-only, low risk:
+- Realm-схема не меняется.
+- Адаптер расширяется новыми view-types — старые ветки нетронуты.
+- Откат — revert одного коммита, никаких миграций.
+- Pull-out-of-prod через flag добавил бы сложность без real win — задача мелкая и видимая через QA сразу.
+
+### ADR
+
+**Новый ADR не требуется.** Решение чисто реализационное (UI ratchet existing pattern из task-002 — heterogeneous adapter с view-types). Не вводит нового domain-понятия и не противоречит существующим ADR.
+
+### Risks
+
+1. **Rail как drop-target** (R8 edge): пользователь может ожидать визуального feedback при hover над rail. В текущем drag-API (`ItemTouchHelper.SimpleCallback`) hover-стейт rail не подсвечивается — drop "работает" незаметно. Принимаем; если будет UX-feedback в Phase 7 manual QA — поднимем отдельный тикет.
+2. **`flatten()` сложность растёт**: было 3 kind'а — стало 6. Тесты-инварианты (если пишутся в Phase 4) должны покрывать порядок эмита для (a) collapsed S, (b) expanded S с задачами, (c) expanded S пустая, (d) free tasks вокруг секции.
+3. **Координация с task-003** (counter в header): task-003 трогает `section_header_card_view.xml` и `bindSectionHeader`. Task-002 их **не трогает**. Конфликта по файлам нет. Sprint orchestrator: задачи можно мерджить независимо.
+4. **Drag-`items[]` десинхрон**: локальная мутация `items[]` в `onMove` может оставить rails не в той позиции до `clearView`. Не приводит к crash (rails statеless), authoritative re-flatten фиксит. Принимаем.
+5. **AdapterItem `section` хранит Realm-ссылку**: если `SectionObject` инвалидируется между bind и drag (нетипичный сценарий — Realm tx), `section.getId()` упадёт. Текущий код уже полагается на эту инвариантность (`bindSectionHeader` тоже использует `section.getId()`). Не регрессия.
 
 ## Tests
 
