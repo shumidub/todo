@@ -285,7 +285,26 @@ Manual QA — без TDD (как в sprint-001).
 
 ## Review
 
-<заполняется на Phase 6>
+- [ ] low: Button labels `"GREEN"` / `"BLUE"` / `"YELLOW"` in `dialog_add_folder_layout.xml` are hardcoded literals. `R.string.tab_color` was added for the label, but the three swatch texts are not externalised. Either externalise them (e.g. `R.string.tab_color_green/blue/yellow`) or document in the task that the strings remain hardcoded until Phase 3 design finalises the casing/abbreviation.
+- [ ] low: `resolveSelectedGroup` / `setCheckedByGroup` are duplicated verbatim across `AddFolderDialog.java` and `EditDelFolderDialog.java`. Design explicitly defers extraction to a shared util ("Phase 5 — выбор разработчика, не блокирует acceptance"), so this is non-blocking — flagged only for the follow-up.
+
+Verified:
+- R1 (EditDelFolderDialog): `cbTasks2` field/init/visibility/ternary all removed; `MaterialButtonToggleGroup` field wired, initialised via `setCheckedByGroup(..., FolderTaskRealmController.getFolderGroup(folderObject))`, target group read via `resolveSelectedGroup` and passed to `moveFolderToGroup`. Picker shown only in `EDIT_LIST` branch (view inflated only there), matching the old checkbox-visibility behaviour. No toast/snackbar/auto-swipe on color change.
+- R2 (AddFolderDialog): picker seeded from `ARG_TASK_GROUP` in `onCreateDialog`, final value comes from `resolveSelectedGroup` in the positive-button lambda (not the arg). `FolderTaskRealmController.addFolder(text, isDaily, group)` signature unchanged.
+- R3: Daily checkbox untouched and remains above the picker in the layout (name → Daily → label → toggle group).
+- R4: no toast/snackbar/auto-swipe added in either dialog. `notifySmallTasksViewPagerListsChanged` is still called over `App.folderSlidingPanelFragments` after edit.
+- R5: green fallback (`return 0`) implemented in `resolveSelectedGroup` and `setCheckedByGroup` for the `group == -1 / unknown` case. Defensive null guards on the toggle group are also present.
+- R6: no Realm-schema changes, `RealmMigrations` and `SCHEMA_VERSION` untouched, no `group` column added.
+- R7: label uses `TextAppearance.App.Dialog.LabelSmall` (caption parent, all-caps, `?attr/colorOnSurfaceVariant`); toggle group is `match_parent` with three `0dp + weight=1` buttons, `minHeight=40dp`, single-select + selection-required.
+- R8: only the listed files are touched (layout, styles.xml, strings.xml, color/tab_swatch_stroke_color.xml, AddFolderDialog.java, EditDelFolderDialog.java). `FolderTaskRealmController`, `MainPagerAdapter`, `RealmFoldersContainer`, `App.java`, `RealmMigrations.java`, `colors.xml` are untouched.
+- R9: per-button `backgroundTint` uses concrete palette colours (`colorBackgroundActivity` / `cornflowerBg` / `canaryBg`) so dialog `ThemeOverlay`s don't repaint the swatches. Selected state uses constant `strokeWidth=2dp` + `tab_swatch_stroke_color` state-list (white when checked, transparent otherwise). Yellow swatch overrides `textColor` to `canaryText` for contrast.
+- TBD discipline: 3 atomic commits on `master` (`feat` + `docs` ADR + orchestrator log), no feature branch.
+- View IDs (`tabColorToggleGroup`, `tabColorGreen`, `tabColorBlue`, `tabColorYellow`, `labelTabColor`) are unique across the layout and only referenced from the two dialog classes; `findViewById` calls match.
+- Null safety: both helpers guard `g == null`; `tabColorToggleGroup` is only used inside the `EDIT_LIST` branch in `EditDelFolderDialog` (matches when the view is actually inflated). No reflection or unsafe casts.
+- Realm/threading: no new Realm access introduced; existing controller calls (`getFolderGroup`, `moveFolderToGroup`, `addFolder`) are unchanged and stay on the dialog's caller thread (main).
+- Colors all reference existing resources in `colors.xml` (`colorWhite`, `colorTransparent`, `colorBackgroundActivity`, `cornflowerBg`, `canaryBg`, `canaryText`, `colorWhiteTransparent`) — no hardcoded hex in the new styles.
+- ADR-0001 saved to `.orchestrator-workflow/adr/ADR-0001-material-button-toggle-group.md` as required.
+- Build reported BUILD SUCCESSFUL in Implementation notes.
 
 ## Manual verification
 
