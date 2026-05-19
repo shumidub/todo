@@ -261,7 +261,27 @@ Manual QA — без TDD (как в sprint-001).
 
 ## Implementation
 
-<заполняется на Phase 5>
+### Files changed
+
+- `app/src/main/res/layout/dialog_add_folder_layout.xml` — dropped `CheckBox @+id/checkbox_tasks2`; added `TextView @+id/labelTabColor` (uses `@string/tab_color`) and a `MaterialButtonToggleGroup @+id/tabColorToggleGroup` with three `MaterialButton` children (`tabColorGreen` / `tabColorBlue` / `tabColorYellow`, weight=1 each, `app:singleSelection="true"`, `app:selectionRequired="true"`). Added `xmlns:app` on the root LinearLayout.
+- `app/src/main/res/values/styles.xml` — added `TextAppearance.App.Dialog.LabelSmall` (caption-style, all-caps, uses `?attr/colorOnSurfaceVariant` so it follows the dialog overlay), `Widget.App.Button.TabColorSwatch` base (OutlinedButton parent, 40dp minHeight, 2dp stroke, ripple, white text, 12sp), plus the three concrete styles `.Green` (backgroundTint = `colorBackgroundActivity`), `.Blue` (`cornflowerBg`), and `.Yellow` (`canaryBg` + textColor override = `canaryText` for contrast).
+- `app/src/main/res/color/tab_swatch_stroke_color.xml` — new color state list: white when `state_checked="true"`, transparent otherwise. Drives the selected-state stroke colour on the toggle buttons without any Java code.
+- `app/src/main/res/values/strings.xml` — added `R.string.tab_color` = "Tab color" used by the label above the picker.
+- `app/src/main/java/com/shumidub/todoapprealm/ui/dialog/task_folder_dialog/EditDelFolderDialog.java` — dropped the `cbTasks2` field, its `findViewById`, the `setVisibility(VISIBLE)` call, the `cbTasks2.setChecked(... == 1)` init, and the `cbTasks2.isChecked() ? 1 : 0` ternary. Added a `MaterialButtonToggleGroup tabColorToggleGroup` field, init via `setCheckedByGroup(toggleGroup, FolderTaskRealmController.getFolderGroup(folderObject))` (green fallback when group == -1), and read via `resolveSelectedGroup(toggleGroup)` at confirm. Added two private static helpers (`resolveSelectedGroup`, `setCheckedByGroup`) at the bottom of the class.
+- `app/src/main/java/com/shumidub/todoapprealm/ui/dialog/task_folder_dialog/AddFolderDialog.java` — added the same `MaterialButtonToggleGroup tabColorToggleGroup` field; in `onCreateDialog` we seed the initial selection from `ARG_TASK_GROUP` (0 → green, 1 → blue, 2 → yellow) via `setCheckedByGroup`. In the positive-button lambda the `group` value now comes from `resolveSelectedGroup(toggleGroup)` instead of re-reading the arg. Added the same two private static helpers at the bottom of the class.
+
+### Build status
+
+`./gradlew clean assembleDebug` — **BUILD SUCCESSFUL** (37 actionable tasks, 36 executed, 1 up-to-date).
+
+### Notes
+
+- ADR-0001 (`MaterialButtonToggleGroup` picker pattern) saved to `.orchestrator-workflow/adr/ADR-0001-material-button-toggle-group.md`.
+- No Realm-schema, controller, or palette changes — purely UI replacement plus two new Java helpers per dialog. `FolderTaskRealmController.moveFolderToGroup` / `addFolder` contracts untouched.
+- Per Design R9, swatches keep their native palette colours regardless of the dialog's `ThemeOverlay` (Cornflower / Canary); the label "Tab color" still follows the overlay through `?attr/colorOnSurfaceVariant`.
+- Selected-state stroke is a constant 2dp; the colour-state-list flips between white (checked) and transparent (unchecked) — no Java listener needed.
+- The two private static helpers (`resolveSelectedGroup`, `setCheckedByGroup`) are duplicated across `AddFolderDialog` and `EditDelFolderDialog`. Extracting to a shared util is intentionally deferred (not blocking acceptance — see Design "API/contracts" note).
+- During the first incremental build attempt javac briefly flagged `RailViewHolder` / `SectionEmptyViewHolder` symbols inside `TasksRecyclerViewAdapter.java` (untouched by this task). A clean build resolved it — the symptom was stale incremental cache picking up the new resources and the existing in-progress sections work mid-merge.
 
 ## Review
 
