@@ -31,22 +31,22 @@
 - **Не рисуется:** для свёрнутой секции (только хэдер); для участков "free tasks" вне секций (R3 sprint-001 — задачи без секции не имеют rails).
 - **Стиль:**
   - Цвет: `#FFFFFF` (белый, как текст заголовка). Альфа 100%.
-  - Толщина: `1dp` (рекомендация — субтильно, как hairline-divider; см. Open Question Q1).
+  - Толщина: `1dp` (hairline-divider).
   - Горизонтальные margin'ы: `marginStart=8dp`, `marginEnd=8dp` (совпадает с `tv.marginStart=8dp` в `task_card_view.xml` чтобы визуально продолжать линию текста задач).
-  - Vertical: рекомендуется `marginTop=2dp` (примыкает к `section_header_card_view.marginBottom=2dp`) и `marginBottom=2dp` до первой задачи.
+  - Vertical: `marginTop=2dp` (примыкает к `section_header_card_view.marginBottom=2dp`) и `marginBottom=2dp` до первой задачи.
 
 ### R2. Bottom rail (нижняя полоса)
-- **Когда рисуется:** для каждой развёрнутой секции, **после** последней задачи секции (или после "Empty"-плейсхолдера если секция пустая).
-- **Не рисуется:** для свёрнутой секции; перед `done_footer`-ом, если только это не нижняя rail секции.
-- **Стиль:** идентичен top rail (цвет, толщина, горизонтальные margins).
-- **Vertical margins:** рекомендуется `marginTop=2dp` (после последней задачи / "Empty") и `marginBottom=6dp` (визуальный отступ до следующего хэдера / выше item'ов вне секции). Точные значения — Open Question Q2.
+- **Когда рисуется:** для каждой развёрнутой секции, **после** последней задачи секции (или после "Empty"-плейсхолдера если секция пустая). Всегда рисуется в том числе для последней секции списка — предсказуемая структура секции.
+- **Не рисуется:** для свёрнутой секции.
+- **Стиль:** идентичен top rail (цвет `#FFFFFF`, толщина `1dp`, `marginStart=8dp / marginEnd=8dp`).
+- **Vertical margins:** `marginTop=2dp` (после последней задачи / "Empty") и `marginBottom=6dp` (визуальный отступ до следующего хэдера / выше item'ов вне секции).
 
 ### R3. Empty placeholder
-- **Когда:** секция expanded и в ней **нет ни одной задачи** (ни done, ни undone — определяется по `tasks` в адаптере; uncertain about done tasks — см. Q3).
+- **Когда:** секция expanded и `flatten()` не эмиттит ни одного task-item под этой секцией. В default-режиме (done скрыты) секция, в которой все задачи done, считается пустой и показывает "Empty". В show-completed-режиме (task-004 Var A) те же done-задачи отрисуются под хэдером по `sectionId`, и "Empty" не показывается.
 - **Текст:** `"Empty"` (строка вынести в `strings.xml` как `R.string.section_empty`).
-- **Расположение:** между top rail и bottom rail, центрировано по горизонтали в контейнере задач.
-- **Типографика:** "минорный текст" — цвет `Color.WHITE` с альфой ~60% (либо `#FFFFFFFF` с `alpha=0.6`), italic, размер `14sp` (на 2sp меньше body-task 16sp). Точные значения — Open Question Q4.
-- **Высота строки:** `wrap_content`, vertical padding ~`12dp` сверху/снизу, чтобы блок дышал между rails.
+- **Расположение:** между top rail и bottom rail, центрировано по горизонтали в контейнере задач (`gravity=center_horizontal`).
+- **Типографика:** `14sp italic`, цвет `#99FFFFFF` (white alpha 60%), без иконок.
+- **Высота строки:** `wrap_content`, vertical padding `12dp` сверху и снизу, чтобы блок дышал между rails.
 
 ### R4. Collapsed секция
 - Рисуется только `section_header_card_view`. Rails и "Empty" не показываются. Поведение совпадает с текущим (collapsed скрывает inner tasks из `items` через `emitSection`).
@@ -54,56 +54,41 @@
 ### R5. Свободные задачи (free tasks, `sectionId == 0`)
 - Rails не рисуются. Empty-плейсхолдер тоже не рисуется (если в папке вообще нет задач — отображается существующий `LinearLayout emptyState` папки, см. `SmallTasksFragment.setEmptyStateIfNeed`).
 
-### R6. Палитра
-- Полосы и текст "Empty" — белые на всех трёх tab'ах (green/blue/yellow). Не зависят от Cornflower/Canary палитры (как и текст заголовка секции, который зашит `Color.WHITE`).
-- Контраст: на yellow (Canary) tab белая полоса 1dp на ярко-жёлтом фоне может быть слабо видна — Open Question Q5.
+### R6. Палитра и контраст
+- Полосы и текст "Empty" — белые на всех трёх tab'ах (green / blue / yellow). Не зависят от Cornflower/Canary палитры (как и текст заголовка секции, который зашит `Color.WHITE`).
+- На Canary (yellow) — оставить белой; если в Phase 7 контраст окажется слабым, поднимется отдельный тикет.
 
-### R7. Координация с task-003 (counter в хэдере)
-- Task-003 добавляет `TextView` справа от названия секции **внутри** `section_header_card_view.xml` (counter `2/5`). Это в **хэдере**, rails — **под** хэдером. Файл `section_header_card_view.xml` будет шарен между task-002 и task-003.
-- **Решение по координации (для Phase 3):**
-  - Если rails реализуются как **отдельные view-types в RecyclerView** (см. Q6) — конфликта нет, layout хэдера не трогается task-002.
-  - Если rails реализуются **внутри layout-обёртки** хэдера (top rail в `section_header_card_view.xml`) — task-002 и task-003 трогают один файл, требуется sequential merge (rebase второго).
-- **Рекомендация:** реализовать rails как отдельные view-types (`VIEW_TYPE_RAIL_TOP=3`, `VIEW_TYPE_RAIL_BOTTOM=4` или единый `VIEW_TYPE_RAIL=3` с флагом). Это:
-  - Не трогает `section_header_card_view.xml` → нет конфликта с task-003.
-  - Симметрично: bottom rail тоже как отдельный item, не привязан к last-task-in-section.
-  - Корректно работает с drag-n-drop (rails не должны быть draggable — `getMovementFlags=0` в `ItemTouchHelperAttacher`).
+### R7. Реализация rails — отдельные view-types в RecyclerView
+- Rails реализуются как **отдельные view-types** в `TasksRecyclerViewAdapter`: `VIEW_TYPE_RAIL_TOP`, `VIEW_TYPE_RAIL_BOTTOM`, `VIEW_TYPE_SECTION_EMPTY` (либо единый `VIEW_TYPE_RAIL` с флагом — выбор на Phase 3).
+- `section_header_card_view.xml` **не трогается** — task-002 и task-003 (counter в хэдере) не конфликтуют по файлам.
+- Bottom rail — отдельный item, не привязан к last-task-in-section через bind-логику.
 
-### R8. Затронутые файлы (предварительно — финализация на Phase 3)
-- **Создать:** `res/layout/section_rail_view.xml` (1dp white line + horizontal margins) и `res/layout/section_empty_card_view.xml` (centered "Empty" textview).
+### R8. Drag-n-drop поведение
+- Rails и Empty-плейсхолдер не draggable: `getMovementFlags=0` в `ItemTouchHelperAttacher`.
+- При drag задачи **через** rail-item: задача попадает в ту же секцию (drop над top rail → первой в секции, над bottom rail → последней). Drop-target rail сам не двигается. Детали маппинга drop-position → section-position — на Phase 3 design.
+
+### R9. Collapse/expand анимация
+- Используется `notifyDataSetChanged` (как сейчас в `setTasksAndNotifyDataSetChanged`). Оптимизация под `notifyItemRangeRemoved/Inserted` — out-of-scope этой задачи.
+
+### R10. Затронутые файлы (предварительно — финализация на Phase 3)
+- **Создать:** `res/layout/section_rail_view.xml` (1dp white line + horizontal margins) и `res/layout/section_empty_card_view.xml` (centered "Empty" textview, italic 14sp #99FFFFFF).
 - **Модифицировать:**
-  - `TasksRecyclerViewAdapter.java` — новые view types (RAIL_TOP, RAIL_BOTTOM, EMPTY_PLACEHOLDER), расширить `AdapterItem.Kind` (`RAIL_TOP`, `RAIL_BOTTOM`, `SECTION_EMPTY`), обновить `flatten()` для вставки rails/empty вокруг каждой expanded секции.
+  - `TasksRecyclerViewAdapter.java` — новые view types (RAIL_TOP, RAIL_BOTTOM, SECTION_EMPTY), расширить `AdapterItem.Kind` (`RAIL_TOP`, `RAIL_BOTTOM`, `SECTION_EMPTY`), обновить `flatten()` для вставки rails/empty вокруг каждой expanded секции (с учётом критерия из R3 о count task-items под секцией).
   - `AdapterItem.java` — добавить новые kinds.
   - `ItemTouchHelperAttacher.java` — rails и empty не draggable (`getMovementFlags=0`), drop через rail в секцию — тот же edge-case что drop на header (cross-section move).
   - `strings.xml` — добавить `section_empty`.
 - **Не трогать:** `section_header_card_view.xml`, `SectionObject.java`, `SectionsRealmController.java`, миграция (Realm-схема без изменений — rails чисто UI).
 
-### R9. Acceptance criteria mapping
+### R11. Acceptance criteria mapping
 - AC1 (rails сверху/снизу expanded секции) → R1 + R2.
 - AC2 (Empty placeholder + обе rails при пустой секции) → R3 + R1 + R2.
 - AC3 (collapsed → нет rails) → R4.
-- AC4 (белые 1-2dp, на всю ширину контейнера задач) → R1 (1dp, marginStart=8dp / marginEnd=8dp).
+- AC4 (белые 1-2dp, на всю ширину контейнера задач) → R1 (1dp, marginStart=8dp / marginEnd=8dp) + R2.
 - AC5 (одинаково на всех 3 табах) → R6.
 
 ## Open Questions
 
-1. **Q1 — толщина rail.**
-   **Answer (default):** `1dp` hairline.
-2. **Q2 — vertical margins вокруг rails.**
-   **Answer (default):** Top rail `marginTop=2dp / marginBottom=2dp`; bottom rail `marginTop=2dp / marginBottom=6dp`. Корректировка после визуального просмотра в Phase 7.
-3. **Q3 — "пустая секция" учитывает done tasks?**
-   **Answer (default — coordinated with task-004 Q1):** "Empty" показывается ⇔ `flatten()` не эмиттит ни одной task-item под секцией. В default-режиме (done скрыты) секция, в которой все задачи done, считается пустой и показывает "Empty". В show-completed-режиме те же done-задачи отрисуются под хэдером по `sectionId`, и "Empty" не показывается. Это согласовано с task-004 Var A.
-4. **Q4 — типографика "Empty".**
-   **Answer (default):** `14sp italic`, цвет `#99FFFFFF` (white alpha 60%), `gravity=center_horizontal`, vertical padding `12dp` сверху и снизу. Без иконок.
-5. **Q5 — контраст на Canary (yellow) tab.**
-   **Answer (default):** Оставить белой везде (per AC4). При слабом контрасте в Phase 7 — поднимем отдельный тикет.
-6. **Q6 — реализация rails: view type vs часть header layout.**
-   **Answer (default):** Отдельные view types в RecyclerView (`VIEW_TYPE_RAIL_TOP`, `VIEW_TYPE_RAIL_BOTTOM`, `VIEW_TYPE_SECTION_EMPTY`). `section_header_card_view.xml` не трогается — task-002 и task-003 не конфликтуют.
-7. **Q7 — bottom rail у последней секции списка.**
-   **Answer (default):** Всегда рисовать. Предсказуемая структура секции.
-8. **Q8 — drag задачи через rail.**
-   **Answer (default):** Rails — `getMovementFlags=0` (не двигаются и не accept drop как самостоятельные цели). При drag над rail item — задача попадает в ту же секцию (top rail → первой в секции, bottom rail → последней). Детали логики drop-target — на Phase 3 design.
-9. **Q9 — анимация при collapse/expand.**
-   **Answer (default):** `notifyDataSetChanged` (как сейчас в `setTasksAndNotifyDataSetChanged`). Оптимизация под `notifyItemRangeRemoved/Inserted` — out-of-scope.
+All questions resolved in Phase 2 — see commit history.
 
 ## Design
 
