@@ -8,6 +8,8 @@
     <string name="delete_section_confirm">Delete section? Tasks inside will become unsectioned.</string>
     <!-- sprint-002 task-002: section rails + empty -->
     <string name="section_empty">Empty</string>
+    <!-- sprint-002 task-003: section progress counter (a11y) -->
+    <string name="section_progress_a11y">%1$d of %2$d tasks done</string>
     <!-- sprint-002 task-001: tab color picker -->
     <string name="tab_color">Tab color</string>
 </resources>

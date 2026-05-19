@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/section_header_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -41,4 +42,16 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/section_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:gravity="center_vertical"
+        android:textSize="12sp"
+        android:textStyle="normal"
+        android:textColor="#B3FFFFFF"
+        android:maxLines="1"
+        tools:text="0/0"/>
 </LinearLayout>

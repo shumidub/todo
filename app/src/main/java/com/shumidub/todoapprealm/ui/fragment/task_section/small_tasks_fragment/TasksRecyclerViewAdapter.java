@@ -44,6 +44,13 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     private List<TaskObject> doneTasks;
     /** Flattened display list. Drives {@link #getItemCount()} / {@link #getItemViewType(int)}. */
     public List<AdapterItem> items = new ArrayList<>();
+    /**
+     * sprint-002 task-003: sectionId -> [doneCount, totalCount]. Rebuilt on every {@link #flatten()}
+     * directly from {@link TasksRealmController#getTasks(long)} so the X/Y counter is correct in
+     * both default (undone-only) and showAllTasks modes. Source-of-truth: Realm table, not the
+     * filtered {@link #tasks} field.
+     */
+    private Map<Long, int[]> sectionCounts = new HashMap<>();
 
     private static final int VIEW_TYPE_TASK = 1;
     private static final int VIEW_TYPE_SECTION_HEADER = 2;
@@ -129,6 +136,19 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     private List<AdapterItem> flatten() {
         List<AdapterItem> out = new ArrayList<>();
         long folderId = smallTasksFragment == null ? 0 : smallTasksFragment.getTasksFolderId();
+        // sprint-002 task-003: recompute section counters from Realm on every rebuild.
+        // R5: no in-memory cache outside this cycle; R1/R2/R3/R4: source-of-truth = full task table.
+        sectionCounts.clear();
+        if (folderId != 0) {
+            for (TaskObject t : TasksRealmController.getTasks(folderId)) {
+                long sid = t.getSectionId();
+                if (sid == 0) continue; // R19: free-zone has no header — skip.
+                int[] pair = sectionCounts.get(sid);
+                if (pair == null) { pair = new int[]{0, 0}; sectionCounts.put(sid, pair); }
+                pair[1]++;
+                if (t.isDone()) pair[0]++;
+            }
+        }
         if (folderId == 0 || tasks == null) {
             // No sections concept outside of a folder; fall back to plain task list.
             if (tasks != null) for (TaskObject t : tasks) out.add(AdapterItem.ofTask(t));
@@ -264,6 +284,16 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         final long sectionId = section.getId();
         holder.tvName.setText(section.getName());
         holder.tvChevron.setText(section.isCurrentlyCollapsed() ? "▶" : "▼");
+
+        // sprint-002 task-003: X/Y progress counter (lookup in pre-computed sectionCounts).
+        if (holder.tvProgress != null) {
+            int[] pair = sectionCounts != null ? sectionCounts.get(sectionId) : null;
+            int done = pair == null ? 0 : pair[0];
+            int total = pair == null ? 0 : pair[1];
+            holder.tvProgress.setText(done + "/" + total);
+            holder.tvProgress.setContentDescription(
+                    activity.getString(R.string.section_progress_a11y, done, total));
+        }
 
         int accent = activeAccent();
         holder.tvName.setTextColor(android.graphics.Color.WHITE);
@@ -442,11 +472,14 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         public final TextView tvName;
         public final TextView tvChevron;
         public final View divider;
+        /** sprint-002 task-003: X/Y counter at the right edge. May be null if layout is older. */
+        public final TextView tvProgress;
         public SectionHeaderViewHolder(View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.section_name);
             tvChevron = itemView.findViewById(R.id.section_chevron);
             divider = itemView.findViewById(R.id.section_divider);
+            tvProgress = itemView.findViewById(R.id.section_progress);
         }
     }
 
