@@ -53,7 +53,7 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
         cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
         tabColorToggleGroup = view.findViewById(R.id.tabColorToggleGroup);
         int initialGroup = getArguments() == null ? 0 : getArguments().getInt(ARG_TASK_GROUP, 0);
-        setCheckedByGroup(tabColorToggleGroup, initialGroup);
+        TabColorPickerHelper.setCheckedByGroup(tabColorToggleGroup, initialGroup);
 
         AlertDialog.Builder builder = ((MainActivity) getActivity()).dialogBuilder();
         builder.setTitle("Add new folder ")
@@ -62,7 +62,7 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
                 .setPositiveButton("Add", (dialogInterface, i) -> {
                         String text = ((EditText) getDialog().findViewById(R.id.name)).getText().toString();
                         if (!text.isEmpty()){
-                            int group = resolveSelectedGroup(tabColorToggleGroup);
+                            int group = TabColorPickerHelper.resolveSelectedGroup(tabColorToggleGroup);
                             long idFolder = FolderTaskRealmController.addFolder(text, cbIsDaily.isChecked(), group);
 //                            Toast.makeText(getContext(),"Done", Toast.LENGTH_SHORT).show();
                             activity = (MainActivity) getActivity();
@@ -105,19 +105,4 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
         return dialog;
     }
 
-    private static int resolveSelectedGroup(MaterialButtonToggleGroup g) {
-        if (g == null) return 0;
-        int checkedId = g.getCheckedButtonId();
-        if (checkedId == R.id.tabColorBlue) return 1;
-        if (checkedId == R.id.tabColorYellow) return 2;
-        return 0; // green / fallback
-    }
-
-    private static void setCheckedByGroup(MaterialButtonToggleGroup g, int group) {
-        if (g == null) return;
-        int id = R.id.tabColorGreen;
-        if (group == 1) id = R.id.tabColorBlue;
-        else if (group == 2) id = R.id.tabColorYellow;
-        g.check(id);
-    }
 }

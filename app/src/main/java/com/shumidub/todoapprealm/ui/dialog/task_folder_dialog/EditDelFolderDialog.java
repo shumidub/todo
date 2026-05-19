@@ -77,7 +77,7 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
             tabColorToggleGroup = view.findViewById(R.id.tabColorToggleGroup);
             etName.setText(folderObject.getName());
             cbIsDaily.setChecked(folderObject.isDaily());
-            setCheckedByGroup(tabColorToggleGroup, FolderTaskRealmController.getFolderGroup(folderObject));
+            TabColorPickerHelper.setCheckedByGroup(tabColorToggleGroup, FolderTaskRealmController.getFolderGroup(folderObject));
             builder.setView(view);
         } else if (title == DELETE_LIST ){
             builder.setMessage("Are you sure?");
@@ -89,7 +89,7 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
                     if (title == EDIT_LIST ) {
                         String text = etName.getText().toString();
                         FolderTaskRealmController.editFolder(folderObject, text, cbIsDaily.isChecked());
-                        int targetGroup = resolveSelectedGroup(tabColorToggleGroup);
+                        int targetGroup = TabColorPickerHelper.resolveSelectedGroup(tabColorToggleGroup);
                         FolderTaskRealmController.moveFolderToGroup(folderObject, targetGroup);
                         folderSlidingPanelFragment.finishActionMode();
                         for (com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment p
@@ -149,19 +149,4 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
         return dialog;
     }
 
-    private static int resolveSelectedGroup(MaterialButtonToggleGroup g) {
-        if (g == null) return 0;
-        int checkedId = g.getCheckedButtonId();
-        if (checkedId == R.id.tabColorBlue) return 1;
-        if (checkedId == R.id.tabColorYellow) return 2;
-        return 0; // green / fallback
-    }
-
-    private static void setCheckedByGroup(MaterialButtonToggleGroup g, int group) {
-        if (g == null) return;
-        int id = R.id.tabColorGreen;
-        if (group == 1) id = R.id.tabColorBlue;
-        else if (group == 2) id = R.id.tabColorYellow;
-        g.check(id);
-    }
 }
