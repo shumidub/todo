@@ -43,8 +43,11 @@ public class App extends Application {
     public static Realm realm;
     public static RealmFoldersContainer realmFoldersContainer;
     public static RealmList<FolderTaskObject> folderOfTasksListFromContainer;
+    public static RealmList<FolderTaskObject> folderOfTasksList2FromContainer;
+    public static RealmList<FolderTaskObject> folderOfTasksList3FromContainer;
     public static RealmList<FolderNotesObject> folderOfNotesContainerList;
     public static FolderSlidingPanelFragment folderSlidingPanelFragment;
+    public static final java.util.List<FolderSlidingPanelFragment> folderSlidingPanelFragments = new java.util.ArrayList<>();
 
 
     RealmModel gettedFolderObject;
@@ -67,8 +70,8 @@ public class App extends Application {
 
         Realm.init(this);
         Realm.setDefaultConfiguration(new RealmConfiguration.Builder()
-                .schemaVersion(1)
-                .deleteRealmIfMigrationNeeded()
+                .schemaVersion(RealmMigrations.SCHEMA_VERSION)
+                .migration(new RealmMigrations())
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .build());
@@ -133,6 +136,8 @@ public class App extends Application {
         });
 
         folderOfTasksListFromContainer = realmFoldersContainer.folderOfTasksList;
+        folderOfTasksList2FromContainer = realmFoldersContainer.folderOfTasksList2;
+        folderOfTasksList3FromContainer = realmFoldersContainer.folderOfTasksList3;
         folderOfNotesContainerList = realmFoldersContainer.folderOfNotesList;
     }
 
@@ -224,12 +229,7 @@ public class App extends Application {
 
         App.dayScope = 0;
 
-        Log.d("DTAG", "setDayScopeValue: = " + App.dayScope);
-
         for (TaskObject task : allDoneAndParticullaryDoneTasks) {
-
-            Log.d("DTAG", "setDayScopeValue: " + task.getText());
-
             if (task.getLastDoneDate() == todayDate) {
                 int equalDateCount = 0;
                 for (RealmInteger realmInteger : task.getDateCountAccumulation()) {
@@ -237,9 +237,6 @@ public class App extends Application {
                         equalDateCount++;
                     }
                 }
-
-                Log.d("DTAG", "setDayScopeValue: + " +  (task.getCountValue() * equalDateCount) );
-
                 App.dayScope = App.dayScope + task.getCountValue() * equalDateCount;
             }
         }

@@ -18,10 +18,18 @@ import android.widget.TextView;
 
 import com.shumidub.todoapprealm.App;
 import com.shumidub.todoapprealm.R;
+import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController;
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController;
+import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
+import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
 import com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment.SmallTasksFragment;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import io.realm.RealmList;
 
 
 /**
@@ -54,7 +62,7 @@ public class TaskActionModeCallback  {
 
                 actionMode.setTitle(task.getText());
 
-                LayoutInflater inflater = activity.getLayoutInflater();
+                LayoutInflater inflater = LayoutInflater.from(((MainActivity) activity).dialogContext());
                 View view = inflater.inflate(R.layout.dialog_edit_task, null);
 
                 EditText etEditTask = view.findViewById(R.id.et);
@@ -71,7 +79,13 @@ public class TaskActionModeCallback  {
                 taskCycling = task.isCycling();
 
                 defaultColor = activity.getResources().getColor(R.color.colorWhite);
-                accentColor =  activity.getResources().getColor(R.color.colorAccent);
+                if (TaskActionModeCallback.this.activity.isCornflowerTab()) {
+                    accentColor = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(activity).accent;
+                } else if (TaskActionModeCallback.this.activity.isCanaryTab()) {
+                    accentColor = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(activity).accent;
+                } else {
+                    accentColor = activity.getResources().getColor(R.color.colorAccent);
+                }
 
                 int tvTaskCyclingColor  = taskCycling ? accentColor : defaultColor;
 
@@ -103,7 +117,7 @@ public class TaskActionModeCallback  {
                 MenuItem editList = menu.add("edit ");
                 editList.setIcon(R.drawable.ic_edit);
                 editList.setOnMenuItemClickListener((MenuItem a) -> {
-                    AlertDialog.Builder dialogBuilder = new MaterialAlertDialogBuilder(activity);
+                    AlertDialog.Builder dialogBuilder = ((MainActivity) activity).dialogBuilder();
                     dialogBuilder.setView(view);
                     dialog = dialogBuilder.create();
                     dialog.setCanceledOnTouchOutside(false);
@@ -123,6 +137,14 @@ public class TaskActionModeCallback  {
                     imm.toggleSoftInputFromWindow(
                             activity.getWindow().getDecorView().getApplicationWindowToken(),
                             InputMethodManager.SHOW_FORCED, 0);
+                    return true;
+                });
+
+
+                MenuItem categories = menu.add("categories ");
+                categories.setIcon(R.drawable.ic_add);
+                categories.setOnMenuItemClickListener((MenuItem a) -> {
+                    showCategoriesDialog((MainActivity) activity, task, smallTasksFragment);
                     return true;
                 });
 
@@ -210,6 +232,60 @@ public class TaskActionModeCallback  {
         taskCycling = !taskCycling;
         if (taskCycling) view.setTextColor(accentColor);
         else view.setTextColor(defaultColor);
+    }
+
+    private void showCategoriesDialog(MainActivity activity, TaskObject task, SmallTasksFragment smallTasksFragment) {
+        List<FolderTaskObject> folders = FolderTaskRealmController.getAllFolders();
+        if (folders.isEmpty()) {
+            activity.showToast("No folders");
+            return;
+        }
+
+        final List<Long> folderIds = new ArrayList<>();
+        final CharSequence[] folderNames = new CharSequence[folders.size()];
+        final boolean[] checked = new boolean[folders.size()];
+
+        List<Long> current = TasksRealmController.getCategoryIds(task);
+
+        for (int i = 0; i < folders.size(); i++) {
+            FolderTaskObject f = folders.get(i);
+            folderIds.add(f.getId());
+            int group = FolderTaskRealmController.getFolderGroup(f);
+            String tag;
+            switch (group) {
+                case 0: tag = " [Tasks1]"; break;
+                case 1: tag = " [Tasks2]"; break;
+                case 2: tag = " [Tasks3]"; break;
+                default: tag = ""; break;
+            }
+            folderNames[i] = f.getName() + tag;
+            checked[i] = current.contains(f.getId());
+        }
+
+        activity.dialogBuilder()
+                .setTitle("Categories")
+                .setMultiChoiceItems(folderNames, checked, (d, which, isChecked) -> checked[which] = isChecked)
+                .setPositiveButton("OK", (d, w) -> {
+                    // primary = first checked; preserve current primary's position if still checked
+                    List<Long> selected = new ArrayList<>();
+                    long currentPrimary = task.getTaskFolderId();
+                    int primaryIdx = folderIds.indexOf(currentPrimary);
+                    if (primaryIdx >= 0 && checked[primaryIdx]) selected.add(currentPrimary);
+                    for (int i = 0; i < checked.length; i++) {
+                        if (checked[i] && folderIds.get(i) != currentPrimary) selected.add(folderIds.get(i));
+                    }
+                    if (selected.isEmpty()) {
+                        activity.showToast("Pick at least one category");
+                        return;
+                    }
+                    TasksRealmController.setTaskCategories(task, selected);
+                    smallTasksFragment.notifyDataChanged();
+                    for (FolderSlidingPanelFragment p : App.folderSlidingPanelFragments) {
+                        p.notifySmallTasksViewPagerListsChanged();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     public void onEditTaskEditClick(Context context, SmallTasksFragment smallTasksFragment, ActionMode actionMode,

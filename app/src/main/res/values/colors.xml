@@ -92,6 +92,28 @@
     <color name="colorCountValue60per">#f2641d</color>
     <color name="colorCountValue0per">#d20808</color>
 
+    <!-- Cornflower palette (Tasks2 tab) -->
+    <color name="cornflowerBg">#5C7CC0</color>
+    <color name="cornflowerSurface">#EEF1F8</color>
+    <color name="cornflowerSurfaceMuted">#5274B7</color>
+    <color name="cornflowerText">#F2F4FA</color>
+    <color name="cornflowerTextSoft">#BCF2F4FA</color>
+    <color name="cornflowerInputText">#1C2952</color>
+    <color name="cornflowerCounter">#7889B0</color>
+    <color name="cornflowerAccent">#E8B85C</color>
+    <color name="cornflowerDivider">#2EF2F4FA</color>
+
+    <!-- Mimosa palette (Tasks3 tab; class name CanaryPalette retained for parity) -->
+    <color name="canaryBg">#FFD93D</color>
+    <color name="canarySurface">#FFFCEA</color>
+    <color name="canarySurfaceMuted">#F2CC30</color>
+    <color name="canaryText">#2E2406</color>
+    <color name="canaryTextSoft">#A82E2406</color>
+    <color name="canaryInputText">#2E2406</color>
+    <color name="canaryCounter">#94802E</color>
+    <color name="canaryAccent">#D7305C</color>
+    <color name="canaryDivider">#242E2406</color>
+
     <!-- Dialog surface palette -->
     <color name="colorDialogSurface">#1F4F38</color>
     <color name="colorDialogOnSurface">#F1F8F4</color>

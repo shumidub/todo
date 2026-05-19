@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
@@ -27,26 +28,42 @@ import io.reactivex.annotations.NonNull;
 
 public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
 
+    private static final String ARG_TASK_GROUP = "task_group";
+
     EditText etName;
     CheckBox cbIsDaily;
+    MaterialButtonToggleGroup tabColorToggleGroup;
     MainActivity activity;
+
+    public static AddFolderDialog newInstance(int taskGroup) {
+        AddFolderDialog d = new AddFolderDialog();
+        Bundle args = new Bundle();
+        args.putInt(ARG_TASK_GROUP, taskGroup);
+        d.setArguments(args);
+        return d;
+    }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        View view = getActivity().getLayoutInflater().inflate(R.layout.dialog_add_folder_layout, null);
+        View view = android.view.LayoutInflater.from(((MainActivity) getActivity()).dialogContext())
+                .inflate(R.layout.dialog_add_folder_layout, null);
         etName = view.findViewById(R.id.name);
         cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
+        tabColorToggleGroup = view.findViewById(R.id.tabColorToggleGroup);
+        int initialGroup = getArguments() == null ? 0 : getArguments().getInt(ARG_TASK_GROUP, 0);
+        TabColorPickerHelper.setCheckedByGroup(tabColorToggleGroup, initialGroup);
 
-        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
+        AlertDialog.Builder builder = ((MainActivity) getActivity()).dialogBuilder();
         builder.setTitle("Add new folder ")
                 .setView(view)
 //              .setIcon(R.drawable.ic_launcher_cat)
                 .setPositiveButton("Add", (dialogInterface, i) -> {
                         String text = ((EditText) getDialog().findViewById(R.id.name)).getText().toString();
                         if (!text.isEmpty()){
-                            long idFolder = FolderTaskRealmController.addFolder(text, cbIsDaily.isChecked());
+                            int group = TabColorPickerHelper.resolveSelectedGroup(tabColorToggleGroup);
+                            long idFolder = FolderTaskRealmController.addFolder(text, cbIsDaily.isChecked(), group);
 //                            Toast.makeText(getContext(),"Done", Toast.LENGTH_SHORT).show();
                             activity = (MainActivity) getActivity();
                             activity.showToast("Done");
@@ -87,4 +104,5 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
 
         return dialog;
     }
+
 }

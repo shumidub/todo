@@ -12,6 +12,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController;
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
@@ -37,6 +38,7 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
     String currentTextList;
     EditText etName;
     CheckBox cbIsDaily;
+    MaterialButtonToggleGroup tabColorToggleGroup;
     long defaultFolderId;
     MainActivity activity;
     static FolderSlidingPanelFragment folderSlidingPanelFragment;
@@ -66,13 +68,16 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
             currentTextList = folderObject.getName();
         }
 
-        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getActivity());
+        AlertDialog.Builder builder = ((MainActivity) getActivity()).dialogBuilder();
         if (title == EDIT_LIST ){
-            View view = getActivity().getLayoutInflater().inflate(R.layout.dialog_add_folder_layout, null);
+            View view = android.view.LayoutInflater.from(((MainActivity) getActivity()).dialogContext())
+                    .inflate(R.layout.dialog_add_folder_layout, null);
             etName = view.findViewById(R.id.name);
             cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
+            tabColorToggleGroup = view.findViewById(R.id.tabColorToggleGroup);
             etName.setText(folderObject.getName());
             cbIsDaily.setChecked(folderObject.isDaily());
+            TabColorPickerHelper.setCheckedByGroup(tabColorToggleGroup, FolderTaskRealmController.getFolderGroup(folderObject));
             builder.setView(view);
         } else if (title == DELETE_LIST ){
             builder.setMessage("Are you sure?");
@@ -84,8 +89,13 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
                     if (title == EDIT_LIST ) {
                         String text = etName.getText().toString();
                         FolderTaskRealmController.editFolder(folderObject, text, cbIsDaily.isChecked());
+                        int targetGroup = TabColorPickerHelper.resolveSelectedGroup(tabColorToggleGroup);
+                        FolderTaskRealmController.moveFolderToGroup(folderObject, targetGroup);
                         folderSlidingPanelFragment.finishActionMode();
-                        folderSlidingPanelFragment.notifySmallTasksViewPagerListsChanged();
+                        for (com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment p
+                                : com.shumidub.todoapprealm.App.folderSlidingPanelFragments) {
+                            p.notifySmallTasksViewPagerListsChanged();
+                        }
 
                         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(getDialog().getWindow().getDecorView().getWindowToken(), 0);
@@ -138,4 +148,5 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
 
         return dialog;
     }
+
 }

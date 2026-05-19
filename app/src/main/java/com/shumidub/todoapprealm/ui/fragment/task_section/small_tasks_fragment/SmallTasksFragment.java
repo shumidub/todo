@@ -3,8 +3,6 @@ package com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
@@ -20,6 +18,9 @@ import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.actionmode.EmptyActionModeCallback;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
 import com.shumidub.todoapprealm.ui.actionmode.task.TaskActionModeCallback;
+import com.shumidub.todoapprealm.ui.dialog.task_bottomsheet.TaskEditorBottomSheet;
+import com.shumidub.todoapprealm.App;
+import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
 
 import java.util.List;
 
@@ -51,6 +52,8 @@ public class SmallTasksFragment extends Fragment {
     //TASKS
     long tasksFolderId;
     public static final String TASK_FOLDER_ID_KEY = "TASK_FOLDER_ID_KEY";
+
+    public long getTasksFolderId() { return tasksFolderId; }
 
     public static final SmallTasksFragment newInstance(long tasksListId) {
         Bundle args = new Bundle();
@@ -108,8 +111,23 @@ public class SmallTasksFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        // task-002: re-flatten in case sections changed externally (e.g. dialog)
+        if (tasksRecyclerViewAdapter != null) setTasksAndNotifyDataSetChanged();
+    }
+
+    @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        // task-002: listen for section dialog results
+        if (getActivity() != null) {
+            getActivity().getSupportFragmentManager().setFragmentResultListener(
+                    com.shumidub.todoapprealm.ui.dialog.section_dialog.SectionEditDialog.RESULT_KEY,
+                    this,
+                    (key, bundle) -> setTasksAndNotifyDataSetChanged());
+        }
 
 
         if (tasksFolderId==0){
@@ -162,19 +180,34 @@ public class SmallTasksFragment extends Fragment {
         };
 
         onItemClicked = (View view, int position) -> {
-            if (view!=null){
+            if (view != null) {
                 long idTask = (Long) view.getTag();
-                TaskObject task = TasksRealmController.getTask(idTask);
-                AlertDialog.Builder builder = new MaterialAlertDialogBuilder(getContext());
-                builder.setMessage(task.getText()).create().show();
+                int group = getTabTaskGroup();
+                if (group < 0) group = 0;
+                TaskEditorBottomSheet sheet = TaskEditorBottomSheet.newInstance(idTask, group);
+                sheet.setOnDismissListener(this::onTaskEditorDismissed);
+                sheet.show(getChildFragmentManager(), TaskEditorBottomSheet.TAG);
             }
         };
+    }
+
+    private void onTaskEditorDismissed() {
+        if (!isAdded()) return;
+        setTasksAndNotifyDataSetChanged();
+        if (getActivity() != null) getActivity().invalidateOptionsMenu();
+        for (FolderSlidingPanelFragment p : App.folderSlidingPanelFragments) {
+            if (p != null) p.notifyFolderOfTasksRVAdapterDataSetChanged();
+        }
     }
 
 
     public void setTasksAndNotifyDataSetChanged(){
         tasks = TasksRealmController.getNotDoneTasks(tasksFolderId);
         doneTasks = TasksRealmController.getDoneTasks(tasksFolderId);
+        if (tasksRecyclerViewAdapter != null) {
+            tasksRecyclerViewAdapter.tasks = tasks;
+            tasksRecyclerViewAdapter.rebuildItems();
+        }
         notifyDataChanged();
     }
 
@@ -202,6 +235,14 @@ public class SmallTasksFragment extends Fragment {
         tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
         tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
 
+        if (isInCornflowerTab()) {
+            tasksRecyclerViewAdapter.useCornflowerPalette(true);
+            applyCornflowerToFragmentView();
+        } else if (isInCanaryTab()) {
+            tasksRecyclerViewAdapter.useCanaryPalette(true);
+            applyCanaryToFragmentView();
+        }
+
         Log.d("DTAG458", "setTasksAndRV: ATTACHEDDD" + rvTasks.getAdapter().getItemCount());
 
         setItemTouchHelperAttacher();
@@ -220,6 +261,7 @@ public class SmallTasksFragment extends Fragment {
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
         }
         else{
+            tasksRecyclerViewAdapter.rebuildItems();
             tasksRecyclerViewAdapter.notifyDataSetChanged();
         }
 
@@ -242,6 +284,8 @@ public class SmallTasksFragment extends Fragment {
             tasksRecyclerViewAdapter = new TasksRecyclerViewAdapter((MainActivity) getActivity(),tasks,doneTasks, this);
             tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
             tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
+            if (isInCornflowerTab()) tasksRecyclerViewAdapter.useCornflowerPalette(true);
+            else if (isInCanaryTab()) tasksRecyclerViewAdapter.useCanaryPalette(true);
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
             rvTasks.scrollToPosition(position);
             isAllTaskShowing = true;
@@ -251,6 +295,8 @@ public class SmallTasksFragment extends Fragment {
             tasksRecyclerViewAdapter = new TasksRecyclerViewAdapter((MainActivity) getActivity(),tasks,doneTasks, this);
             tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
             tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
+            if (isInCornflowerTab()) tasksRecyclerViewAdapter.useCornflowerPalette(true);
+            else if (isInCanaryTab()) tasksRecyclerViewAdapter.useCanaryPalette(true);
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
             isAllTaskShowing = false;
         }
@@ -268,6 +314,40 @@ public class SmallTasksFragment extends Fragment {
 //    public void finishActionMode(){
 //        ((MainActivity) getActivity()).startSupportActionMode(new EmptyActionModeCallback());
 //    }
+
+    private boolean isInCornflowerTab() {
+        Fragment parent = getParentFragment();
+        return parent instanceof com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment
+                && ((com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment) parent).getTaskGroup() == 1;
+    }
+
+    private boolean isInCanaryTab() {
+        Fragment parent = getParentFragment();
+        return parent instanceof com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment
+                && ((com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment) parent).getTaskGroup() == 2;
+    }
+
+    /** taskGroup of parent FolderSlidingPanelFragment, or -1 if no parent. */
+    public int getTabTaskGroup() {
+        Fragment parent = getParentFragment();
+        return parent instanceof com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment
+                ? ((com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment) parent).getTaskGroup()
+                : -1;
+    }
+
+    private void applyCornflowerToFragmentView() {
+        if (getView() == null) return;
+        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
+                new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
+        getView().setBackgroundColor(p.bg);
+    }
+
+    private void applyCanaryToFragmentView() {
+        if (getView() == null) return;
+        com.shumidub.todoapprealm.ui.theme.CanaryPalette p =
+                new com.shumidub.todoapprealm.ui.theme.CanaryPalette(getContext());
+        getView().setBackgroundColor(p.bg);
+    }
 
     private void setEmptyStateIfNeed(){
 

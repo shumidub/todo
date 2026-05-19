@@ -39,7 +39,6 @@ import com.shumidub.todoapprealm.realmmodel.report.ReportObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.actionmode.EmptyActionModeCallback;
 import com.shumidub.todoapprealm.ui.fragment.note_fragment.FolderNoteFragment;
-import com.shumidub.todoapprealm.ui.fragment.report_section.report_fragment.ReportFragment;
 import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -81,6 +80,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Reset section collapse states once per cold start.
+        // Wrapped: Realm errors here must not block the activity from drawing.
+        try {
+            com.shumidub.todoapprealm.realmcontrollers.taskcontroller.SectionsRealmController.resetAllCollapseStates();
+        } catch (Throwable t) {
+            android.util.Log.w("MainActivity", "resetAllCollapseStates failed", t);
+        }
         onCreateActions();
         requestRuntimePermissions();
     }
@@ -112,8 +118,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void onCreateActions(){
-        App.setDayScopeValue();
-
         setContentView(R.layout.activity_main);
 
         // ActionBar + AppCompat already inset for the status bar (and camera cutout) with the
@@ -133,8 +137,13 @@ public class MainActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.viewpager);
         mainPagerAdapter = new MainPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(mainPagerAdapter);
-        viewPager.setOffscreenPageLimit(5);
+        viewPager.setOffscreenPageLimit(1);
         viewPager.setCurrentItem(1);
+
+        rootLayout.post(() -> {
+            App.setDayScopeValue();
+            if (dayScopeMenu != null) dayScopeMenu.setTitle("" + App.dayScope);
+        });
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -181,20 +190,17 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                else if (position == 1){
+                else if (position == 1 || position == 2 || position == 3){
 
                     for (Fragment fragment: getSupportFragmentManager ().getFragments()){
-                        if (fragment instanceof FolderSlidingPanelFragment){
+                        if (fragment instanceof FolderSlidingPanelFragment
+                                && ((FolderSlidingPanelFragment) fragment).getTaskGroup() == position - 1){
                             actionBar.setTitle( ((FolderSlidingPanelFragment) fragment).getValidTitle() );
                         }
                     }
                 }
 
-                else if (position == 2){
-                    actionBar.setTitle("Reports");
-                }
-
-
+                applyTabChrome(position);
             }
 
             @Override
@@ -205,6 +211,157 @@ public class MainActivity extends AppCompatActivity {
 
 
         actionBar.setTitle("Tasks");
+        applyTabChrome(viewPager.getCurrentItem());
+    }
+
+    public boolean isCornflowerTab() {
+        return viewPager != null && viewPager.getCurrentItem() == 2;
+    }
+
+    public boolean isCanaryTab() {
+        return viewPager != null && viewPager.getCurrentItem() == 3;
+    }
+
+    /** Build a MaterialAlertDialogBuilder applying the per-tab overlay (Cornflower for Tasks2,
+     *  Canary for Tasks3, default otherwise). */
+    public com.google.android.material.dialog.MaterialAlertDialogBuilder dialogBuilder() {
+        if (viewPager != null) {
+            int pos = viewPager.getCurrentItem();
+            if (pos == 2) {
+                return new com.google.android.material.dialog.MaterialAlertDialogBuilder(this,
+                        R.style.ThemeOverlay_App_MaterialAlertDialog_Cornflower);
+            }
+            if (pos == 3) {
+                return new com.google.android.material.dialog.MaterialAlertDialogBuilder(this,
+                        R.style.ThemeOverlay_App_MaterialAlertDialog_Canary);
+            }
+        }
+        return new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
+    }
+
+    /** Activity context wrapped with the per-tab overlay theme (Cornflower for Tasks2,
+     *  Canary for Tasks3), for layout inflation. The default tab is wrapped with the
+     *  base MaterialAlertDialog overlay so Material-only attributes (colorOnSurface,
+     *  colorOnSurfaceVariant, etc.) resolve during inflation — the raw AppTheme is the
+     *  Bridge variant and doesn't expose all Material 3 tokens. */
+    public android.content.Context dialogContext() {
+        if (viewPager != null) {
+            int pos = viewPager.getCurrentItem();
+            if (pos == 2) {
+                return new androidx.appcompat.view.ContextThemeWrapper(this,
+                        R.style.ThemeOverlay_App_MaterialAlertDialog_Cornflower);
+            }
+            if (pos == 3) {
+                return new androidx.appcompat.view.ContextThemeWrapper(this,
+                        R.style.ThemeOverlay_App_MaterialAlertDialog_Canary);
+            }
+        }
+        return new androidx.appcompat.view.ContextThemeWrapper(this,
+                R.style.ThemeOverlay_App_MaterialAlertDialog);
+    }
+
+    @Override
+    public void onSupportActionModeStarted(androidx.appcompat.view.ActionMode mode) {
+        super.onSupportActionModeStarted(mode);
+        tintActionModeBarForCurrentTab();
+    }
+
+    @Override
+    public void onActionModeStarted(android.view.ActionMode mode) {
+        super.onActionModeStarted(mode);
+        tintActionModeBarForCurrentTab();
+    }
+
+    /** Tint the ActionMode bar with the current tab palette background. No-op for
+     *  tabs that don't have a custom palette (Notes / Tasks1). */
+    public void tintActionModeBarForCurrentTab() {
+        if (viewPager == null) return;
+        int pos = viewPager.getCurrentItem();
+        final int color;
+        if (pos == 2) {
+            color = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this).bg;
+        } else if (pos == 3) {
+            color = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(this).bg;
+        } else {
+            return;
+        }
+        Runnable tint = () -> applyActionModeBarColor(color);
+        View decor = getWindow().getDecorView();
+        decor.post(tint);
+        decor.postDelayed(tint, 100);
+    }
+
+    private void applyActionModeBarColor(int color) {
+        View decor = getWindow().getDecorView();
+        View bar = decor.findViewById(androidx.appcompat.R.id.action_mode_bar);
+        if (bar == null) {
+            int fwId = getResources().getIdentifier("action_mode_bar", "id", "android");
+            if (fwId != 0) bar = decor.findViewById(fwId);
+        }
+        if (bar == null) bar = findFirstActionModeBar(decor);
+        if (bar != null) {
+            bar.setBackgroundColor(color);
+            bar.invalidate();
+        }
+    }
+
+    private View findFirstActionModeBar(View v) {
+        if (v == null) return null;
+        String cls = v.getClass().getName();
+        if (cls.contains("ActionBarContextView") || cls.contains("ActionModeBar")) return v;
+        try {
+            String name = getResources().getResourceEntryName(v.getId());
+            if (name != null && name.contains("action_mode")) return v;
+        } catch (Exception ignored) { }
+        if (v instanceof android.view.ViewGroup) {
+            android.view.ViewGroup g = (android.view.ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                View found = findFirstActionModeBar(g.getChildAt(i));
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
+    private void applyTabChrome(int position) {
+        if (rootLayout == null || actionBar == null) return;
+        androidx.core.view.WindowInsetsControllerCompat insets =
+                androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (position == 2) {
+            com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
+                    new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this);
+            rootLayout.setBackgroundColor(p.bg);
+            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
+            getWindow().setStatusBarColor(p.bg);
+            getWindow().setNavigationBarColor(p.bg);
+            if (insets != null) {
+                insets.setAppearanceLightStatusBars(false);
+                insets.setAppearanceLightNavigationBars(false);
+            }
+        } else if (position == 3) {
+            com.shumidub.todoapprealm.ui.theme.CanaryPalette p =
+                    new com.shumidub.todoapprealm.ui.theme.CanaryPalette(this);
+            rootLayout.setBackgroundColor(p.bg);
+            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
+            getWindow().setStatusBarColor(p.bg);
+            getWindow().setNavigationBarColor(p.bg);
+            if (insets != null) {
+                // R8: dark icons on yellow background
+                insets.setAppearanceLightStatusBars(true);
+                insets.setAppearanceLightNavigationBars(true);
+            }
+        } else {
+            int green = androidx.core.content.ContextCompat.getColor(this, R.color.colorBackgroundActivity);
+            rootLayout.setBackgroundColor(green);
+            int primary = androidx.core.content.ContextCompat.getColor(this, R.color.colorPrimary);
+            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(primary));
+            getWindow().setStatusBarColor(primary);
+            getWindow().setNavigationBarColor(primary);
+            if (insets != null) {
+                insets.setAppearanceLightStatusBars(false);
+                insets.setAppearanceLightNavigationBars(false);
+            }
+        }
     }
 
 
@@ -272,25 +429,15 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         int currentFragmentItem = viewPager.getCurrentItem();
 
-        if (currentFragmentItem == 1){
+        if (currentFragmentItem == 1 || currentFragmentItem == 2 || currentFragmentItem == 3){
             for (Fragment fragment: getSupportFragmentManager ().getFragments()){
-                if (fragment instanceof FolderSlidingPanelFragment){
+                if (fragment instanceof FolderSlidingPanelFragment
+                        && ((FolderSlidingPanelFragment) fragment).getTaskGroup() == currentFragmentItem - 1){
                     SlidingUpPanelLayout slidingUpPanelLayout = ((FolderSlidingPanelFragment) fragment).slidingUpPanelLayout;
                     if ( slidingUpPanelLayout.getPanelState()== SlidingUpPanelLayout.PanelState.EXPANDED){
                         slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
                         return;
                     } else{
-                        onBackPressedWithTimer();
-                        return;
-                    }
-                }
-            }
-        } else if (currentFragmentItem ==2){
-            for (Fragment fragment: getSupportFragmentManager ().getFragments()){
-                if (fragment instanceof ReportFragment) {
-                    if (((ReportFragment) fragment).actionModeIsEnabled) {
-                        ((ReportFragment) fragment).finishActionMode();
-                    } else {
                         onBackPressedWithTimer();
                         return;
                     }

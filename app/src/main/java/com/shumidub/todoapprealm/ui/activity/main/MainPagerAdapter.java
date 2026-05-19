@@ -4,7 +4,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import com.shumidub.todoapprealm.ui.fragment.note_fragment.FolderNoteFragment;
-import com.shumidub.todoapprealm.ui.fragment.report_section.report_fragment.ReportFragment;
 import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment;
 
 /**
@@ -22,21 +21,16 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 3;
+        return 4;
     }
 
     @Override
     public Fragment getItem(int position) {
-        if (position == 1){
-            return new FolderSlidingPanelFragment();
-        }else if (position == 2){
-            return new ReportFragment();
-        } else if (position == 0) {
-            return new FolderNoteFragment();
-        }
-        else {
-            return null;
-        }
+        if (position == 0) return new FolderNoteFragment();
+        if (position == 1) return FolderSlidingPanelFragment.newInstance(0);
+        if (position == 2) return FolderSlidingPanelFragment.newInstance(1);
+        if (position == 3) return FolderSlidingPanelFragment.newInstance(2);
+        return null;
     }
 
 }

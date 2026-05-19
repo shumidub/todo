@@ -1,4 +1,18 @@
 <resources>
     <string name="app_name">100todo(a6)</string>
     <string name="back_button_pressed_notify">Press once again to exit! All changes will not be saved</string>
+    <!-- task-002: sections -->
+    <string name="add_section">Add section</string>
+    <string name="section_name_hint">Section name</string>
+    <string name="section_collapsed_default">Collapsed by default</string>
+    <string name="delete_section_confirm">Delete section? Tasks inside will become unsectioned.</string>
+    <!-- sprint-002 task-002: section rails + empty -->
+    <string name="section_empty">Empty</string>
+    <!-- sprint-002 task-003: section progress counter (a11y) -->
+    <string name="section_progress_a11y">%1$d of %2$d tasks done</string>
+    <!-- sprint-002 task-001: tab color picker -->
+    <string name="tab_color">Tab color</string>
+    <string name="tab_color_green">GREEN</string>
+    <string name="tab_color_blue">BLUE</string>
+    <string name="tab_color_yellow">YELLOW</string>
 </resources>

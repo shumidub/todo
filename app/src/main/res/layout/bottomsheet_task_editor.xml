@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bs_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottomsheet_rounded"
+    android:fillViewport="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp">
+
+        <View
+            android:id="@+id/bs_drag_handle"
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp"
+            android:background="@color/colorDialogOnSurfaceVariant"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/bs_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Edit task"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorDialogOnSurface"/>
+
+            <TextView
+                android:id="@+id/bs_task_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="32dp"
+                android:gravity="center"
+                android:text="1"
+                android:textColor="@color/colorDialogOnSurface"
+                android:textSize="16sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <TextView
+                android:id="@+id/bs_task_max_acc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="32dp"
+                android:gravity="center"
+                android:text="1"
+                android:textColor="@color/colorDialogOnSurface"
+                android:textSize="16sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <TextView
+                android:id="@+id/bs_task_priority"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="32dp"
+                android:gravity="center"
+                android:text="!"
+                android:textColor="?attr/colorAccent"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <TextView
+                android:id="@+id/bs_task_cycling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="32dp"
+                android:gravity="center"
+                android:text="C"
+                android:textColor="@color/colorDialogOnSurface"
+                android:textSize="16sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <CheckBox
+                android:id="@+id/bs_done_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="4dp"
+                android:paddingEnd="0dp"/>
+
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/bs_text_layout"
+            style="@style/Widget.App.TextInputLayout.Dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Task text">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/bs_et_text"
+                style="@style/Widget.App.EditText.Dialog"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapSentences|textMultiLine"
+                android:gravity="top|start"
+                android:minLines="3"
+                android:maxLines="10"
+                android:scrollbars="vertical"
+                android:scrollHorizontally="false"
+                android:nestedScrollingEnabled="true"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/bs_categories_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Categories"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:textColor="@color/colorDialogOnSurfaceVariant"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/bs_rv_categories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:overScrollMode="never"
+            android:nestedScrollingEnabled="false"/>
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

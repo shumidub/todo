@@ -1,13 +1,15 @@
 package com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment;
 
 
+import android.Manifest;
 import android.animation.StateListAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Rect;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.ActionBar;
@@ -21,7 +23,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -39,6 +40,7 @@ import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_f
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
 import com.shumidub.todoapprealm.ui.actionmode.task.FolderActionModeCallback;
 import com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment.SmallTaskFragmentPagerAdapter;
+import com.shumidub.todoapprealm.ui.dialog.syncdialog.SyncDialog;
 import com.shumidub.todoapprealm.ui.dialog.task_folder_dialog.AddFolderDialog;
 import com.shumidub.todoapprealm.ui.fragment.task_section.small_tasks_fragment.SmallTasksFragment;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -56,12 +58,8 @@ import io.realm.RealmList;
 
 public class FolderSlidingPanelFragment extends Fragment implements IViewFolderSlidingPanelFragment {
 
-    LinearLayout rootLayout;
     LinearLayout emptyState;
     View view;
-
-    ConstraintLayout.LayoutParams layoutParams;
-    int keyboardHeight = 500;
 
     // ACTIONBAR AND ACTIONMODE
     ActionBar actionBar;
@@ -112,12 +110,38 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     int priority = 0;
     boolean cycling = false;
 
+    /** Which Tasks tab this fragment represents. 0 = Tasks1, 1 = Tasks2, 2 = Tasks3. */
+    private int taskGroup = 0;
+    private com.shumidub.todoapprealm.ui.theme.CornflowerPalette cornflowerPalette;
+    private com.shumidub.todoapprealm.ui.theme.CanaryPalette canaryPalette;
+    private static final String ARG_TASK_GROUP = "task_group";
+
+    public static FolderSlidingPanelFragment newInstance(int taskGroup) {
+        FolderSlidingPanelFragment f = new FolderSlidingPanelFragment();
+        Bundle args = new Bundle();
+        args.putInt(ARG_TASK_GROUP, taskGroup);
+        f.setArguments(args);
+        return f;
+    }
+
+    public int getTaskGroup() { return taskGroup; }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getArguments() != null) taskGroup = getArguments().getInt(ARG_TASK_GROUP, 0);
         resetTasksCountAccumulation();
         App.folderSlidingPanelFragment = this;
+        if (!App.folderSlidingPanelFragments.contains(this)) {
+            App.folderSlidingPanelFragments.add(this);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        App.folderSlidingPanelFragments.remove(this);
+        if (App.folderSlidingPanelFragment == this) App.folderSlidingPanelFragment = null;
+        super.onDestroy();
     }
 
     @Nullable
@@ -168,11 +192,14 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
             @Override
             public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
-                if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) setTitle("Tasks");
+                if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    setTitle("Tasks");
+                    folderOfTaskRVAdapter.notifyDataSetChanged();
+                }
                 if (newState == SlidingUpPanelLayout.PanelState.EXPANDED){
                     finishActionMode();
-                    if (FolderTaskRealmController.getFoldersList().size()>0) {
-                        setTitle(FolderTaskRealmController.getFoldersList().get(smallTasksViewPager.getCurrentItem()).getName());
+                    if (FolderTaskRealmController.getFoldersList(taskGroup).size()>0) {
+                        setTitle(FolderTaskRealmController.getFoldersList(taskGroup).get(smallTasksViewPager.getCurrentItem()).getName());
                     }
                 }
             }
@@ -182,13 +209,13 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         findFolderViews(view);
         llm = new LinearLayoutManager(getContext());
         rvFolders.setLayoutManager(llm);
-        folderObjects = FolderTaskRealmController.getFoldersList();
+        folderObjects = FolderTaskRealmController.getFoldersList(taskGroup);
 
         //set empty state for folder // todo need redesign view
 //        setEmptyStateIfFoldersIsEmpty(view);
 
         //set adapter for folder rv
-        folderOfTaskRVAdapter = new FolderOfTaskRecyclerViewAdapter(folderObjects, getActivity());
+        folderOfTaskRVAdapter = new FolderOfTaskRecyclerViewAdapter(folderObjects, getActivity(), taskGroup);
         rvFolders.setAdapter(folderOfTaskRVAdapter);
         //todo empty state
 
@@ -224,14 +251,14 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                     tvTaskCycling.setTextColor(getResources().getColor(R.color.colorWhite));
                     folderOfTaskRVAdapter.notifyDataSetChanged();
 
-                    smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getActivity().getSupportFragmentManager());
+                    smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getChildFragmentManager(), taskGroup);
                     smallTasksViewPager.setAdapter(smallTaskFragmentPagerAdapter);
 
 
                 } else {
                     idFolderFromTag = (Long) holder.itemView.findViewById(R.id.tv_note_text).getTag();
                     // setTasksAndRV(); //todo check if it need
-                    smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getActivity().getSupportFragmentManager());
+                    smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getChildFragmentManager(), taskGroup);
                     smallTasksViewPager.setAdapter(smallTaskFragmentPagerAdapter);
                     smallTasksViewPager.setCurrentItem(position);
                     setTitle(FolderTaskRealmController.getFolder(idFolderFromTag).getName());
@@ -264,7 +291,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         App.initRealm();
         realmFoldersContainer = App.realm.where(RealmFoldersContainer.class).findFirst();
         //todo try is it working, or need not use linked variable
-        RealmList<FolderTaskObject> folderOfTasksLis = realmFoldersContainer.folderOfTasksList;
+        RealmList<FolderTaskObject> folderOfTasksLis = FolderTaskRealmController.getFoldersList(taskGroup);
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
                     ItemTouchHelper.UP | ItemTouchHelper.DOWN ,0) {
 
@@ -321,7 +348,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
         ///////////////////////    SMALL TASKS VIEWS (onViewCreated)     //////////////////////
         smallTasksViewPager = view.findViewById(R.id.view_pager_small_tasks);
-        smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getActivity().getSupportFragmentManager());
+        smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getChildFragmentManager(), taskGroup);
         smallTasksViewPager.setAdapter(smallTaskFragmentPagerAdapter);
         smallTasksViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -330,63 +357,113 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             @Override
             public void onPageSelected(int position) {
                 finishActionMode();
-                setTitle(FolderTaskRealmController.getFoldersList().get(position).getName());
+                setTitle(FolderTaskRealmController.getFoldersList(taskGroup).get(position).getName());
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {}
         });
 
-        //set root view changer on keyboard opens
-
-        layoutParams
-                = (ConstraintLayout.LayoutParams) rvFolders.getLayoutParams();
-        rootLayout = ((MainActivity)getActivity()).rootLayout;
-        rootLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int height = rootLayout.getHeight();
-//                Log.w("Foo", String.format("layout height: %d", height));
-                Rect r = new Rect();
-                rootLayout.getWindowVisibleDisplayFrame(r);
-                int visible = r.bottom - r.top;
-                if (height - visible > 200){
-                    keyboardHeight = height - visible;
-                }
-//                Log.w("Foo", String.format("visible height: %d", visible));
-//                Log.w("Foo", String.format("keyboard height: %d", height - visible));
-            }
-        });
-
-
-
         KeyboardVisibilityEvent.setEventListener(
                 getActivity(),
-                //todo need thing about logig
                 (boolean isOpen) -> {
-                        if (isOpen && slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED && et.isFocused()  ){
-
-
-
-
-                            MainActivity activity = (MainActivity) getActivity();
-
-                            int topMargin = keyboardHeight - tvBottomText.getHeight() + activity.getPixelsFromDPs(4);
-
-                            activity.setPageCanChangedScrolled(false);
-                            layoutParams.setMargins(0,topMargin,0,0);
-                            rvFolders.setLayoutParams(layoutParams);
-
-                        }
-                        else {
-                            ((MainActivity)getActivity()).setPageCanChangedScrolled(true);
-                            layoutParams.setMargins(0,0,0,0);
-                            rvFolders.setLayoutParams(layoutParams);
-                        }
+                    boolean lockPaging = isOpen
+                            && slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED
+                            && et.isFocused();
+                    ((MainActivity) getActivity()).setPageCanChangedScrolled(!lockPaging);
                 });
 
-
+        if (taskGroup == 1) applyCornflowerPalette(view);
+        else if (taskGroup == 2) applyCanaryPalette(view);
     }
+
+    private void applyCornflowerPalette(View root) {
+        cornflowerPalette = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
+        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p = cornflowerPalette;
+
+        root.setBackgroundColor(p.bg);
+        View cl = root.findViewById(R.id.cl);
+        if (cl != null) cl.setBackgroundColor(p.bg);
+
+        View footer = root.findViewById(R.id.ll_footer);
+        if (footer != null) footer.setBackgroundColor(p.surfaceMuted);
+
+        TextView bottomText = root.findViewById(R.id.bottom_text);
+        if (bottomText != null) bottomText.setTextColor(p.text);
+
+        View bottomAddArea = root.findViewById(R.id.ll_bottom);
+        if (bottomAddArea != null) bottomAddArea.setBackgroundColor(p.surfaceMuted);
+
+        if (et != null) {
+            et.setTextColor(p.text);
+            et.setHintTextColor(p.textSoft);
+            et.setBackgroundTintList(android.content.res.ColorStateList.valueOf(p.accent));
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                android.graphics.drawable.Drawable cursor = new android.graphics.drawable.ColorDrawable(p.accent) {
+                    @Override public int getIntrinsicWidth() { return (int) (2 * getResources().getDisplayMetrics().density); }
+                };
+                et.setTextCursorDrawable(cursor);
+            }
+        }
+        if (tvBottomText != null) tvBottomText.setTextColor(p.text);
+        if (tvTaskCountValue != null) tvTaskCountValue.setTextColor(p.text);
+        if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setTextColor(p.text);
+        if (tvTaskPriority != null) tvTaskPriority.setTextColor(p.text);
+        if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
+    }
+
+    private void applyCanaryPalette(View root) {
+        canaryPalette = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(getContext());
+        com.shumidub.todoapprealm.ui.theme.CanaryPalette p = canaryPalette;
+
+        root.setBackgroundColor(p.bg);
+        View cl = root.findViewById(R.id.cl);
+        if (cl != null) cl.setBackgroundColor(p.bg);
+
+        View footer = root.findViewById(R.id.ll_footer);
+        if (footer != null) footer.setBackgroundColor(p.surfaceMuted);
+
+        TextView bottomText = root.findViewById(R.id.bottom_text);
+        if (bottomText != null) bottomText.setTextColor(p.text);
+
+        View bottomAddArea = root.findViewById(R.id.ll_bottom);
+        if (bottomAddArea != null) bottomAddArea.setBackgroundColor(p.surfaceMuted);
+
+        if (et != null) {
+            et.setTextColor(p.inputText);
+            et.setHintTextColor(p.textSoft);
+            et.setBackgroundTintList(android.content.res.ColorStateList.valueOf(p.accent));
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                android.graphics.drawable.Drawable cursor = new android.graphics.drawable.ColorDrawable(p.accent) {
+                    @Override public int getIntrinsicWidth() { return (int) (2 * getResources().getDisplayMetrics().density); }
+                };
+                et.setTextCursorDrawable(cursor);
+            }
+        }
+        if (tvBottomText != null) tvBottomText.setTextColor(p.text);
+        if (tvTaskCountValue != null) tvTaskCountValue.setTextColor(p.text);
+        if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setTextColor(p.text);
+        if (tvTaskPriority != null) tvTaskPriority.setTextColor(p.text);
+        if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
+    }
+
+    /** Returns the accent the bottom-panel click handlers should use — cornflower on Tasks2,
+     *  canary on Tasks3, default colorAccent otherwise. */
+    private int activeAccent() {
+        if (cornflowerPalette != null) return cornflowerPalette.accent;
+        if (canaryPalette != null) return canaryPalette.accent;
+        return getResources().getColor(R.color.colorAccent);
+    }
+
+    /** Active palette tint accent (Cornflower / Canary / default). Exposed for downstream callers
+     *  (task-001 BottomSheet, task-002 section header). */
+    public int getActiveAccent() { return activeAccent(); }
+
+    /** true if this fragment renders inside the Cornflower (Tasks2) tab. */
+    public boolean isCornflowerGroup() { return taskGroup == 1; }
+
+    /** true if this fragment renders inside the Canary (Tasks3) tab. */
+    public boolean isCanaryGroup() { return taskGroup == 2; }
 
 
     @Override
@@ -408,12 +485,12 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        MenuItem add = menu.add(2,2,2,"add ");
-        add.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        MenuItem add = menu.add(2,2,3,"Add category");
+        add.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         add.setIcon(R.drawable.ic_add);
         add.setOnMenuItemClickListener((v)->{
             if (!(slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED)) {
-                AddFolderDialog addFolderDialog = new AddFolderDialog();
+                AddFolderDialog addFolderDialog = AddFolderDialog.newInstance(taskGroup);
                 addFolderDialog.show(getActivity().getSupportFragmentManager(), "addfolder");
                 InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.toggleSoftInputFromWindow(
@@ -421,6 +498,60 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                         InputMethodManager.SHOW_FORCED, 0);
             }
          return true;});
+
+        // task-002: Add section (overflow only; no-op unless a folder is open)
+        MenuItem addSection = menu.add(2, 4, 2, R.string.add_section);
+        addSection.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        addSection.setOnMenuItemClickListener(v -> {
+            if (slidingUpPanelLayout.getPanelState() != SlidingUpPanelLayout.PanelState.EXPANDED) return true;
+            int pos = smallTasksViewPager.getCurrentItem();
+            java.util.List<FolderTaskObject> folders = FolderTaskRealmController.getFoldersList(taskGroup);
+            if (pos < 0 || pos >= folders.size()) return true;
+            long folderId = folders.get(pos).getId();
+            if (folderId == 0) return true;
+            // Subscribe right before showing the dialog so the per-fragment listener race
+            // (multiple SmallTasksFragments overwriting each other on the same result key)
+            // can't bite us. Refresh every SmallTasksFragment in this pager — cheap, robust.
+            getActivity().getSupportFragmentManager().setFragmentResultListener(
+                    com.shumidub.todoapprealm.ui.dialog.section_dialog.SectionEditDialog.RESULT_KEY,
+                    this,
+                    (key, bundle) -> {
+                        // FragmentStatePagerAdapter doesn't tag fragments — walk the live FM list.
+                        for (androidx.fragment.app.Fragment f : getChildFragmentManager().getFragments()) {
+                            if (f instanceof SmallTasksFragment) {
+                                ((SmallTasksFragment) f).setTasksAndNotifyDataSetChanged();
+                            }
+                        }
+                    });
+            com.shumidub.todoapprealm.ui.dialog.section_dialog.SectionEditDialog
+                    .forCreate(folderId)
+                    .show(getActivity().getSupportFragmentManager(), "addsection");
+            return true;
+        });
+
+        MenuItem sync = menu.add(2,3,1,"Backup / Sync");
+        sync.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        sync.setIcon(R.drawable.ic_sync);
+        sync.setOnMenuItemClickListener((MenuItem a) -> {
+            if (storagePermissionGrantedOrUnneeded()) {
+                new SyncDialog().show(getActivity().getSupportFragmentManager(), "SYNC_DIALOG");
+            } else {
+                requiredWritePermisson();
+            }
+            return true;
+        });
+    }
+
+    private boolean storagePermissionGrantedOrUnneeded() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) return true;
+        return ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requiredWritePermisson() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) return;
+        ActivityCompat.requestPermissions(getActivity(),
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 200);
     }
 
     //FOLDER
@@ -475,7 +606,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         view.setText("" + i);
 
         if (i<2) view.setTextColor(getResources().getColor(R.color.colorWhite));
-        else view.setTextColor(getResources().getColor(R.color.colorAccent));
+        else view.setTextColor(activeAccent());
     }
 
     public void onTaskPriorityClick(View view) {
@@ -492,13 +623,13 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             ((TextView) view).setText(text);
         } else ((TextView) view).setText("!");
 
-        if (priority>0) ((TextView) view).setTextColor(getResources().getColor(R.color.colorAccent));
+        if (priority>0) ((TextView) view).setTextColor(activeAccent());
         else ((TextView) view).setTextColor(getResources().getColor(R.color.colorWhite));
     }
 
     public void onTaskCyclingClick(View view) {
         cycling = !cycling;
-        if (cycling) ((TextView) view).setTextColor(getResources().getColor(R.color.colorAccent));
+        if (cycling) ((TextView) view).setTextColor(activeAccent());
         else ((TextView) view).setTextColor(getResources().getColor(R.color.colorWhite));
     }
 
@@ -513,7 +644,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
         smallTasksViewPager.removeAllViews();
 //        smallTaskFragmentPagerAdapter.notifyDataSetChanged();
-        smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getActivity().getSupportFragmentManager());
+        smallTaskFragmentPagerAdapter = new SmallTaskFragmentPagerAdapter(getChildFragmentManager(), taskGroup);
         smallTasksViewPager.setAdapter(smallTaskFragmentPagerAdapter);
 
 

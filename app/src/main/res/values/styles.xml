@@ -64,10 +64,10 @@
     </style>
 
     <style name="Widget.App.Button.Dialog.Positive" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:textColor">?attr/colorAccent</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.025</item>
-        <item name="rippleColor">@color/colorAccent</item>
+        <item name="rippleColor">?attr/colorAccent</item>
     </style>
 
     <style name="Widget.App.Button.Dialog.Negative" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
@@ -82,15 +82,15 @@
 
     <!-- Floating-label EditText used inside dialogs. -->
     <style name="Widget.App.TextInputLayout.Dialog" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxStrokeColor">@color/colorAccent</item>
+        <item name="boxStrokeColor">?attr/colorAccent</item>
         <item name="boxStrokeWidth">1dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
         <item name="boxCornerRadiusTopStart">12dp</item>
         <item name="boxCornerRadiusTopEnd">12dp</item>
         <item name="boxCornerRadiusBottomStart">12dp</item>
         <item name="boxCornerRadiusBottomEnd">12dp</item>
-        <item name="hintTextColor">@color/colorAccent</item>
-        <item name="android:textColorHint">@color/colorDialogOnSurfaceVariant</item>
+        <item name="hintTextColor">?attr/colorAccent</item>
+        <item name="android:textColorHint">?android:attr/textColorSecondary</item>
     </style>
 
     <style name="Widget.App.EditText.Dialog" parent="Widget.AppCompat.EditText">
@@ -100,8 +100,72 @@
     </style>
 
     <style name="Widget.App.CheckBox.Dialog" parent="Widget.AppCompat.CompoundButton.CheckBox">
-        <item name="android:textColor">@color/colorDialogOnSurface</item>
-        <item name="buttonTint">@color/colorAccent</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="buttonTint">?attr/colorAccent</item>
+    </style>
+
+    <!-- Small caption-like label used inside dialogs (e.g. "Tab color" above picker).
+         Uses ?android:attr/textColorSecondary (always defined; overlays remap it to
+         colorDialogOnSurfaceVariant / cornflowerTextSoft / canaryTextSoft) instead of
+         ?attr/colorOnSurfaceVariant which is Material 3 only and missing on the Bridge
+         parent theme — that mismatch crashed TextView inflate on the default tab. -->
+    <style name="TextAppearance.App.Dialog.LabelSmall" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <!-- Tab color swatch button base — used inside MaterialButtonToggleGroup picker. -->
+    <style name="Widget.App.Button.TabColorSwatch" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="strokeColor">@color/tab_swatch_stroke_color</item>
+        <item name="rippleColor">@color/colorWhiteTransparent</item>
+    </style>
+
+    <style name="Widget.App.Button.TabColorSwatch.Green">
+        <item name="backgroundTint">@color/colorBackgroundActivity</item>
+    </style>
+
+    <style name="Widget.App.Button.TabColorSwatch.Blue">
+        <item name="backgroundTint">@color/cornflowerBg</item>
+    </style>
+
+    <style name="Widget.App.Button.TabColorSwatch.Yellow">
+        <item name="backgroundTint">@color/canaryBg</item>
+        <item name="android:textColor">@color/canaryText</item>
+    </style>
+
+    <!-- Cornflower MaterialAlertDialog overlay — used when a dialog is spawned from the Tasks2 tab. -->
+    <style name="ThemeOverlay.App.MaterialAlertDialog.Cornflower" parent="ThemeOverlay.App.MaterialAlertDialog">
+        <item name="colorSurface">@color/cornflowerSurfaceMuted</item>
+        <item name="colorOnSurface">@color/cornflowerText</item>
+        <item name="android:textColorPrimary">@color/cornflowerText</item>
+        <item name="android:textColorSecondary">@color/cornflowerTextSoft</item>
+        <item name="android:colorBackground">@color/cornflowerSurfaceMuted</item>
+        <item name="colorAccent">@color/cornflowerAccent</item>
+        <!-- Material button text & TextInputLayout stroke resolve via colorPrimary inside the dialog. -->
+        <item name="colorPrimary">@color/cornflowerAccent</item>
+        <item name="colorControlActivated">@color/cornflowerAccent</item>
+    </style>
+
+    <!-- Canary MaterialAlertDialog overlay — used when a dialog is spawned from the Tasks3 tab. -->
+    <style name="ThemeOverlay.App.MaterialAlertDialog.Canary" parent="ThemeOverlay.App.MaterialAlertDialog">
+        <item name="colorSurface">@color/canarySurfaceMuted</item>
+        <item name="colorOnSurface">@color/canaryText</item>
+        <item name="android:textColorPrimary">@color/canaryText</item>
+        <item name="android:textColorSecondary">@color/canaryTextSoft</item>
+        <item name="android:colorBackground">@color/canarySurfaceMuted</item>
+        <item name="colorAccent">@color/canaryAccent</item>
+        <item name="colorPrimary">@color/canaryAccent</item>
+        <item name="colorControlActivated">@color/canaryAccent</item>
     </style>
 
 </resources>

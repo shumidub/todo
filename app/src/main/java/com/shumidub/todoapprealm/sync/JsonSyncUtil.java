@@ -11,7 +11,10 @@ import com.google.gson.GsonBuilder;
 import com.shumidub.todoapprealm.App;
 import com.shumidub.todoapprealm.realmcontrollers.ContainersControllers.ContainersRealmController;
 import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer;
+import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
+
+import io.realm.RealmList;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -99,6 +102,7 @@ public class JsonSyncUtil {
                     App.realm.insertOrUpdate(realmFoldersContainer2);
 
                     App.realmFoldersContainer = App.realm.where(RealmFoldersContainer.class).findFirst();
+                    normalizeExtraFolderIds();
 
                     Log.d("DTAG44444", "realm container count =  "
                             + App.realm.where(RealmFoldersContainer.class).findAll().size());
@@ -148,6 +152,14 @@ public class JsonSyncUtil {
         return  FileWritter.isBackupExist();
     }
 
+    /** Ensure every managed TaskObject has a non-null extraFolderIds list.
+     *  Backups produced before multi-category support don't carry the field. */
+    private static void normalizeExtraFolderIds() {
+        for (TaskObject t : App.realm.where(TaskObject.class).findAll()) {
+            if (t.getExtraFolderIds() == null) t.setExtraFolderIds(new RealmList<>());
+        }
+    }
+
 
     public void realmBdFromJsonUri(Uri uri){
         if (uri == null){
@@ -171,6 +183,7 @@ public class JsonSyncUtil {
             RealmFoldersContainer restored = gson.fromJson(json, RealmFoldersContainer.class);
             App.realm.insertOrUpdate(restored);
             App.realmFoldersContainer = App.realm.where(RealmFoldersContainer.class).findFirst();
+            normalizeExtraFolderIds();
             Log.d("DTAG44444", "realm container count = "
                     + App.realm.where(RealmFoldersContainer.class).findAll().size());
         });
