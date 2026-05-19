@@ -47,6 +47,9 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
 
     private static final int VIEW_TYPE_TASK = 1;
     private static final int VIEW_TYPE_SECTION_HEADER = 2;
+    private static final int VIEW_TYPE_RAIL_TOP = 3;
+    private static final int VIEW_TYPE_RAIL_BOTTOM = 4;
+    private static final int VIEW_TYPE_SECTION_EMPTY = 5;
     private static final int FOOTER_VIEW = 123;
     private static final int VIEW_TYPE_EMPTY = 99;
 
@@ -174,8 +177,16 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     private void emitSection(List<AdapterItem> out, SectionObject s, Map<Long, List<TaskObject>> bySection) {
         out.add(AdapterItem.ofSection(s));
         if (!s.isCurrentlyCollapsed()) {
+            // sprint-002 task-002: rails around expanded section body; "Empty" placeholder
+            // if no task-items would be emitted under this section.
+            out.add(AdapterItem.ofRailTop(s));
             List<TaskObject> inner = bySection.get(s.getId());
-            if (inner != null) for (TaskObject t : inner) out.add(AdapterItem.ofTask(t));
+            if (inner == null || inner.isEmpty()) {
+                out.add(AdapterItem.ofSectionEmpty(s));
+            } else {
+                for (TaskObject t : inner) out.add(AdapterItem.ofTask(t));
+            }
+            out.add(AdapterItem.ofRailBottom(s));
         }
     }
 
@@ -196,6 +207,18 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
             view = LayoutInflater.from(parent.getContext()).inflate(R.layout.section_header_card_view, parent, false);
             return new SectionHeaderViewHolder(view);
         }
+        if (viewType == VIEW_TYPE_RAIL_TOP) {
+            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.section_rail_top_view, parent, false);
+            return new RailViewHolder(view);
+        }
+        if (viewType == VIEW_TYPE_RAIL_BOTTOM) {
+            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.section_rail_bottom_view, parent, false);
+            return new RailViewHolder(view);
+        }
+        if (viewType == VIEW_TYPE_SECTION_EMPTY) {
+            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.section_empty_card_view, parent, false);
+            return new SectionEmptyViewHolder(view);
+        }
         if (viewType == VIEW_TYPE_TASK) {
             view = LayoutInflater.from(parent.getContext()).inflate(R.layout.task_card_view, parent, false);
             return new NormalViewHolder(view);
@@ -215,6 +238,12 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         AdapterItem it = position < items.size() ? items.get(position) : null;
         if (it == null) return;
 
+        // sprint-002 task-002: rails + empty placeholder are static layouts, no bind logic.
+        if (it.kind == AdapterItem.Kind.RAIL_TOP
+                || it.kind == AdapterItem.Kind.RAIL_BOTTOM
+                || it.kind == AdapterItem.Kind.SECTION_EMPTY) {
+            return;
+        }
         if (it.kind == AdapterItem.Kind.SECTION_HEADER && holder instanceof SectionHeaderViewHolder) {
             bindSectionHeader((SectionHeaderViewHolder) holder, it.section);
             return;
@@ -340,6 +369,9 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         switch (it.kind) {
             case SECTION_HEADER: return VIEW_TYPE_SECTION_HEADER;
             case DONE_FOOTER: return FOOTER_VIEW;
+            case RAIL_TOP: return VIEW_TYPE_RAIL_TOP;
+            case RAIL_BOTTOM: return VIEW_TYPE_RAIL_BOTTOM;
+            case SECTION_EMPTY: return VIEW_TYPE_SECTION_EMPTY;
             case TASK:
             default: return VIEW_TYPE_TASK;
         }
@@ -416,5 +448,15 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
             tvChevron = itemView.findViewById(R.id.section_chevron);
             divider = itemView.findViewById(R.id.section_divider);
         }
+    }
+
+    /** sprint-002 task-002: stateless 1dp white line under/after expanded sections. */
+    public class RailViewHolder extends ViewHolder {
+        public RailViewHolder(View itemView) { super(itemView); }
+    }
+
+    /** sprint-002 task-002: "Empty" placeholder for expanded sections with no task-items. */
+    public class SectionEmptyViewHolder extends ViewHolder {
+        public SectionEmptyViewHolder(View itemView) { super(itemView); }
     }
 }

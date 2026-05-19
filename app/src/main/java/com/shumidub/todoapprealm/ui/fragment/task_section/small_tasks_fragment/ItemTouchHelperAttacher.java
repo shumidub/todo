@@ -81,6 +81,9 @@ public class ItemTouchHelperAttacher {
             public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
                 if (smallTasksFragment.isAllTaskShowing) return ACTION_STATE_IDLE;
                 if (viewHolder instanceof TasksRecyclerViewAdapter.FooterViewHolder) return 0;
+                // sprint-002 task-002: rails and empty placeholder are not draggable.
+                if (viewHolder instanceof TasksRecyclerViewAdapter.RailViewHolder) return 0;
+                if (viewHolder instanceof TasksRecyclerViewAdapter.SectionEmptyViewHolder) return 0;
                 return super.getMovementFlags(recyclerView, viewHolder);
             }
 
@@ -197,9 +200,19 @@ public class ItemTouchHelperAttacher {
                             moved.section.getId(), outerPos, -1L));
                 } else if (moved.kind == AdapterItem.Kind.TASK) {
                     // Determine container at the new position: walk upward for the nearest section header.
+                    // sprint-002 task-002: rail/empty items above the drop position resolve directly to
+                    // their owning section (skip walk for them — they encode the same answer).
                     long containerSectionId = 0L;
                     for (int i = dragTo - 1; i >= 0; i--) {
                         AdapterItem above = items.get(i);
+                        if (above.kind == AdapterItem.Kind.RAIL_TOP
+                                || above.kind == AdapterItem.Kind.RAIL_BOTTOM
+                                || above.kind == AdapterItem.Kind.SECTION_EMPTY) {
+                            if (above.section != null && !above.section.isCurrentlyCollapsed()) {
+                                containerSectionId = above.section.getId();
+                            }
+                            break;
+                        }
                         if (above.kind == AdapterItem.Kind.SECTION_HEADER) {
                             // Only count it as container if it's not collapsed (otherwise tasks below it
                             // belong to outer space). When auto-expanded, isCurrentlyCollapsed is false.

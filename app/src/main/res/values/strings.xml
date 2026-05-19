@@ -6,4 +6,6 @@
     <string name="section_name_hint">Section name</string>
     <string name="section_collapsed_default">Collapsed by default</string>
     <string name="delete_section_confirm">Delete section? Tasks inside will become unsectioned.</string>
+    <!-- sprint-002 task-002: section rails + empty -->
+    <string name="section_empty">Empty</string>
 </resources>
