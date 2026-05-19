@@ -295,7 +295,38 @@ Manual QA.
 
 ## Review
 
-<заполняется на Phase 6>
+All clean. Verified against requirements / design / TBD / safety / edge cases.
+
+- Requirements compliance:
+  - R1 top rail: `section_rail_top_view.xml` is `<View>` height `1dp`, `marginStart/End=8dp` (matches `task_card_view` text inset of 8dp), `marginTop=2dp`, `marginBottom=2dp`, `background=#FFFFFF`. Matches AC4 + R1 exactly.
+  - R2 bottom rail: `section_rail_bottom_view.xml` identical to top except `marginBottom=6dp`. Matches R2.
+  - R3 Empty placeholder: `TextView` with `text=@string/section_empty`, `gravity=center_horizontal`, `paddingTop/Bottom=12dp`, `textSize=14sp`, `textStyle=italic`, `textColor=#99FFFFFF`. Matches R3 exactly.
+  - R3 only-undone rule: `bySection` is built from `tasks` (undone) only — sections with only done tasks naturally hit the `inner.isEmpty()` branch and emit `SECTION_EMPTY`. Confirmed by reading bucket construction in `flatten()`.
+  - R4 collapsed sections: `emitSection` only emits rails/empty when `!s.isCurrentlyCollapsed()`. Collapsed path unchanged.
+  - R5 free tasks: outer-merge loop emits free tasks directly, no rails. Confirmed.
+  - R6 palette: `#FFFFFF` and `#99FFFFFF` are hard-coded — survive Cornflower/Canary palette changes.
+- Design compliance:
+  - 3 new view-type constants (`VIEW_TYPE_RAIL_TOP=3`, `VIEW_TYPE_RAIL_BOTTOM=4`, `VIEW_TYPE_SECTION_EMPTY=5`), 3 new `AdapterItem.Kind` values, 3 factories carrying owning `SectionObject`.
+  - Two separate rail layouts (chosen variant a) rather than one + programmatic margin.
+  - `section_header_card_view.xml` UNTOUCHED in 51ab10b — last modified in unrelated task-003 commit 3b9c891.
+  - `ItemTouchHelperAttacher`: `getMovementFlags=0` for `RailViewHolder` and `SectionEmptyViewHolder`; `commitMove()` walk-upward short-circuits on rail/empty kinds using `above.section.getId()`, falling through to `SECTION_HEADER` resolution as designed.
+  - `onBindViewHolder()` short-circuits before any state binding for the three new kinds — stateless rails confirmed.
+- TBD discipline: 5 atomic commits on master for task-002 (requirements draft, requirements finalized, design, implementation, log). All prefixed correctly.
+- Test adequacy: manual QA only as per spec.
+- Safety / view recycling:
+  - `RailViewHolder` and `SectionEmptyViewHolder` have zero fields and zero bind logic — no stale state possible on recycle.
+  - No `position` lookups inside the new ViewHolders.
+  - No Realm access added on main thread — drag-resolve uses `above.section.getId()` and `isCurrentlyCollapsed()` which were already in use elsewhere in this method.
+- Edge cases:
+  - Section with 0 tasks (undone) → `inner == null || inner.isEmpty()` → `SECTION_EMPTY` between both rails. Correct.
+  - Section with only done tasks (default-mode) → bucket is undone-only → empty → `SECTION_EMPTY`. Correct.
+  - Drop near section boundary: walk-upward first hits `RAIL_BOTTOM(prev)` or `RAIL_TOP(next)` — both resolve to their owning section's id (RAIL_BOTTOM of prev → prev section; RAIL_TOP of next → next section). This matches expected drop-target semantics.
+  - Collapsed-section safety: rail/empty short-circuit checks `!above.section.isCurrentlyCollapsed()` before assigning containerSectionId; rails are never emitted for collapsed sections anyway, so this is defensive belt-and-suspenders, but it doesn't introduce bugs.
+- Readability:
+  - Factory methods `ofRailTop/ofRailBottom/ofSectionEmpty` match the existing `ofSection/ofTask/doneFooter` style.
+  - ViewHolders are minimal (single-line constructor). No dead code added.
+  - Comments tagged `sprint-002 task-002:` make the intent traceable.
+- Build: `assembleDebug BUILD SUCCESSFUL in 9s` (recorded in task md).
 
 ## Manual verification
 
