@@ -12,6 +12,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController;
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
@@ -37,7 +38,7 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
     String currentTextList;
     EditText etName;
     CheckBox cbIsDaily;
-    CheckBox cbTasks2;
+    MaterialButtonToggleGroup tabColorToggleGroup;
     long defaultFolderId;
     MainActivity activity;
     static FolderSlidingPanelFragment folderSlidingPanelFragment;
@@ -73,11 +74,10 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
                     .inflate(R.layout.dialog_add_folder_layout, null);
             etName = view.findViewById(R.id.name);
             cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
-            cbTasks2 = view.findViewById(R.id.checkbox_tasks2);
+            tabColorToggleGroup = view.findViewById(R.id.tabColorToggleGroup);
             etName.setText(folderObject.getName());
             cbIsDaily.setChecked(folderObject.isDaily());
-            cbTasks2.setVisibility(View.VISIBLE);
-            cbTasks2.setChecked(FolderTaskRealmController.getFolderGroup(folderObject) == 1);
+            setCheckedByGroup(tabColorToggleGroup, FolderTaskRealmController.getFolderGroup(folderObject));
             builder.setView(view);
         } else if (title == DELETE_LIST ){
             builder.setMessage("Are you sure?");
@@ -89,7 +89,7 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
                     if (title == EDIT_LIST ) {
                         String text = etName.getText().toString();
                         FolderTaskRealmController.editFolder(folderObject, text, cbIsDaily.isChecked());
-                        int targetGroup = cbTasks2 != null && cbTasks2.isChecked() ? 1 : 0;
+                        int targetGroup = resolveSelectedGroup(tabColorToggleGroup);
                         FolderTaskRealmController.moveFolderToGroup(folderObject, targetGroup);
                         folderSlidingPanelFragment.finishActionMode();
                         for (com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment p
@@ -147,5 +147,21 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
         });
 
         return dialog;
+    }
+
+    private static int resolveSelectedGroup(MaterialButtonToggleGroup g) {
+        if (g == null) return 0;
+        int checkedId = g.getCheckedButtonId();
+        if (checkedId == R.id.tabColorBlue) return 1;
+        if (checkedId == R.id.tabColorYellow) return 2;
+        return 0; // green / fallback
+    }
+
+    private static void setCheckedByGroup(MaterialButtonToggleGroup g, int group) {
+        if (g == null) return;
+        int id = R.id.tabColorGreen;
+        if (group == 1) id = R.id.tabColorBlue;
+        else if (group == 2) id = R.id.tabColorYellow;
+        g.check(id);
     }
 }

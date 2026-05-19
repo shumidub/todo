@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
@@ -31,6 +32,7 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
 
     EditText etName;
     CheckBox cbIsDaily;
+    MaterialButtonToggleGroup tabColorToggleGroup;
     MainActivity activity;
 
     public static AddFolderDialog newInstance(int taskGroup) {
@@ -49,6 +51,9 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
                 .inflate(R.layout.dialog_add_folder_layout, null);
         etName = view.findViewById(R.id.name);
         cbIsDaily = view.findViewById(R.id.checkboxIsDaily);
+        tabColorToggleGroup = view.findViewById(R.id.tabColorToggleGroup);
+        int initialGroup = getArguments() == null ? 0 : getArguments().getInt(ARG_TASK_GROUP, 0);
+        setCheckedByGroup(tabColorToggleGroup, initialGroup);
 
         AlertDialog.Builder builder = ((MainActivity) getActivity()).dialogBuilder();
         builder.setTitle("Add new folder ")
@@ -57,7 +62,7 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
                 .setPositiveButton("Add", (dialogInterface, i) -> {
                         String text = ((EditText) getDialog().findViewById(R.id.name)).getText().toString();
                         if (!text.isEmpty()){
-                            int group = getArguments() == null ? 0 : getArguments().getInt(ARG_TASK_GROUP, 0);
+                            int group = resolveSelectedGroup(tabColorToggleGroup);
                             long idFolder = FolderTaskRealmController.addFolder(text, cbIsDaily.isChecked(), group);
 //                            Toast.makeText(getContext(),"Done", Toast.LENGTH_SHORT).show();
                             activity = (MainActivity) getActivity();
@@ -98,5 +103,21 @@ public class AddFolderDialog extends androidx.fragment.app.DialogFragment {
 
 
         return dialog;
+    }
+
+    private static int resolveSelectedGroup(MaterialButtonToggleGroup g) {
+        if (g == null) return 0;
+        int checkedId = g.getCheckedButtonId();
+        if (checkedId == R.id.tabColorBlue) return 1;
+        if (checkedId == R.id.tabColorYellow) return 2;
+        return 0; // green / fallback
+    }
+
+    private static void setCheckedByGroup(MaterialButtonToggleGroup g, int group) {
+        if (g == null) return;
+        int id = R.id.tabColorGreen;
+        if (group == 1) id = R.id.tabColorBlue;
+        else if (group == 2) id = R.id.tabColorYellow;
+        g.check(id);
     }
 }
