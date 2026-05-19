@@ -103,7 +103,76 @@ All questions resolved in Phase 2 — see commit history.
 
 ## Design
 
-<заполняется на Phase 3 — после diagnosis>
+### Approach
+
+Одностроковый фикс в `SmallTasksFragment.notifyDataChanged()` (файл `app/src/main/java/com/shumidub/todoapprealm/ui/fragment/task_section/small_tasks_fragment/SmallTasksFragment.java`, метод на строках 252-275).
+
+Вставить вызов `tasksRecyclerViewAdapter.rebuildItems();` **внутри `else`-ветки**, непосредственно **перед** `tasksRecyclerViewAdapter.notifyDataSetChanged();`. То есть в текущей структуре:
+
+```
+if (tasksRecyclerViewAdapter == null) {
+    tasksRecyclerViewAdapter = new TasksRecyclerViewAdapter(...);   // конструктор уже вызывает rebuildItems()
+    rvTasks.setAdapter(tasksRecyclerViewAdapter);
+} else {
+    tasksRecyclerViewAdapter.rebuildItems();          // <-- НОВАЯ СТРОКА
+    tasksRecyclerViewAdapter.notifyDataSetChanged();
+}
+```
+
+Null-guard уже присутствует (`if (tasksRecyclerViewAdapter == null)` на строке 259) — отдельная проверка не нужна. В ветке `null` конструктор `TasksRecyclerViewAdapter` сам зовёт `rebuildItems()` (строка 118 адаптера), так что snapshot всегда консистентен после `notifyDataChanged()`.
+
+`rebuildItems()` читает текущее поле `tasksRecyclerViewAdapter.tasks` (RealmResults proxy). На момент вызова `notifyDataChanged()` из checkbox-handler или TaskActionMode это поле уже отражает актуальное состояние Realm (фильтр `done=false` живой), поэтому snapshot `items` пересоберётся из undone-only — done-задача исчезнет.
+
+### Affected files
+
+- `app/src/main/java/com/shumidub/todoapprealm/ui/fragment/task_section/small_tasks_fragment/SmallTasksFragment.java` — единственный модифицируемый файл, одна строка добавляется в методе `notifyDataChanged()` (строки 252-275).
+
+Никаких других файлов трогать не нужно. Все call-sites `notifyDataChanged()` (checkbox в `TasksRecyclerViewAdapter.bindTask()` строка 319; `TaskActionModeCallback` строки 156, 282, 299) починятся автоматически — это и есть цель выбранной точки фикса.
+
+### API / contracts
+
+- Никаких изменений в public API.
+- `rebuildItems()` уже `public` в `TasksRecyclerViewAdapter` (строка 122) — подтверждено grep'ом. Используется в:
+  - конструкторе адаптера (строка 118),
+  - `SmallTasksFragment.setTasksAndNotifyDataSetChanged()` (строка 209).
+- Сигнатура: `public void rebuildItems()` — без аргументов, без return.
+
+### Feature flag
+
+Не требуется. Это bugfix регрессии Wave 2 (sprint-001, commit `7a9d7ae`).
+
+### ADR
+
+Новый ADR не нужен. Это код-смел фикс (snapshot rebuilt missing), а не архитектурное решение. Связь со снапшот-моделью адаптера уже зафиксирована в sprint-001 task-001/002.
+
+### Risks
+
+1. **Stale data при гонке с Realm-транзакцией.** `rebuildItems()` читает snapshot из `tasks` (RealmResults proxy). Если Realm-транзакция ещё не закоммичена в момент вызова `notifyDataChanged()`, snapshot может оказаться stale. **Новый риск НЕ появляется** — этот же путь уже работает в `setTasksAndNotifyDataSetChanged()` (строки 204-212), который вызывается из `onResume`, `onTaskEditorDismissed`, и section-dialog listener. Все существующие call-sites `notifyDataChanged()` вызываются **после** Realm-мутации (`setTaskDoneOrParticullaryDone` в checkbox-handler, `delete`/`edit`/`category` в ActionMode), так что транзакция уже закоммичена.
+
+2. **NPE на early lifecycle.** Если адаптер ещё не создан (`tasksRecyclerViewAdapter == null`), ветка `if` создаёт новый адаптер (который сам зовёт `rebuildItems()` в конструкторе). Ветка `else` гарантирует адаптер не null → безопасно. Дополнительный null-guard НЕ требуется.
+
+3. **Двойной rebuild в `setTasksAndNotifyDataSetChanged()`.** После фикса этот метод сначала вызовет `rebuildItems()` (строка 209), потом `notifyDataChanged()` → который снова позовёт `rebuildItems()`. Идемпотентно (rebuild читает текущее состояние `tasks`, результат тот же), оверхед минимален (один проход по `tasks` + `sections`). Допустимо — упрощать call-site не входит в задачу.
+
+4. **Show-completed-mode (`showAllTasks()`) — не затронут.** Этот метод пересоздаёт адаптер с новой ссылкой на `tasks` (строки 283/294) и НЕ зовёт `notifyDataChanged()` — поэтому фикс на toggle-режим никак не влияет.
+
+5. **Infinite recursion — отсутствует.** `rebuildItems()` не вызывает `notifyDataChanged()`. `notifyDataSetChanged()` — это RecyclerView.Adapter API, тоже не зовёт обратно во фрагмент. Цикла нет.
+
+6. **Tabs (Tasks/Tasks2/Tasks3).** У каждого таба свой `SmallTasksFragment` с собственным адаптером и `tasks`. Фикс работает идентично для всех трёх — палитра (cornflower/canary) к фильтрации done не относится.
+
+### Test plan (Phase 7 — manual QA)
+
+1. **Default-mode, чекбокс.** Открыть категорию с несколькими undone-задачами. Тапнуть чекбокс одной задачи → задача должна **исчезнуть мгновенно**, без скролла/поворота/перехода между табами. Счётчик "Done N tasks" в футере увеличивается на 1.
+2. **Default-mode, delete через ActionMode.** Long-press по задаче → ActionMode → delete → задача исчезает мгновенно.
+3. **Default-mode, edit через ActionMode.** Long-press → edit → изменить title → сохранить → список перерисовывается, без stale-снимка.
+4. **Default-mode, move category через ActionMode.** Long-press → categories → переместить в другую папку → задача исчезает из текущего списка.
+5. **Show-completed-mode, чекбокс на done.** Включить show-completed (тап по футеру). Тапнуть на чекбокс выполненной задачи → задача **остаётся в списке** (uncheck снимает done-флаг), переезжает в undone-bucket секции/корня.
+6. **Show-completed-mode, чекбокс на undone.** В том же режиме тапнуть на undone-задачу → задача **остаётся в списке** (она теперь done), переезжает вниз своего bucket'а (за счёт `done ASC` сортировки в Realm-запросе).
+7. **Tabs.** Повторить пункт 1 (чекбокс на undone в default-режиме) на Tasks2 и Tasks3 — поведение идентичное.
+8. **Sections + default-режим.** Создать секцию с двумя undone-задачами. Чекнуть последнюю undone → секция остаётся (хедер виден), bucket пустой → показывается placeholder **"Empty"** (R5).
+9. **Sections + show-completed.** В том же сценарии включить show-completed → done-задачи появляются под хэдером своей секции, "Empty" исчезает (R5 / task-002 Q3 var A).
+10. **Toggle round-trip.** Default → show-completed → default → done-задачи должны быть скрыты в обоих default-фазах, видны только в show-completed.
+
+Unit-тест на фильтрацию не добавляем: `notifyDataChanged()` тесно связан с Android-фреймворком (RecyclerView + LinearLayoutManager + Fragment lifecycle), изоляция нерациональна для одностроковой правки. Будет покрыто manual QA.
 
 ## Tests
 
