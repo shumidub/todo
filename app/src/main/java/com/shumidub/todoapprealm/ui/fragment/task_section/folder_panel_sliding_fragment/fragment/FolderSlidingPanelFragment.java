@@ -487,7 +487,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        MenuItem add = menu.add(2,2,3,"Add category");
+        MenuItem add = menu.add(2,5,3,"Add category");
         add.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         add.setIcon(R.drawable.ic_add);
         add.setOnMenuItemClickListener((v)->{
@@ -550,7 +550,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         // Hide Add category when a folder is open; hide Add section on the folders list.
         boolean folderOpen = slidingUpPanelLayout != null
                 && slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED;
-        MenuItem addCategory = menu.findItem(2);  // group=2 id=2 — "Add category"
+        MenuItem addCategory = menu.findItem(5);  // group=2 id=5 — "Add category" (id=2 conflicted with MainActivity dayScopeMenu)
         MenuItem addSection  = menu.findItem(4);  // group=2 id=4 — "Add section"
         if (addCategory != null) addCategory.setVisible(!folderOpen);
         if (addSection  != null) addSection.setVisible(folderOpen);
