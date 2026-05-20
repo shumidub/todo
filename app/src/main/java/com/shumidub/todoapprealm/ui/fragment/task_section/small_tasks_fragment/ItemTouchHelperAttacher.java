@@ -201,11 +201,14 @@ public class ItemTouchHelperAttacher {
                 List<SectionsRealmController.ItemMove> moves = new ArrayList<>();
 
                 if (moved.kind == AdapterItem.Kind.SECTION_HEADER) {
-                    // Section-as-block — only the header's outer position changes.
-                    int outerPos = computeOuterPositionAt(items, dragTo);
-                    moves.add(new SectionsRealmController.ItemMove(
-                            SectionsRealmController.ItemMove.Kind.SECTION,
-                            moved.section.getId(), outerPos, -1L));
+                    // Section swap: restamp outer-space from items so two sections sharing a
+                    // position value never tie-break back to the original order.
+                    List<SectionsRealmController.ItemMove> outerOrdered =
+                            collectOuterEntries(items, 0L);
+                    Log.d("DRAG", "section-move dragFrom=" + dragFrom + " dragTo=" + dragTo
+                            + " moved=" + moved.section.getId() + " outer=" + outerOrdered.size());
+                    SectionsRealmController.rearrangeOuterSpace(folderId, outerOrdered);
+                    return;
                 } else if (moved.kind == AdapterItem.Kind.TASK) {
                     // Determine container at the new position: walk upward for the nearest
                     // section-boundary marker.
