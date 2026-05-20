@@ -173,6 +173,31 @@ public final class SectionsRealmController {
     }
 
     /**
+     * Restamp positions of all tasks in a single container (inner section or outer-space free-zone)
+     * from an explicit ordered list of task IDs. Avoids position-tie issues that
+     * {@link #reorderItems} + {@link #compactPositions} fall into when two tasks momentarily
+     * share the same {@code position} value.
+     *
+     * <p>If {@code sectionId == 0} this restamps free-zone tasks (sections in the same folder
+     * keep their positions; final {@link #compactPositions} call interleaves them deterministically).
+     *
+     * <p>The dragged task's {@code sectionId} is set to {@code sectionId} if it differs.
+     */
+    public static void rearrangeTasksInContainer(long folderId, long sectionId, List<Long> orderedTaskIds) {
+        if (orderedTaskIds == null) return;
+        App.initRealm();
+        App.realm.executeTransaction(r -> {
+            for (int i = 0; i < orderedTaskIds.size(); i++) {
+                TaskObject t = r.where(TaskObject.class).equalTo("id", orderedTaskIds.get(i)).findFirst();
+                if (t == null) continue;
+                if (t.getSectionId() != sectionId) t.setSectionId(sectionId);
+                t.setPosition(i);
+            }
+        });
+        compactPositions(folderId);
+    }
+
+    /**
      * Re-stamp positions to a contiguous 0..N-1 in current sorted order.
      * Outer space (sections + free tasks) is compacted independently from each inner space.
      */
