@@ -349,7 +349,25 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
             if (!active.contains(folder.getId())) active.add(folder.getId());
         }
         TasksRealmController.setTaskCategories(task, active);
-        rebuildCategoryRows();
+        // Refresh check states in place — do NOT re-sort, so the row the user just
+        // tapped does not jump under their finger. Sort order is the snapshot
+        // captured by rebuildCategoryRows() when the sheet was opened.
+        refreshActiveFlagsInPlace();
+    }
+
+    /** Update each row's active flag against Realm without changing row order. */
+    private void refreshActiveFlagsInPlace() {
+        if (task == null || !task.isValid()) return;
+        List<Long> activeIds = TasksRealmController.getCategoryIds(task);
+        List<Row> rows = categoriesAdapter.rows;
+        for (int i = 0; i < rows.size(); i++) {
+            Row r = rows.get(i);
+            boolean nowActive = activeIds.contains(r.folder.getId());
+            if (r.active != nowActive) {
+                rows.set(i, new Row(r.folder, nowActive));
+                categoriesAdapter.notifyItemChanged(i);
+            }
+        }
     }
 
     // -------- Row model --------
