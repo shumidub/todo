@@ -237,13 +237,12 @@ public class ItemTouchHelperAttacher {
                         }
                     }
                     if (containerSectionId != 0L) {
-                        // Inner-space move: restamp the whole target section's task order from
-                        // items between its RAIL_TOP and RAIL_BOTTOM markers. Avoids the
-                        // position-tie that reorderItems+compactPositions can't disambiguate
-                        // when two tasks end up sharing the same position field momentarily.
                         List<Long> ordered = collectTasksInSection(items, containerSectionId);
+                        Log.d("DRAG", "inner-move sec=" + containerSectionId + " dragFrom=" + dragFrom
+                                + " dragTo=" + dragTo + " moved=" + moved.task.getId()
+                                + " ordered=" + ordered);
                         SectionsRealmController.rearrangeTasksInContainer(folderId, containerSectionId, ordered);
-                        return; // skip the generic moves path
+                        return;
                     }
                     int newPos = computePositionInContainer(items, dragTo, containerSectionId);
                     moves.add(new SectionsRealmController.ItemMove(
@@ -265,19 +264,24 @@ public class ItemTouchHelperAttacher {
                 return count;
             }
 
-            /** Task IDs in target section, in adapter (visual) order — bounded by RAIL_TOP/RAIL_BOTTOM. */
+            /**
+             * Task IDs in target section, in adapter (visual) order.
+             * Section boundary = SECTION_HEADER (start) → RAIL_BOTTOM (end).
+             * Top rail was removed in c1a3841 so we no longer use it as a marker.
+             */
             private List<Long> collectTasksInSection(List<AdapterItem> items, long sectionId) {
                 List<Long> out = new ArrayList<>();
                 boolean inside = false;
                 for (AdapterItem it : items) {
                     if (!inside) {
-                        if (it.kind == AdapterItem.Kind.RAIL_TOP
+                        if (it.kind == AdapterItem.Kind.SECTION_HEADER
                                 && it.section != null && it.section.getId() == sectionId) {
                             inside = true;
                         }
                         continue;
                     }
                     if (it.kind == AdapterItem.Kind.RAIL_BOTTOM) break;
+                    if (it.kind == AdapterItem.Kind.SECTION_HEADER) break; // shouldn't happen, defensive
                     if (it.kind == AdapterItem.Kind.TASK && it.task != null) {
                         out.add(it.task.getId());
                     }
