@@ -202,6 +202,8 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                         setTitle(FolderTaskRealmController.getFoldersList(taskGroup).get(smallTasksViewPager.getCurrentItem()).getName());
                     }
                 }
+                // Refresh overflow menu so Add section / Add category visibility tracks panel state.
+                if (getActivity() != null) getActivity().invalidateOptionsMenu();
             }
         });
 
@@ -540,6 +542,18 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             }
             return true;
         });
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        // Hide Add category when a folder is open; hide Add section on the folders list.
+        boolean folderOpen = slidingUpPanelLayout != null
+                && slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED;
+        MenuItem addCategory = menu.findItem(2);  // group=2 id=2 — "Add category"
+        MenuItem addSection  = menu.findItem(4);  // group=2 id=4 — "Add section"
+        if (addCategory != null) addCategory.setVisible(!folderOpen);
+        if (addSection  != null) addSection.setVisible(folderOpen);
     }
 
     private boolean storagePermissionGrantedOrUnneeded() {
