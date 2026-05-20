@@ -244,10 +244,14 @@ public class ItemTouchHelperAttacher {
                         SectionsRealmController.rearrangeTasksInContainer(folderId, containerSectionId, ordered);
                         return;
                     }
-                    int newPos = computePositionInContainer(items, dragTo, containerSectionId);
-                    moves.add(new SectionsRealmController.ItemMove(
-                            SectionsRealmController.ItemMove.Kind.TASK,
-                            moved.task.getId(), newPos, containerSectionId));
+                    // Outer-space drop: restamp the whole outer-space (sections + free-zone tasks)
+                    // from the items list. Forces moved task into free-zone (sectionId=0).
+                    List<SectionsRealmController.ItemMove> outerOrdered =
+                            collectOuterEntries(items, moved.task != null ? moved.task.getId() : 0L);
+                    Log.d("DRAG", "outer-move dragFrom=" + dragFrom + " dragTo=" + dragTo
+                            + " moved=" + moved.task.getId() + " outer=" + outerOrdered.size());
+                    SectionsRealmController.rearrangeOuterSpace(folderId, outerOrdered);
+                    return;
                 }
 
                 if (!moves.isEmpty()) SectionsRealmController.reorderItems(folderId, moves);
@@ -262,6 +266,57 @@ public class ItemTouchHelperAttacher {
                     else if (it.kind == AdapterItem.Kind.TASK && it.task != null && it.task.getSectionId() == 0) count++;
                 }
                 return count;
+            }
+
+            /**
+             * Outer-space entries (SECTION + free-zone TASKs) in adapter visual order.
+             * Inner-space tasks belonging to sections are skipped. The dragged task
+             * (identified by {@code movedTaskId}) is forced into the free-zone — it appears
+             * in the result as a TASK entry at its current adapter position regardless of
+             * its old {@code sectionId}, because the user just moved it outside any section.
+             */
+            private List<SectionsRealmController.ItemMove> collectOuterEntries(List<AdapterItem> items, long movedTaskId) {
+                List<SectionsRealmController.ItemMove> out = new ArrayList<>();
+                long currentSectionId = 0L;
+                boolean insideExpandedSection = false;
+                for (AdapterItem it : items) {
+                    switch (it.kind) {
+                        case SECTION_HEADER:
+                            if (it.section != null) {
+                                out.add(new SectionsRealmController.ItemMove(
+                                        SectionsRealmController.ItemMove.Kind.SECTION,
+                                        it.section.getId(), 0, -1L));
+                                currentSectionId = it.section.getId();
+                                insideExpandedSection = !it.section.isCurrentlyCollapsed();
+                            }
+                            break;
+                        case RAIL_BOTTOM:
+                            insideExpandedSection = false;
+                            currentSectionId = 0L;
+                            break;
+                        case TASK:
+                            if (it.task == null) break;
+                            // The dragged task — force into outer space.
+                            if (it.task.getId() == movedTaskId) {
+                                out.add(new SectionsRealmController.ItemMove(
+                                        SectionsRealmController.ItemMove.Kind.TASK,
+                                        it.task.getId(), 0, 0L));
+                                break;
+                            }
+                            // Inner-space tasks of an expanded section: skip — handled by their section's body.
+                            if (insideExpandedSection) break;
+                            // Free-zone task (sectionId == 0 in Realm).
+                            if (it.task.getSectionId() == 0L) {
+                                out.add(new SectionsRealmController.ItemMove(
+                                        SectionsRealmController.ItemMove.Kind.TASK,
+                                        it.task.getId(), 0, 0L));
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                return out;
             }
 
             /**

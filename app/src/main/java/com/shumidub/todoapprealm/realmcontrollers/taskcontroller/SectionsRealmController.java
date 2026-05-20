@@ -198,6 +198,35 @@ public final class SectionsRealmController {
     }
 
     /**
+     * Outer-space restamp from an explicit ordered list of {@link ItemMove} entries
+     * (SECTION + TASK, in the desired visual order). Each TASK entry is forced into
+     * the free-zone ({@code sectionId = 0}). Positions become 0..N-1 in one transaction.
+     * Use when drag moves a task across section boundaries into the free-zone — avoids
+     * position ties that {@link #reorderItems} + {@link #compactPositions} cannot
+     * disambiguate.
+     */
+    public static void rearrangeOuterSpace(long folderId, List<ItemMove> orderedEntries) {
+        if (orderedEntries == null) return;
+        App.initRealm();
+        App.realm.executeTransaction(r -> {
+            for (int i = 0; i < orderedEntries.size(); i++) {
+                ItemMove e = orderedEntries.get(i);
+                if (e.kind == ItemMove.Kind.SECTION) {
+                    SectionObject s = r.where(SectionObject.class).equalTo("id", e.id).findFirst();
+                    if (s != null) s.setPosition(i);
+                } else {
+                    TaskObject t = r.where(TaskObject.class).equalTo("id", e.id).findFirst();
+                    if (t != null) {
+                        if (t.getSectionId() != 0L) t.setSectionId(0L);
+                        t.setPosition(i);
+                    }
+                }
+            }
+        });
+        compactPositions(folderId);
+    }
+
+    /**
      * Re-stamp positions to a contiguous 0..N-1 in current sorted order.
      * Outer space (sections + free tasks) is compacted independently from each inner space.
      */
