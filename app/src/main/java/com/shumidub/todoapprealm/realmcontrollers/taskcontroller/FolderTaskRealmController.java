@@ -35,6 +35,7 @@ public class FolderTaskRealmController {
         switch (group) {
             case 1: return App.folderOfTasksList2FromContainer;
             case 2: return App.folderOfTasksList3FromContainer;
+            case 3: return App.folderOfTasksList4FromContainer;
             default: return App.folderOfTasksListFromContainer;
         }
     }
@@ -48,6 +49,8 @@ public class FolderTaskRealmController {
                 && App.folderOfTasksList2FromContainer.contains(folder)) return 1;
         if (App.folderOfTasksList3FromContainer != null
                 && App.folderOfTasksList3FromContainer.contains(folder)) return 2;
+        if (App.folderOfTasksList4FromContainer != null
+                && App.folderOfTasksList4FromContainer.contains(folder)) return 3;
         return -1;
     }
 
@@ -58,6 +61,7 @@ public class FolderTaskRealmController {
         if (App.folderOfTasksListFromContainer != null) all.addAll(App.folderOfTasksListFromContainer);
         if (App.folderOfTasksList2FromContainer != null) all.addAll(App.folderOfTasksList2FromContainer);
         if (App.folderOfTasksList3FromContainer != null) all.addAll(App.folderOfTasksList3FromContainer);
+        if (App.folderOfTasksList4FromContainer != null) all.addAll(App.folderOfTasksList4FromContainer);
         return all;
     }
 
@@ -112,6 +116,7 @@ public class FolderTaskRealmController {
             if (App.folderOfTasksListFromContainer != null) App.folderOfTasksListFromContainer.remove(folder);
             if (App.folderOfTasksList2FromContainer != null) App.folderOfTasksList2FromContainer.remove(folder);
             if (App.folderOfTasksList3FromContainer != null) App.folderOfTasksList3FromContainer.remove(folder);
+            if (App.folderOfTasksList4FromContainer != null) App.folderOfTasksList4FromContainer.remove(folder);
             getFoldersList(targetGroup).add(folder);
         });
     }
@@ -144,6 +149,9 @@ public class FolderTaskRealmController {
             }
             if (App.folderOfTasksList3FromContainer != null) {
                 App.folderOfTasksList3FromContainer.remove(folderObject);
+            }
+            if (App.folderOfTasksList4FromContainer != null) {
+                App.folderOfTasksList4FromContainer.remove(folderObject);
             }
             folderObject.deleteFromRealm();
             App.realm.where(FolderTaskObject.class).equalTo("id", folderId).findAll().deleteAllFromRealm();

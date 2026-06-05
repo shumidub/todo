@@ -74,10 +74,11 @@
             style="@style/Widget.App.EditText.Dialog"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxHeight="160dp"
+            android:maxHeight="260dp"
+            android:scrollbars="vertical"
             android:imeOptions="actionDone"
             android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="4"/>
+            android:maxLines="9"/>
 
     </com.google.android.material.textfield.TextInputLayout>
 

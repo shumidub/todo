@@ -16,6 +16,7 @@ import com.shumidub.todoapprealm.realmmodel.RealmInteger;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
 import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
+import com.shumidub.todoapprealm.ui.theme.IndigoPalette;
 import androidx.cardview.widget.CardView;
 
 
@@ -38,6 +39,7 @@ public class FolderOfTaskRecyclerViewAdapter
     private final int taskGroup;
     private CornflowerPalette cornflowerPalette;
     private CanaryPalette canaryPalette;
+    private IndigoPalette indigoPalette;
 
 
     public interface OnHolderTextViewOnClickListener {
@@ -57,6 +59,7 @@ public class FolderOfTaskRecyclerViewAdapter
         this.taskGroup = taskGroup;
         if (taskGroup == 1) cornflowerPalette = new CornflowerPalette(activity);
         else if (taskGroup == 2) canaryPalette = new CanaryPalette(activity);
+        else if (taskGroup == 3) indigoPalette = new IndigoPalette(activity);
     }
 
     @Override
@@ -78,6 +81,7 @@ public class FolderOfTaskRecyclerViewAdapter
 
         if (cornflowerPalette != null) applyCornflowerPaletteToCard((ItemViewHolder) holder);
         else if (canaryPalette != null) applyCanaryPaletteToCard((ItemViewHolder) holder);
+        else if (indigoPalette != null) applyIndigoPaletteToCard((ItemViewHolder) holder);
 
         ((ItemViewHolder) holder).textView.setOnClickListener(
                 (v)->onHolderTextViewOnClickListener.onClick(holder, position));
@@ -112,12 +116,17 @@ public class FolderOfTaskRecyclerViewAdapter
 
         }
 
-        String folderTaskCounts = String.format("%d / %d", done, all);
+        // Notes tab (taskGroup 3): show only the total number of notes, not done/all points.
+        String folderTaskCounts = taskGroup == 3
+                ? String.valueOf(realmList.size())
+                : String.format("%d / %d", done, all);
         ((ItemViewHolder) holder).tvFolderTaskCounts.setText(folderTaskCounts);
         if (cornflowerPalette != null) {
             ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(cornflowerPalette.counter);
         } else if (canaryPalette != null) {
             ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(canaryPalette.counter);
+        } else if (indigoPalette != null) {
+            ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(indigoPalette.counter);
         } else if (realmListFolder.get(position).isDaily){
             ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(activity.getApplicationContext().getResources().getColor(R.color.colorPrimaryDark));
         } else {
@@ -143,6 +152,16 @@ public class FolderOfTaskRecyclerViewAdapter
             root.setBackgroundColor(canaryPalette.surface);
         }
         holder.textView.setTextColor(canaryPalette.inputText);
+    }
+
+    private void applyIndigoPaletteToCard(ItemViewHolder holder) {
+        View root = holder.itemView;
+        if (root instanceof CardView) {
+            ((CardView) root).setCardBackgroundColor(indigoPalette.surface);
+        } else {
+            root.setBackgroundColor(indigoPalette.surface);
+        }
+        holder.textView.setTextColor(indigoPalette.inputText);
     }
 
 

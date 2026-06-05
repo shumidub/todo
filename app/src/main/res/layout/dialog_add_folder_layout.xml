@@ -75,6 +75,14 @@
             android:layout_weight="1"
             android:text="@string/tab_color_yellow"/>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/tabColorIndigo"
+            style="@style/Widget.App.Button.TabColorSwatch.Indigo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/tab_color_indigo"/>
+
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
 </LinearLayout>

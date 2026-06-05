@@ -143,6 +143,10 @@
         <item name="android:textColor">@color/canaryText</item>
     </style>
 
+    <style name="Widget.App.Button.TabColorSwatch.Indigo">
+        <item name="backgroundTint">@color/indigoBg</item>
+    </style>
+
     <!-- Cornflower MaterialAlertDialog overlay — used when a dialog is spawned from the Tasks2 tab. -->
     <style name="ThemeOverlay.App.MaterialAlertDialog.Cornflower" parent="ThemeOverlay.App.MaterialAlertDialog">
         <item name="colorSurface">@color/cornflowerSurfaceMuted</item>
@@ -166,6 +170,18 @@
         <item name="colorAccent">@color/canaryAccent</item>
         <item name="colorPrimary">@color/canaryAccent</item>
         <item name="colorControlActivated">@color/canaryAccent</item>
+    </style>
+
+    <!-- Indigo MaterialAlertDialog overlay — used when a dialog is spawned from the Notes tab. -->
+    <style name="ThemeOverlay.App.MaterialAlertDialog.Indigo" parent="ThemeOverlay.App.MaterialAlertDialog">
+        <item name="colorSurface">@color/indigoSurfaceMuted</item>
+        <item name="colorOnSurface">@color/indigoText</item>
+        <item name="android:textColorPrimary">@color/indigoText</item>
+        <item name="android:textColorSecondary">@color/indigoTextSoft</item>
+        <item name="android:colorBackground">@color/indigoSurfaceMuted</item>
+        <item name="colorAccent">@color/indigoAccent</item>
+        <item name="colorPrimary">@color/indigoAccent</item>
+        <item name="colorControlActivated">@color/indigoAccent</item>
     </style>
 
 </resources>

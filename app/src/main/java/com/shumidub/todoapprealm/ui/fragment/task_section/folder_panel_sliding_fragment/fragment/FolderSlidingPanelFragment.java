@@ -97,7 +97,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 //    RealmResults<FolderObject> folderObjects;
     RealmList<FolderTaskObject> folderObjects;
     public static Long idFolderFromTag;
-    private static String title;
+    private String title;
     public static String titleFolder;
     int lastDateResetTasksCountAccumulation;
 
@@ -114,7 +114,11 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     private int taskGroup = 0;
     private com.shumidub.todoapprealm.ui.theme.CornflowerPalette cornflowerPalette;
     private com.shumidub.todoapprealm.ui.theme.CanaryPalette canaryPalette;
+    private com.shumidub.todoapprealm.ui.theme.IndigoPalette indigoPalette;
     private static final String ARG_TASK_GROUP = "task_group";
+
+    /** Default action-bar title for this tab (Notes tab is its own name). */
+    private String defaultTitle() { return taskGroup == 3 ? "Notes" : "Tasks"; }
 
     public static FolderSlidingPanelFragment newInstance(int taskGroup) {
         FolderSlidingPanelFragment f = new FolderSlidingPanelFragment();
@@ -163,7 +167,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         ///////////////////////    ACTION BAR, MODE (onViewCreated)    ///////////////////////
         actionBar = ((MainActivity)getActivity()).getSupportActionBar();
         setHasOptionsMenu(true);
-        setTitle("Tasks");
+        setTitle(defaultTitle());
 
 //        setDayScopeValue();
 //        actionBar.setSubtitle("" + App.dayScope);
@@ -193,7 +197,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             @Override
             public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
                 if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
-                    setTitle("Tasks");
+                    setTitle(defaultTitle());
                     folderOfTaskRVAdapter.notifyDataSetChanged();
                 }
                 if (newState == SlidingUpPanelLayout.PanelState.EXPANDED){
@@ -359,7 +363,12 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             @Override
             public void onPageSelected(int position) {
                 finishActionMode();
-                setTitle(FolderTaskRealmController.getFoldersList(taskGroup).get(position).getName());
+                // Only show the folder name while its tasks are actually open (panel expanded).
+                // When collapsed (folder list view), the title must stay the tab name — otherwise
+                // the inner pager settling on a folder leaks that folder's name as the title.
+                if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
+                    setTitle(FolderTaskRealmController.getFoldersList(taskGroup).get(position).getName());
+                }
             }
 
             @Override
@@ -377,6 +386,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
         if (taskGroup == 1) applyCornflowerPalette(view);
         else if (taskGroup == 2) applyCanaryPalette(view);
+        else if (taskGroup == 3) applyIndigoPalette(view);
     }
 
     private void applyCornflowerPalette(View root) {
@@ -449,11 +459,50 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
     }
 
+    private void applyIndigoPalette(View root) {
+        indigoPalette = new com.shumidub.todoapprealm.ui.theme.IndigoPalette(getContext());
+        com.shumidub.todoapprealm.ui.theme.IndigoPalette p = indigoPalette;
+
+        root.setBackgroundColor(p.bg);
+        View cl = root.findViewById(R.id.cl);
+        if (cl != null) cl.setBackgroundColor(p.bg);
+
+        View footer = root.findViewById(R.id.ll_footer);
+        if (footer != null) footer.setBackgroundColor(p.surfaceMuted);
+
+        TextView bottomText = root.findViewById(R.id.bottom_text);
+        if (bottomText != null) bottomText.setTextColor(p.text);
+
+        View bottomAddArea = root.findViewById(R.id.ll_bottom);
+        if (bottomAddArea != null) bottomAddArea.setBackgroundColor(p.surfaceMuted);
+
+        if (et != null) {
+            et.setTextColor(p.text);
+            et.setHintTextColor(p.textSoft);
+            et.setBackgroundTintList(android.content.res.ColorStateList.valueOf(p.accent));
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                android.graphics.drawable.Drawable cursor = new android.graphics.drawable.ColorDrawable(p.accent) {
+                    @Override public int getIntrinsicWidth() { return (int) (2 * getResources().getDisplayMetrics().density); }
+                };
+                et.setTextCursorDrawable(cursor);
+            }
+        }
+        if (tvBottomText != null) tvBottomText.setTextColor(p.text);
+
+        // Notes tab: no points / cycling / priority — hide the add-panel param controls.
+        // They keep their default values ("1", priority 0, cycling false) so addTask still works.
+        if (tvTaskCountValue != null) tvTaskCountValue.setVisibility(View.GONE);
+        if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setVisibility(View.GONE);
+        if (tvTaskPriority != null) tvTaskPriority.setVisibility(View.GONE);
+        if (tvTaskCycling != null) tvTaskCycling.setVisibility(View.GONE);
+    }
+
     /** Returns the accent the bottom-panel click handlers should use — cornflower on Tasks2,
-     *  canary on Tasks3, default colorAccent otherwise. */
+     *  canary on Tasks3, indigo on Notes, default colorAccent otherwise. */
     private int activeAccent() {
         if (cornflowerPalette != null) return cornflowerPalette.accent;
         if (canaryPalette != null) return canaryPalette.accent;
+        if (indigoPalette != null) return indigoPalette.accent;
         return getResources().getColor(R.color.colorAccent);
     }
 
@@ -466,6 +515,9 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
     /** true if this fragment renders inside the Canary (Tasks3) tab. */
     public boolean isCanaryGroup() { return taskGroup == 2; }
+
+    /** true if this fragment renders inside the Indigo (Notes) tab. */
+    public boolean isIndigoGroup() { return taskGroup == 3; }
 
 
     @Override
@@ -708,15 +760,16 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
     }
 
-    public static String getTitle(){
-        if (title != null && !title.isEmpty()) return title;
-        else return "Tasks";
-    }
-
     private void setTitle(String title){
         this.title = title;
-        ((MainActivity) getActivity()).getSupportActionBar()
-                        .setTitle(title);
+        MainActivity a = (MainActivity) getActivity();
+        if (a == null) return;
+        // Only the currently-visible tab may drive the shared action-bar title.
+        // ViewPager pre-creates offscreen neighbours, whose onViewCreated would
+        // otherwise clobber the active tab's title (e.g. "Notes" leaking onto Tasks3).
+        if (a.getPagerAdapterPosition() == taskGroup + 1) {
+            a.getSupportActionBar().setTitle(title);
+        }
     }
 
 
@@ -744,7 +797,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                     .get(smallTasksViewPager
                             .getCurrentItem())
                     .getName();
-        } else return "Tasks";
+        } else return defaultTitle();
 
     }
 

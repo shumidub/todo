@@ -114,6 +114,17 @@
     <color name="canaryAccent">#D7305C</color>
     <color name="canaryDivider">#242E2406</color>
 
+    <!-- Indigo palette (Notes tab; Tasks-style list without checkboxes/params) -->
+    <color name="indigoBg">#3D52A0</color>
+    <color name="indigoSurface">#ECEEF8</color>
+    <color name="indigoSurfaceMuted">#34468F</color>
+    <color name="indigoText">#F2F4FA</color>
+    <color name="indigoTextSoft">#BCF2F4FA</color>
+    <color name="indigoInputText">#161F45</color>
+    <color name="indigoCounter">#6E7CB2</color>
+    <color name="indigoAccent">#F4A742</color>
+    <color name="indigoDivider">#2EF2F4FA</color>
+
     <!-- Dialog surface palette -->
     <color name="colorDialogSurface">#1F4F38</color>
     <color name="colorDialogOnSurface">#F1F8F4</color>

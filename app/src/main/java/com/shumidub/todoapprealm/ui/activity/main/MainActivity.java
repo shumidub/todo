@@ -157,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
 
                 if (position==1){
                     actionBar.setDisplayHomeAsUpEnabled(false);
-                    actionBar.setTitle(FolderSlidingPanelFragment.getTitle());
                 }if (position ==0){
 
                     /*
@@ -190,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                else if (position == 1 || position == 2 || position == 3){
+                else if (position == 1 || position == 2 || position == 3 || position == 4){
 
                     for (Fragment fragment: getSupportFragmentManager ().getFragments()){
                         if (fragment instanceof FolderSlidingPanelFragment
@@ -199,6 +198,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }
+
+                if (dayScopeMenu != null) dayScopeMenu.setVisible(position != 4);
 
                 applyTabChrome(position);
             }
@@ -222,6 +223,10 @@ public class MainActivity extends AppCompatActivity {
         return viewPager != null && viewPager.getCurrentItem() == 3;
     }
 
+    public boolean isIndigoTab() {
+        return viewPager != null && viewPager.getCurrentItem() == 4;
+    }
+
     /** Build a MaterialAlertDialogBuilder applying the per-tab overlay (Cornflower for Tasks2,
      *  Canary for Tasks3, default otherwise). */
     public com.google.android.material.dialog.MaterialAlertDialogBuilder dialogBuilder() {
@@ -234,6 +239,10 @@ public class MainActivity extends AppCompatActivity {
             if (pos == 3) {
                 return new com.google.android.material.dialog.MaterialAlertDialogBuilder(this,
                         R.style.ThemeOverlay_App_MaterialAlertDialog_Canary);
+            }
+            if (pos == 4) {
+                return new com.google.android.material.dialog.MaterialAlertDialogBuilder(this,
+                        R.style.ThemeOverlay_App_MaterialAlertDialog_Indigo);
             }
         }
         return new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
@@ -254,6 +263,10 @@ public class MainActivity extends AppCompatActivity {
             if (pos == 3) {
                 return new androidx.appcompat.view.ContextThemeWrapper(this,
                         R.style.ThemeOverlay_App_MaterialAlertDialog_Canary);
+            }
+            if (pos == 4) {
+                return new androidx.appcompat.view.ContextThemeWrapper(this,
+                        R.style.ThemeOverlay_App_MaterialAlertDialog_Indigo);
             }
         }
         return new androidx.appcompat.view.ContextThemeWrapper(this,
@@ -282,6 +295,8 @@ public class MainActivity extends AppCompatActivity {
             color = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this).bg;
         } else if (pos == 3) {
             color = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(this).bg;
+        } else if (pos == 4) {
+            color = new com.shumidub.todoapprealm.ui.theme.IndigoPalette(this).bg;
         } else {
             return;
         }
@@ -350,6 +365,17 @@ public class MainActivity extends AppCompatActivity {
                 insets.setAppearanceLightStatusBars(true);
                 insets.setAppearanceLightNavigationBars(true);
             }
+        } else if (position == 4) {
+            com.shumidub.todoapprealm.ui.theme.IndigoPalette p =
+                    new com.shumidub.todoapprealm.ui.theme.IndigoPalette(this);
+            rootLayout.setBackgroundColor(p.bg);
+            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
+            getWindow().setStatusBarColor(p.bg);
+            getWindow().setNavigationBarColor(p.bg);
+            if (insets != null) {
+                insets.setAppearanceLightStatusBars(false);
+                insets.setAppearanceLightNavigationBars(false);
+            }
         } else {
             int green = androidx.core.content.ContextCompat.getColor(this, R.color.colorBackgroundActivity);
             rootLayout.setBackgroundColor(green);
@@ -406,6 +432,8 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         dayScopeMenu = menu.add(2,2,2,"" + App.dayScope);
         dayScopeMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        // Notes tab has no "done" concept — hide the day-scope counter there.
+        dayScopeMenu.setVisible(viewPager == null || viewPager.getCurrentItem() != 4);
         dayScopeMenu.setOnMenuItemClickListener((v)->{
 
             App.initRealm();
@@ -429,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         int currentFragmentItem = viewPager.getCurrentItem();
 
-        if (currentFragmentItem == 1 || currentFragmentItem == 2 || currentFragmentItem == 3){
+        if (currentFragmentItem == 1 || currentFragmentItem == 2 || currentFragmentItem == 3 || currentFragmentItem == 4){
             for (Fragment fragment: getSupportFragmentManager ().getFragments()){
                 if (fragment instanceof FolderSlidingPanelFragment
                         && ((FolderSlidingPanelFragment) fragment).getTaskGroup() == currentFragmentItem - 1){

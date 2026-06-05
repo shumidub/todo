@@ -34,6 +34,7 @@ import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
 import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
+import com.shumidub.todoapprealm.ui.theme.IndigoPalette;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -157,6 +158,15 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
         renderCycling();
 
         applyPalette();
+
+        // Notes tab (taskGroup 3): no points / cycling / priority / done — hide those controls.
+        if (taskGroup == 3) {
+            tvValue.setVisibility(View.GONE);
+            tvMaxAcc.setVisibility(View.GONE);
+            tvPriority.setVisibility(View.GONE);
+            tvCycling.setVisibility(View.GONE);
+            cbDone.setVisibility(View.GONE);
+        }
 
         tvValue.setOnClickListener(v -> {
             draftValue = cycleOneToNine(draftValue);
@@ -332,6 +342,7 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
             case 0: return " [Tasks1]";
             case 1: return " [Tasks2]";
             case 2: return " [Tasks3]";
+            case 3: return " [Notes]";
             default: return "";
         }
     }
@@ -462,6 +473,11 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
                 }
                 case 2: {
                     CanaryPalette p = new CanaryPalette(ctx);
+                    return new Palette(p.bg, p.surface, p.text, p.textSoft,
+                            p.inputText, p.counter, p.accent, p.divider);
+                }
+                case 3: {
+                    IndigoPalette p = new IndigoPalette(ctx);
                     return new Palette(p.bg, p.surface, p.text, p.textSoft,
                             p.inputText, p.counter, p.accent, p.divider);
                 }

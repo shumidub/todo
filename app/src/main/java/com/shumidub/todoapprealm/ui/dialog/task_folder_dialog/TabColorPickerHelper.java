@@ -21,6 +21,7 @@ final class TabColorPickerHelper {
         int checkedId = g.getCheckedButtonId();
         if (checkedId == R.id.tabColorBlue) return 1;
         if (checkedId == R.id.tabColorYellow) return 2;
+        if (checkedId == R.id.tabColorIndigo) return 3;
         return 0; // green / fallback
     }
 
@@ -30,6 +31,7 @@ final class TabColorPickerHelper {
         int id = R.id.tabColorGreen;
         if (group == 1) id = R.id.tabColorBlue;
         else if (group == 2) id = R.id.tabColorYellow;
+        else if (group == 3) id = R.id.tabColorIndigo;
         g.check(id);
     }
 }

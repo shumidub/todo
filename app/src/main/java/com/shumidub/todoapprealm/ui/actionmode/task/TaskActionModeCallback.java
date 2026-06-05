@@ -83,6 +83,8 @@ public class TaskActionModeCallback  {
                     accentColor = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(activity).accent;
                 } else if (TaskActionModeCallback.this.activity.isCanaryTab()) {
                     accentColor = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(activity).accent;
+                } else if (TaskActionModeCallback.this.activity.isIndigoTab()) {
+                    accentColor = new com.shumidub.todoapprealm.ui.theme.IndigoPalette(activity).accent;
                 } else {
                     accentColor = activity.getResources().getColor(R.color.colorAccent);
                 }
@@ -100,6 +102,15 @@ public class TaskActionModeCallback  {
                 tvEditTaskPriority.setOnClickListener((v) -> onEditTaskPriorityClick(tvEditTaskPriority));
                 tvEditTaskCycling.setOnClickListener((v) -> onEditTaskCyclingClick(tvEditTaskCycling));
                 tvEditTaskMaxAccumulate.setOnClickListener((v) -> onEditTaskValueClick(tvEditTaskMaxAccumulate));
+
+                // Notes tab: no points / cycling / priority — hide them in the edit dialog too.
+                // The hidden fields keep the task's existing values, so saving text still works.
+                if (TaskActionModeCallback.this.activity.isIndigoTab()) {
+                    tvEditTaskCountValue.setVisibility(View.GONE);
+                    tvEditTaskMaxAccumulate.setVisibility(View.GONE);
+                    tvEditTaskPriority.setVisibility(View.GONE);
+                    tvEditTaskCycling.setVisibility(View.GONE);
+                }
                 tvEditTaskCancel.setOnClickListener((x)-> {
                     InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(dialog.getWindow().getDecorView().getWindowToken(), 0);
@@ -256,6 +267,7 @@ public class TaskActionModeCallback  {
                 case 0: tag = " [Tasks1]"; break;
                 case 1: tag = " [Tasks2]"; break;
                 case 2: tag = " [Tasks3]"; break;
+                case 3: tag = " [Notes]"; break;
                 default: tag = ""; break;
             }
             folderNames[i] = f.getName() + tag;

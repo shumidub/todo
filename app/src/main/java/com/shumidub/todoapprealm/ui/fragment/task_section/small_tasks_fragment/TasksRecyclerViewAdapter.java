@@ -20,6 +20,7 @@ import com.shumidub.todoapprealm.ui.actionmode.task.SectionActionModeCallback;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
 import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
 import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
+import com.shumidub.todoapprealm.ui.theme.IndigoPalette;
 import androidx.cardview.widget.CardView;
 
 
@@ -67,44 +68,65 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     MainActivity activity;
     private CornflowerPalette cornflowerPalette;
     private CanaryPalette canaryPalette;
+    private IndigoPalette indigoPalette;
+    /** Notes tab (taskGroup 3): render tasks as a plain list — no checkbox, no
+     *  points/cycling/priority params, no "Done" footer. */
+    private boolean plainList = false;
 
     public void useCornflowerPalette(boolean enabled) {
         cornflowerPalette = enabled ? new CornflowerPalette(activity) : null;
-        if (enabled) canaryPalette = null;
+        if (enabled) { canaryPalette = null; indigoPalette = null; }
         notifyDataSetChanged();
     }
 
     public void useCanaryPalette(boolean enabled) {
         canaryPalette = enabled ? new CanaryPalette(activity) : null;
-        if (enabled) cornflowerPalette = null;
+        if (enabled) { cornflowerPalette = null; indigoPalette = null; }
+        notifyDataSetChanged();
+    }
+
+    public void useIndigoPalette(boolean enabled) {
+        indigoPalette = enabled ? new IndigoPalette(activity) : null;
+        if (enabled) { cornflowerPalette = null; canaryPalette = null; }
+        notifyDataSetChanged();
+    }
+
+    /** Toggle plain-list rendering (Notes tab). Rebuilds items so the footer is dropped. */
+    public void setPlainList(boolean enabled) {
+        plainList = enabled;
+        rebuildItems();
         notifyDataSetChanged();
     }
 
     private boolean hasActivePalette() {
-        return cornflowerPalette != null || canaryPalette != null;
+        return cornflowerPalette != null || canaryPalette != null || indigoPalette != null;
     }
 
     private int activeAccent() {
         if (cornflowerPalette != null) return cornflowerPalette.accent;
         if (canaryPalette != null) return canaryPalette.accent;
+        if (indigoPalette != null) return indigoPalette.accent;
         return activity.getResources().getColor(R.color.colorAccent);
     }
 
     private int activeSurface() {
         if (cornflowerPalette != null) return cornflowerPalette.surface;
         if (canaryPalette != null) return canaryPalette.surface;
+        if (indigoPalette != null) return indigoPalette.surface;
         return 0;
     }
 
     private int activeInputText() {
         if (cornflowerPalette != null) return cornflowerPalette.inputText;
         if (canaryPalette != null) return canaryPalette.inputText;
+        if (indigoPalette != null) return indigoPalette.inputText;
         return 0;
     }
 
     private int activeCounter() {
         if (cornflowerPalette != null) return cornflowerPalette.counter;
         if (canaryPalette != null) return canaryPalette.counter;
+        if (indigoPalette != null) return indigoPalette.counter;
         return 0;
     }
 
@@ -152,7 +174,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         if (folderId == 0 || tasks == null) {
             // No sections concept outside of a folder; fall back to plain task list.
             if (tasks != null) for (TaskObject t : tasks) out.add(AdapterItem.ofTask(t));
-            if ((tasks != null && !tasks.isEmpty()) || (doneTasks != null && !doneTasks.isEmpty())) {
+            if (!plainList && ((tasks != null && !tasks.isEmpty()) || (doneTasks != null && !doneTasks.isEmpty()))) {
                 out.add(AdapterItem.doneFooter());
             }
             return out;
@@ -188,7 +210,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         while (si < sections.size()) emitSection(out, sections.get(si++), bySection);
         while (ti < freeTasks.size()) out.add(AdapterItem.ofTask(freeTasks.get(ti++)));
 
-        if (!tasks.isEmpty() || (doneTasks != null && !doneTasks.isEmpty())) {
+        if (!plainList && (!tasks.isEmpty() || (doneTasks != null && !doneTasks.isEmpty()))) {
             out.add(AdapterItem.doneFooter());
         }
         return out;
@@ -353,6 +375,27 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         bindCategoryStripes(holder, taskObject);
         applyPaletteIfNeeded(holder);
 
+        // Notes tab: plain list — drop the checkbox and the params row entirely,
+        // and show the full note text (no 7-line clamp).
+        if (plainList) {
+            holder.checkBox.setVisibility(View.GONE);
+            if (holder.paramsRow != null) holder.paramsRow.setVisibility(View.GONE);
+            // Bounded preview keeps list items cheap to measure/draw; the full note text
+            // is shown in the editor on tap. Unbounded inline text janks the RecyclerView.
+            holder.textView.setMaxLines(12);
+            holder.textView.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            holder.textView.setOnLongClickListener(view -> {
+                if (onItemLongClicked != null) onItemLongClicked.onLongClick(view, position);
+                return true;
+            });
+            holder.textView.setOnClickListener(view -> {
+                if (onItemClicked != null) onItemClicked.onClick(view, position);
+            });
+            return;
+        }
+        holder.checkBox.setVisibility(View.VISIBLE);
+        if (holder.paramsRow != null) holder.paramsRow.setVisibility(View.VISIBLE);
+
         holder.checkBox.setChecked(taskObject.isDone());
 
         if (taskObject.isCycling() && !taskObject.isDone()) holder.checkBox.setButtonDrawable(R.drawable.unchecked_accent_color_checkbox);
@@ -446,11 +489,13 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
         TextView textViewDoneTask;
         TextView tvAccumulation;
         View categoryStripes;
+        View paramsRow;
 
         public ViewHolder(View itemView) {
             super(itemView);
             textView = itemView.findViewById(R.id.tv);
             checkBox = itemView.findViewById(R.id.checkbox);
+            paramsRow = itemView.findViewById(R.id.task_params_row);
             tvCount = itemView.findViewById(R.id.task_value);
             tvPriority = itemView.findViewById(R.id.task_priority);
             tvCycling = itemView.findViewById(R.id.task_cycling);

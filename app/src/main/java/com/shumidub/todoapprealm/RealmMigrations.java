@@ -11,7 +11,7 @@ import io.realm.RealmSchema;
 
 public class RealmMigrations implements RealmMigration {
 
-    public static final long SCHEMA_VERSION = 4;
+    public static final long SCHEMA_VERSION = 5;
 
     @Override
     public void migrate(DynamicRealm realm, long oldVersion, long newVersion) {
@@ -66,6 +66,12 @@ public class RealmMigrations implements RealmMigration {
             // ---- task-003: third Tasks tab folder list ----
             schema.get("RealmFoldersContainer")
                     .addRealmListField("folderOfTasksList3", schema.get("FolderTaskObject"));
+        }
+
+        if (oldVersion < 5) {
+            // Notes tab (taskGroup 3) folder list
+            schema.get("RealmFoldersContainer")
+                    .addRealmListField("folderOfTasksList4", schema.get("FolderTaskObject"));
         }
     }
 
