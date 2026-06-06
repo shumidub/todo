@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Todo100 — редактор</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --panel:#ffffff; --panel2:#eef1f5; --line:#d7dce3;
+    --txt:#1c2129; --muted:#6b7280; --accent:#2f6df0; --accent2:#1f57c9;
+    --green:#16a34a; --red:#dc2626; --amber:#b45309;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+  header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:16px;margin:0 12px 0 0;font-weight:600}
+  .spacer{flex:1}
+  button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{background:var(--accent2)}
+  button.danger{color:var(--red);border-color:transparent;background:transparent;padding:4px 8px}
+  button.danger:hover{background:rgba(229,72,77,.12)}
+  button.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+  input,textarea,select{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:7px 9px;font:inherit;width:100%}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+  textarea{resize:vertical;min-height:34px;font-family:inherit}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{padding:8px 14px;border-radius:8px;background:var(--panel);border:1px solid var(--line);cursor:pointer;color:var(--muted)}
+  .tab.active{color:#fff;border-color:var(--accent);background:var(--panel2)}
+  .tab .cnt{opacity:.6;font-size:12px;margin-left:6px}
+  .folder{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .folder-head{display:flex;gap:10px;align-items:center;padding:10px 12px;background:var(--panel2);border-bottom:1px solid var(--line)}
+  .folder-head .name{flex:1;font-weight:600}
+  .folder-head .name input{font-weight:600}
+  .tasks{padding:8px 12px;display:flex;flex-direction:column;gap:8px}
+  .task{display:flex;gap:10px;align-items:flex-start;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+  .task.done{opacity:.55}
+  .task .grip{color:var(--muted);cursor:default;user-select:none;padding-top:6px}
+  .task .body{flex:1;display:flex;flex-direction:column;gap:6px}
+  .task .body textarea{background:var(--panel)}
+  .task.done .body textarea{text-decoration:line-through}
+  .chk{width:20px;height:20px;margin-top:6px;accent-color:var(--green)}
+  .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:12px}
+  .meta label{display:flex;gap:4px;align-items:center}
+  .meta input[type=number]{width:64px;padding:3px 6px}
+  .meta select{width:auto;padding:3px 6px}
+  .pill{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--line)}
+  .pill.cyc{color:var(--amber);border-color:var(--amber)}
+  .add-row{padding:8px 12px}
+  .muted{color:var(--muted)}
+  .empty{color:var(--muted);text-align:center;padding:30px}
+  dialog{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:0;max-width:560px;width:92%}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .dlg-body{padding:20px}
+  .dlg-body h2{margin:0 0 14px;font-size:17px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  .status{font-size:12px;color:var(--muted)}
+  .status.ok{color:var(--green)}
+  .status.err{color:var(--red)}
+  .badge{font-size:12px;color:var(--muted);background:var(--panel2);padding:4px 9px;border-radius:7px;border:1px solid var(--line)}
+  details.adv{margin-top:2px}
+  details.adv summary{cursor:pointer;color:var(--muted);font-size:12px;list-style:none}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv[open] summary{margin-bottom:6px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--muted)}
+  .dot.on{background:var(--green)}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Todo100 редактор</h1>
+  <span class="dot" id="connDot"></span>
+  <span class="badge" id="connBadge">не подключено</span>
+  <span class="spacer"></span>
+  <span class="status" id="status"></span>
+  <button id="btnFb">Firebase…</button>
+  <button id="btnLoadFb">Загрузить из Firebase</button>
+  <button id="btnImport">Загрузить файл</button>
+  <button id="btnExport">Скачать JSON</button>
+  <button class="primary" id="btnSave">Сохранить в Firebase</button>
+  <input type="file" id="file" accept=".json,application/json" hidden />
+</header>
+
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div id="view"></div>
+</div>
+
+<!-- Firebase config / login dialog -->
+<dialog id="fbDlg">
+  <div class="dlg-body">
+    <h2>Подключение к Firebase</h2>
+    <div class="field">
+      <label>Firebase config (JSON из консоли Firebase → Project settings)</label>
+      <textarea id="fbConfig" rows="7" placeholder='{
+  "apiKey": "...",
+  "authDomain": "todo100-5db8c.firebaseapp.com",
+  "databaseURL": "https://todo100-5db8c-default-rtdb.firebaseio.com",
+  "projectId": "todo100-5db8c"
+}'></textarea>
+    </div>
+    <div class="row">
+      <div class="field"><label>Email</label><input id="fbEmail" type="email" autocomplete="username" /></div>
+      <div class="field"><label>Пароль</label><input id="fbPass" type="password" autocomplete="current-password" /></div>
+    </div>
+    <div class="field">
+      <label>UID (необязательно — подставится после входа)</label>
+      <input id="fbUid" placeholder="ITtrONv5OEh7khdb9kdrYIPWFB02" />
+    </div>
+    <div class="status" id="fbStatus"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="fbSignIn" class="primary">Войти</button>
+      <button id="fbAnon">Анонимно</button>
+      <button id="fbClose" class="ghost">Закрыть</button>
+    </div>
+    <p class="muted" style="font-size:12px;margin:12px 0 0">
+      Конфиг и email сохраняются локально в браузере (localStorage). Пароль не сохраняется.
+    </p>
+  </div>
+</dialog>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signInAnonymously, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, get, set }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const DEFAULT_FB_CONFIG = {
+  apiKey: "AIzaSyDdf17OsHRxIw5HYvOSXiMQvWo8W1leeKM",
+  authDomain: "todo100-5db8c.firebaseapp.com",
+  databaseURL: "https://todo100-5db8c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "todo100-5db8c",
+  storageBucket: "todo100-5db8c.firebasestorage.app",
+  messagingSenderId: "610575384597",
+  appId: "1:610575384597:web:86fe16a50e3f22d8b80e1c",
+  measurementId: "G-8V58P0BKVC"
+};
+
+const LISTS = ["folderOfTasksList","folderOfTasksList2","folderOfTasksList3","folderOfTasksList4"];
+const LIST_LABELS = ["Список 1","Список 2","Список 3","Список 4"];
+
+const $ = sel => document.querySelector(sel);
+const el = (tag, props={}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(props)){
+    if (k === "class") n.className = v;
+    else if (k === "html") n.innerHTML = v;
+    else if (k === "value") n.value = v;            // input/textarea: set property, not attribute
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v !== undefined && v !== null) n.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid!=null) n.append(kid.nodeType?kid:document.createTextNode(kid));
+  return n;
+};
+
+// ---------- state ----------
+let backup = null;        // {folderOfTasksList:[...], ...}
+let activeTab = LISTS[0];
+let dirty = false;
+let fb = { app:null, auth:null, db:null, user:null };
+let idSeq = 0;
+
+function newId(){ // 13-digit-ish, monotonic, unique within session
+  idSeq++;
+  // base on a fixed-ish large number + seq to avoid Date.now (sandbox) and keep numeric ids
+  const base = 1790000000000;
+  return base + (idSeq*1000) + (idSeq % 997);
+}
+
+function setStatus(msg, cls=""){ const s=$("#status"); s.textContent=msg; s.className="status "+cls; }
+function markDirty(){ dirty=true; }
+
+// ---------- empty model ----------
+function emptyBackup(){
+  const b={}; LISTS.forEach(l=>b[l]=[]); return b;
+}
+function newFolder(){
+  return { id:newId(), isDaily:true, name:"Новая категория", folderTasks:[] };
+}
+function newTask(folder){
+  const pos=(folder.folderTasks||[]).length;
+  return {
+    countAccumulation:0, countValue:1, done:false, id:newId(),
+    isCycling:false, lastDoneDate:0, maxAccumulation:1,
+    position:pos, priority:0, sectionId:0, taskFolderId:folder.id, text:""
+  };
+}
+
+// ---------- normalize loaded data ----------
+function normalize(raw){
+  const b=emptyBackup();
+  if(!raw) return b;
+  // raw may be the whole export {users:{uid:{backup:{...}}}} or just a backup object
+  let src=raw;
+  if(raw.users){
+    const uid=Object.keys(raw.users)[0];
+    src=raw.users[uid]?.backup || {};
+  } else if(raw.backup){ src=raw.backup; }
+  LISTS.forEach(l=>{
+    const arr=Array.isArray(src[l])?src[l]:[];
+    b[l]=arr.map(f=>({ ...f, folderTasks: Array.isArray(f.folderTasks)?f.folderTasks:[] }));
+  });
+  return b;
+}
+
+// ---------- render ----------
+function renderTabs(){
+  const tabs=$("#tabs"); tabs.innerHTML="";
+  LISTS.forEach((l,i)=>{
+    const cnt=(backup?.[l]||[]).length;
+    tabs.append(el("div",{class:"tab"+(activeTab===l?" active":""),onclick:()=>{activeTab=l;render();}},
+      LIST_LABELS[i], el("span",{class:"cnt"}, String(cnt))));
+  });
+}
+
+function render(){
+  renderTabs();
+  const view=$("#view"); view.innerHTML="";
+  if(!backup){ view.append(el("div",{class:"empty"},"Загрузи данные из Firebase или из файла.")); return; }
+  const folders=backup[activeTab]||[];
+  const head=el("div",{style:"display:flex;align-items:center;gap:10px;margin-bottom:12px"},
+    el("span",{class:"muted"}, folders.length+" категорий"),
+    el("span",{class:"spacer",style:"flex:1"}),
+    el("button",{class:"primary",onclick:()=>{ folders.push(newFolder()); markDirty(); render(); }},"+ Категория")
+  );
+  view.append(head);
+  if(!folders.length){ view.append(el("div",{class:"empty"},"Пусто. Добавь категорию.")); return; }
+  folders.forEach((f,fi)=> view.append(renderFolder(f,fi,folders)));
+}
+
+function renderFolder(f, fi, folders){
+  const tasks=f.folderTasks||(f.folderTasks=[]);
+  const head=el("div",{class:"folder-head"},
+    el("span",{class:"name"}, el("input",{value:f.name??"", oninput:e=>{f.name=e.target.value;markDirty();}})),
+    el("label",{class:"meta",title:"isDaily"},
+      el("input",{type:"checkbox", ...(f.isDaily?{checked:""}:{}), onchange:e=>{f.isDaily=e.target.checked;markDirty();}}),
+      "daily"),
+    el("span",{class:"muted",style:"font-size:12px"}, tasks.length+" зад."),
+    el("button",{class:"ghost",title:"Вверх",onclick:()=>{if(fi>0){[folders[fi-1],folders[fi]]=[folders[fi],folders[fi-1]];markDirty();render();}}},"↑"),
+    el("button",{class:"ghost",title:"Вниз",onclick:()=>{if(fi<folders.length-1){[folders[fi+1],folders[fi]]=[folders[fi],folders[fi+1]];markDirty();render();}}},"↓"),
+    el("button",{class:"danger",onclick:()=>{ if(confirm(`Удалить категорию «${f.name}» и её ${tasks.length} задач?`)){ folders.splice(fi,1); markDirty(); render(); } }},"Удалить")
+  );
+  const list=el("div",{class:"tasks"});
+  tasks.forEach((t,ti)=> list.append(renderTask(t,ti,tasks,f)));
+  const addRow=el("div",{class:"add-row"},
+    el("button",{onclick:()=>{ tasks.push(newTask(f)); markDirty(); render(); }},"+ Задача / заметка"));
+  return el("div",{class:"folder"}, head, list, addRow);
+}
+
+function renderTask(t, ti, tasks, folder){
+  const body=el("div",{class:"body"});
+  body.append(el("textarea",{rows:1, value:t.text??"", oninput:e=>{
+    t.text=e.target.value;
+    e.target.style.height="auto"; e.target.style.height=(e.target.scrollHeight)+"px";
+    markDirty();
+  }}));
+  // auto-size on render
+  const ta=body.firstChild;
+  requestAnimationFrame(()=>{ ta.style.height="auto"; ta.style.height=ta.scrollHeight+"px"; });
+
+  const meta=el("div",{class:"meta"});
+  // priority
+  meta.append(el("label",{}, "приоритет",
+    el("select",{onchange:e=>{t.priority=+e.target.value;markDirty();}},
+      ...[0,1,2,3].map(p=>el("option",{value:p, ...(Number(t.priority)===p?{selected:""}:{})}, String(p))))));
+  // cycling
+  meta.append(el("label",{},
+    el("input",{type:"checkbox", ...(t.isCycling?{checked:""}:{}), onchange:e=>{t.isCycling=e.target.checked;markDirty();}}),
+    "цикл."));
+  // advanced
+  const adv=el("details",{class:"adv"},
+    el("summary",{},"ещё поля"),
+    el("div",{class:"meta"},
+      el("label",{},"count",el("input",{type:"number",value:t.countValue??1,oninput:e=>{t.countValue=+e.target.value;markDirty();}})),
+      el("label",{},"max",el("input",{type:"number",value:t.maxAccumulation??1,oninput:e=>{t.maxAccumulation=+e.target.value;markDirty();}})),
+      el("label",{},"накопл.",el("input",{type:"number",value:t.countAccumulation??0,oninput:e=>{t.countAccumulation=+e.target.value;markDirty();}})),
+      el("label",{},"sectionId",el("input",{type:"number",value:t.sectionId??0,oninput:e=>{t.sectionId=+e.target.value;markDirty();}})),
+      el("label",{},"position",el("input",{type:"number",value:t.position??0,oninput:e=>{t.position=+e.target.value;markDirty();}})),
+      el("span",{class:"muted",style:"font-size:11px"},"id "+t.id+(Array.isArray(t.extraFolderIds)?` · в ${t.extraFolderIds.length} папках`:""))
+    ));
+  body.append(meta, adv);
+
+  const taskEl=el("div",{class:"task"+(t.done?" done":"")},
+    el("input",{type:"checkbox",class:"chk", ...(t.done?{checked:""}:{}), onchange:e=>{
+      t.done=e.target.checked; markDirty(); taskEl.classList.toggle("done",t.done);
+    }}),
+    body,
+    el("div",{style:"display:flex;flex-direction:column;gap:2px"},
+      el("button",{class:"ghost",title:"Вверх",onclick:()=>{if(ti>0){[tasks[ti-1],tasks[ti]]=[tasks[ti],tasks[ti-1]];markDirty();render();}}},"↑"),
+      el("button",{class:"ghost",title:"Вниз",onclick:()=>{if(ti<tasks.length-1){[tasks[ti+1],tasks[ti]]=[tasks[ti],tasks[ti+1]];markDirty();render();}}},"↓"),
+      el("button",{class:"danger",onclick:()=>{ tasks.splice(ti,1); markDirty(); render(); }},"✕"))
+  );
+  return taskEl;
+}
+
+// ---------- Firebase ----------
+function loadCfgLocal(){
+  try{
+    const c=localStorage.getItem("fbConfig"); $("#fbConfig").value = c || JSON.stringify(DEFAULT_FB_CONFIG,null,2);
+    const e=localStorage.getItem("fbEmail"); if(e) $("#fbEmail").value=e;
+    const u=localStorage.getItem("fbUid"); if(u) $("#fbUid").value=u;
+  }catch{}
+}
+function parseConfig(){
+  let txt=$("#fbConfig").value.trim();
+  if(!txt) throw new Error("Вставь Firebase config");
+  // tolerate JS-object style (unquoted keys)
+  let cfg;
+  try{ cfg=JSON.parse(txt); }
+  catch{
+    try{ cfg=Function('"use strict";return ('+txt+')')(); }
+    catch{ throw new Error("Не удалось разобрать config"); }
+  }
+  if(!cfg.databaseURL) throw new Error("В config нет databaseURL");
+  return cfg;
+}
+function ensureApp(){
+  const cfg=parseConfig();
+  localStorage.setItem("fbConfig",$("#fbConfig").value.trim());
+  if(!fb.app){
+    fb.app=initializeApp(cfg);
+    fb.auth=getAuth(fb.app);
+    fb.db=getDatabase(fb.app);
+    onAuthStateChanged(fb.auth,u=>{
+      fb.user=u;
+      const dot=$("#connDot"), badge=$("#connBadge");
+      if(u){ dot.classList.add("on"); badge.textContent="вошёл: "+(u.email||u.uid.slice(0,8)+"…"); if(!$("#fbUid").value) $("#fbUid").value=u.uid; }
+      else { dot.classList.remove("on"); badge.textContent="не подключено"; }
+    });
+  }
+  return fb;
+}
+async function signIn(anon){
+  try{
+    ensureApp();
+    $("#fbStatus").textContent="вход…";
+    if(anon){ await signInAnonymously(fb.auth); }
+    else{
+      const email=$("#fbEmail").value.trim(), pass=$("#fbPass").value;
+      localStorage.setItem("fbEmail",email);
+      await signInWithEmailAndPassword(fb.auth,email,pass);
+    }
+    if($("#fbUid").value) localStorage.setItem("fbUid",$("#fbUid").value.trim());
+    $("#fbStatus").textContent="успешно: "+(fb.user?.email||fb.user?.uid||"");
+    $("#fbStatus").className="status ok";
+  }catch(e){
+    $("#fbStatus").textContent="ошибка: "+(e.code||e.message);
+    $("#fbStatus").className="status err";
+  }
+}
+function targetUid(){
+  return ($("#fbUid").value.trim()) || fb.user?.uid;
+}
+async function loadFromFirebase(){
+  try{
+    ensureApp();
+    if(!fb.user){ $("#fbDlg").showModal(); setStatus("сначала войди",""); return; }
+    const uid=targetUid();
+    if(!uid){ setStatus("нет UID","err"); return; }
+    setStatus("чтение…");
+    const snap=await get(ref(fb.db,`users/${uid}/backup`));
+    backup=normalize(snap.exists()?snap.val():null);
+    dirty=false; activeTab=LISTS[0]; render();
+    setStatus("загружено из Firebase ("+uid.slice(0,8)+"…)","ok");
+  }catch(e){
+    setStatus("ошибка чтения: "+(e.code||e.message),"err");
+  }
+}
+async function saveToFirebase(){
+  try{
+    ensureApp();
+    if(!fb.user){ $("#fbDlg").showModal(); setStatus("сначала войди",""); return; }
+    const uid=targetUid();
+    if(!uid){ setStatus("нет UID","err"); return; }
+    if(!backup){ setStatus("нечего сохранять","err"); return; }
+    if(!confirm(`Записать данные в users/${uid}/backup? Текущие данные в Firebase будут перезаписаны.`)) return;
+    setStatus("запись…");
+    const payload=buildPayload();
+    await set(ref(fb.db,`users/${uid}/backup`), payload.backup);
+    await set(ref(fb.db,`users/${uid}/updatedAt`), payload.updatedAt);
+    dirty=false;
+    setStatus("сохранено в Firebase ✓","ok");
+  }catch(e){
+    setStatus("ошибка записи: "+(e.code||e.message),"err");
+  }
+}
+
+// строим чистый payload: пустые folderTasks не пишем (как в исходнике)
+function buildPayload(){
+  const out={};
+  LISTS.forEach(l=>{
+    out[l]=(backup[l]||[]).map(f=>{
+      const c={...f};
+      if(Array.isArray(c.folderTasks)){
+        if(c.folderTasks.length===0) delete c.folderTasks;
+        else c.folderTasks=c.folderTasks.map(t=>({...t}));
+      }
+      return c;
+    });
+  });
+  // updatedAt: возьмём из исходника +1, чтобы не использовать Date.now (sandbox)
+  const prev=Number(backup.__updatedAt)||1780670278321;
+  return { backup:out, updatedAt: prev+1 };
+}
+
+// ---------- file import/export ----------
+function exportFile(){
+  if(!backup){ setStatus("нет данных","err"); return; }
+  const uid=targetUid()||"ITtrONv5OEh7khdb9kdrYIPWFB02";
+  const payload=buildPayload();
+  const full={ users:{ [uid]:{ backup:payload.backup, updatedAt:payload.updatedAt } } };
+  const blob=new Blob([JSON.stringify(full,null,2)],{type:"application/json"});
+  const a=el("a",{href:URL.createObjectURL(blob), download:"todo100-export.json"});
+  document.body.append(a); a.click(); a.remove();
+  setStatus("файл скачан","ok");
+}
+function importFile(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const raw=JSON.parse(r.result);
+      // keep original updatedAt if present
+      let prevUpdated;
+      if(raw.users){ const uid=Object.keys(raw.users)[0]; prevUpdated=raw.users[uid]?.updatedAt; }
+      backup=normalize(raw);
+      if(prevUpdated) backup.__updatedAt=prevUpdated;
+      dirty=false; activeTab=LISTS[0]; render();
+      setStatus("файл загружен","ok");
+    }catch(e){ setStatus("битый JSON: "+e.message,"err"); }
+  };
+  r.readAsText(file);
+}
+
+// ---------- wire up ----------
+$("#btnFb").addEventListener("click",()=>{ loadCfgLocal(); $("#fbDlg").showModal(); });
+$("#fbClose").addEventListener("click",()=>$("#fbDlg").close());
+$("#fbSignIn").addEventListener("click",()=>signIn(false));
+$("#fbAnon").addEventListener("click",()=>signIn(true));
+$("#btnLoadFb").addEventListener("click",loadFromFirebase);
+$("#btnSave").addEventListener("click",saveToFirebase);
+$("#btnExport").addEventListener("click",exportFile);
+$("#btnImport").addEventListener("click",()=>$("#file").click());
+$("#file").addEventListener("change",e=>{ if(e.target.files[0]) importFile(e.target.files[0]); e.target.value=""; });
+window.addEventListener("beforeunload",e=>{ if(dirty){ e.preventDefault(); e.returnValue=""; } });
+
+loadCfgLocal();
+// стартуем с пустого, чтобы можно было сразу пробовать
+backup=emptyBackup(); render();
+</script>
+</body>
+</html>
