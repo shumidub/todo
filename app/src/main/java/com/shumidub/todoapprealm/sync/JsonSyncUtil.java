@@ -173,6 +173,17 @@ public class JsonSyncUtil {
             return;
         }
 
+        realmBdFromJsonString(json);
+    }
+
+    /** Restore the whole DB from a JSON string (used by both the SAF picker and the
+     *  Firebase import). Replaces current data, then restarts the activity. */
+    public void realmBdFromJsonString(String json){
+        if (TextUtils.isEmpty(json)){
+            ((MainActivity)activity).showToast("Backup is empty");
+            return;
+        }
+
         GsonBuilder builder = new GsonBuilder().setPrettyPrinting();
         Gson gson = builder.create();
 

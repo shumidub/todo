@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 apply plugin: 'realm-android'
+// Firebase: uncomment AFTER placing app/google-services.json (downloaded from the
+// Firebase console for package com.shumidub.todoapprealm.alpha8). The plugin fails
+// the build if that file is missing, so it stays off until the project is set up.
+apply plugin: 'com.google.gms.google-services'
 
 android {
     namespace 'com.shumidub.todoapprealm'
@@ -62,4 +66,9 @@ dependencies {
     implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:3.0.0-RC3'
 
     implementation 'com.google.code.gson:gson:2.10.1'
+
+    // Firebase (Realtime Database + email/password Auth). BoM pins compatible versions.
+    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-database'
 }

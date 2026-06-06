@@ -166,6 +166,24 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
             tvPriority.setVisibility(View.GONE);
             tvCycling.setVisibility(View.GONE);
             cbDone.setVisibility(View.GONE);
+
+            // Full-height "curtain" editor: let the text field grow and the whole note be edited.
+            etText.setMinLines(15);
+            etText.setMaxLines(200);
+            // Full-width text field: drop the container's horizontal padding so the box
+            // spans edge to edge.
+            View content = view.findViewById(R.id.bs_content);
+            if (content != null) {
+                content.setPadding(0, content.getPaddingTop(), 0, content.getPaddingBottom());
+            }
+            // Live autosave — write to Realm on every change (no Apply/dismiss needed).
+            etText.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+                @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+                @Override public void afterTextChanged(Editable s) {
+                    saveTextLive(s == null ? "" : s.toString());
+                }
+            });
         }
 
         tvValue.setOnClickListener(v -> {
@@ -219,13 +237,32 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
         dlg.setOnShowListener(d -> {
             BottomSheetBehavior<?> behavior = dlg.getBehavior();
             behavior.setSkipCollapsed(true);
-            behavior.setHalfExpandedRatio(0.55f);
-            behavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
             // Make the framework's design_bottom_sheet container transparent so the
             // root view's rounded background isn't clipped by an opaque parent.
             View sheet = dlg.findViewById(com.google.android.material.R.id.design_bottom_sheet);
             if (sheet != null) {
                 sheet.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            }
+
+            if (taskGroup == 3) {
+                // Notes: full-height, full-width "curtain".
+                if (sheet != null) {
+                    ViewGroup.LayoutParams lp = sheet.getLayoutParams();
+                    lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
+                    lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                    sheet.setLayoutParams(lp);
+                }
+                if (root != null) {
+                    ViewGroup.LayoutParams rlp = root.getLayoutParams();
+                    rlp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                    root.setLayoutParams(rlp);
+                }
+                behavior.setFitToContents(false);
+                behavior.setExpandedOffset(0);
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            } else {
+                behavior.setHalfExpandedRatio(0.55f);
+                behavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
             }
         });
         if (dlg.getWindow() != null) {
@@ -258,6 +295,15 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
         }
         super.onDismiss(dialog);
         if (onDismissListener != null) onDismissListener.run();
+    }
+
+    // -------- live text save (Notes) --------
+
+    private void saveTextLive(String newText) {
+        if (task == null || !task.isValid()) return;
+        String current = task.getText() == null ? "" : task.getText();
+        if (newText.equals(current)) return;
+        TasksRealmController.editTask(task, newText, draftValue, draftMaxAcc, draftCycling, draftPriority);
     }
 
     // -------- live numeric save --------

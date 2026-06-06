@@ -78,7 +78,7 @@
             android:scrollbars="vertical"
             android:imeOptions="actionDone"
             android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="9"/>
+            android:maxLines="200"/>
 
     </com.google.android.material.textfield.TextInputLayout>
 

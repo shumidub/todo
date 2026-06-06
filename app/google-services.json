@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "610575384597",
+    "firebase_url": "https://todo100-5db8c-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "todo100-5db8c",
+    "storage_bucket": "todo100-5db8c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610575384597:android:a591ec933074df47b80e1c",
+        "android_client_info": {
+          "package_name": "com.shumidub.todoapprealm.alpha8"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFAzWbri3Oxu97kmB9AZsbHfSKst4yUuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

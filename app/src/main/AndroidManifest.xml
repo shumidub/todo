@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Firebase Realtime Database / Auth networking. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <!-- Backup/restore JSON to/from Downloads. On API 29+ MediaStore.Downloads handles it
          without runtime permission; only legacy API levels need the broad storage perms. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"

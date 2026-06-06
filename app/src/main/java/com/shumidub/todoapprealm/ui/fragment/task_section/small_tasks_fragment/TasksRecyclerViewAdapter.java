@@ -382,7 +382,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
             if (holder.paramsRow != null) holder.paramsRow.setVisibility(View.GONE);
             // Bounded preview keeps list items cheap to measure/draw; the full note text
             // is shown in the editor on tap. Unbounded inline text janks the RecyclerView.
-            holder.textView.setMaxLines(12);
+            holder.textView.setMaxLines(25);
             holder.textView.setEllipsize(android.text.TextUtils.TruncateAt.END);
             holder.textView.setOnLongClickListener(view -> {
                 if (onItemLongClicked != null) onItemLongClicked.onLongClick(view, position);
