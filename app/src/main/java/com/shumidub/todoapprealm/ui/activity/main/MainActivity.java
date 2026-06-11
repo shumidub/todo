@@ -403,32 +403,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        App.closeRealm();
-        super.onPause();
-    }
-
-    @Override
-    protected void onRestart() {
-//        /**Проверка на возможность загрузить список при возврате на экран.
-//        * Например, после ухода с экрана, категория со списком могла быть удалена и при возврате на
-//        * экран и тапе на список - была ошибка.
-//        */
-//        if (FolderRealmController.getFolder(listId)==null){
-//
-//            long defaultListId = new SharedPrefHelper(this).getDefaultListId();
-//            if (FolderRealmController.getFolder(defaultListId)!=null)  listId = defaultListId;
-//            else listId = 0;
-//            fragmentManager.beginTransaction().replace(R.id.container,
-//                    FolderSlidingPanelFragment.newInstance(listId)).commitAllowingStateLoss();
-////          try fix run method before savedInstance outStatte
-////          FolderSlidingPanelFragment.newInstance(listId)).commit();
-//        }
-        super.onRestart();
-    }
-
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         dayScopeMenu = menu.add(2,2,2,"" + App.dayScope);
         dayScopeMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
