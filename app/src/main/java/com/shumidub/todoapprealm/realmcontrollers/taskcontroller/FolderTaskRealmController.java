@@ -1,8 +1,7 @@
 package com.shumidub.todoapprealm.realmcontrollers.taskcontroller;
 
-import android.util.Log;
-
 import com.shumidub.todoapprealm.App;
+import com.shumidub.todoapprealm.realmcontrollers.RealmDb;
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
@@ -11,18 +10,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import io.realm.RealmList;
-import io.realm.RealmQuery;
-import io.realm.RealmResults;
-import static com.shumidub.todoapprealm.App.realm;
 
 /**
  * Created by Артем on 24.12.2017.
  */
 
 public class FolderTaskRealmController {
-
-    private static RealmQuery<FolderTaskObject> foldersQuery;
-    private static RealmResults<FolderTaskObject> folders;
 
     /** Get folders for tab 0 (legacy callers). */
     public static RealmList<FolderTaskObject> getFoldersList(){
@@ -31,7 +24,7 @@ public class FolderTaskRealmController {
 
     /** Get folders for a given tab. group=0 → Tasks1, group=1 → Tasks2, group=2 → Tasks3. */
     public static RealmList<FolderTaskObject> getFoldersList(int group){
-        App.initRealm();
+        RealmDb.realm();
         switch (group) {
             case 1: return App.folderOfTasksList2FromContainer;
             case 2: return App.folderOfTasksList3FromContainer;
@@ -56,7 +49,7 @@ public class FolderTaskRealmController {
 
     /** All folders across all tabs (Tasks1 first, then Tasks2, then Tasks3). */
     public static java.util.List<FolderTaskObject> getAllFolders(){
-        App.initRealm();
+        RealmDb.realm();
         java.util.List<FolderTaskObject> all = new ArrayList<>();
         if (App.folderOfTasksListFromContainer != null) all.addAll(App.folderOfTasksListFromContainer);
         if (App.folderOfTasksList2FromContainer != null) all.addAll(App.folderOfTasksList2FromContainer);
@@ -67,7 +60,7 @@ public class FolderTaskRealmController {
 
     /** get folder by id */
     public static FolderTaskObject getFolder(long listId){
-        return getFoldersQuery().equalTo("id", listId).findFirst();
+        return RealmDb.findById(FolderTaskObject.class, listId);
     }
 
     /** add folder to tab 0 (legacy). */
@@ -78,9 +71,8 @@ public class FolderTaskRealmController {
     /** add folder to a specific tab. */
     public static long addFolder(String name, boolean isDaily, int group){
         long id = getIdForNextValue();
-        App.initRealm();
-        App.realm.executeTransaction((transaction) -> {
-            FolderTaskObject folder = App.realm.createObject(FolderTaskObject.class);
+        RealmDb.write(() -> {
+            FolderTaskObject folder = RealmDb.realm().createObject(FolderTaskObject.class);
             folder.setId(id);
             folder.setName(name);
             folder.setDaily(isDaily);
@@ -91,8 +83,7 @@ public class FolderTaskRealmController {
 
     /** edit folder by folderobject */
     public static long editFolder(FolderTaskObject folder, String name, boolean isDaily){
-        App.initRealm();
-        realm.executeTransaction((transaction)-> {
+        RealmDb.write(() -> {
             folder.setName(name);
             folder.setDaily(isDaily);
         });
@@ -101,7 +92,6 @@ public class FolderTaskRealmController {
 
     /** edit folder by id */
     public static long editFolder(long id, String name, boolean isDaily){
-        App.initRealm();
         FolderTaskObject folder = getFolder(id);
         return editFolder(folder, name, isDaily);
     }
@@ -111,8 +101,7 @@ public class FolderTaskRealmController {
         if (folder == null) return;
         int current = getFolderGroup(folder);
         if (current == targetGroup) return;
-        App.initRealm();
-        App.realm.executeTransaction((r) -> {
+        RealmDb.write(() -> {
             if (App.folderOfTasksListFromContainer != null) App.folderOfTasksListFromContainer.remove(folder);
             if (App.folderOfTasksList2FromContainer != null) App.folderOfTasksList2FromContainer.remove(folder);
             if (App.folderOfTasksList3FromContainer != null) App.folderOfTasksList3FromContainer.remove(folder);
@@ -123,10 +112,9 @@ public class FolderTaskRealmController {
 
     /** delete folder by folderobject */
     public static void deleteFolder(FolderTaskObject folderObject){
-        App.initRealm();
         long folderId = folderObject.getId();
 
-        Runnable body = () -> {
+        RealmDb.write(() -> {
             // For every task currently in this folder: either fully delete it
             // (this folder was its only category) or detach it from this folder
             // (the task survives in its remaining categories).
@@ -138,7 +126,7 @@ public class FolderTaskRealmController {
             // Catch direct-orphan tasks whose primary still points to this folder
             // but which somehow aren't in the folder's task list.
             ArrayList<TaskObject> orphans = new ArrayList<>(
-                    App.realm.where(TaskObject.class).equalTo("taskFolderId", folderId).findAll());
+                    RealmDb.realm().where(TaskObject.class).equalTo("taskFolderId", folderId).findAll());
             for (TaskObject task : orphans) detachOrDeleteTaskFromFolder(task, folderId);
 
             if (App.folderOfTasksListFromContainer != null) {
@@ -154,14 +142,8 @@ public class FolderTaskRealmController {
                 App.folderOfTasksList4FromContainer.remove(folderObject);
             }
             folderObject.deleteFromRealm();
-            App.realm.where(FolderTaskObject.class).equalTo("id", folderId).findAll().deleteAllFromRealm();
-        };
-
-        if (App.realm.isInTransaction()) {
-            body.run();
-        } else {
-            realm.executeTransaction((transaction) -> body.run());
-        }
+            RealmDb.realm().where(FolderTaskObject.class).equalTo("id", folderId).findAll().deleteAllFromRealm();
+        });
     }
 
     /** Must run inside a Realm transaction. */
@@ -196,54 +178,32 @@ public class FolderTaskRealmController {
 
     /** delete folder by id */
     public static void deleteFolder(long idList){
-        App.initRealm();
-        FolderTaskObject list = getFoldersQuery().equalTo("id", idList).findFirst();
-        deleteFolder(list);
+        deleteFolder(getFolder(idList));
     }
 
     /** folder is valid */
     public static boolean folderIsExist(FolderTaskObject list){
-        App.initRealm();
         return list.isValid();
     }
 
     /** folder is exist and valid */
     public static boolean folderIsExist(long idList){
-        App.initRealm();
-        if ( realm.where(FolderTaskObject.class).equalTo("id", idList).findFirst() == null){
-            return false;
-        }else {
-            return realm.where(FolderTaskObject.class).equalTo("id", idList).findFirst().isValid();
-        }
+        FolderTaskObject folder = getFolder(idList);
+        return folder != null && folder.isValid();
     }
 
     /** folders is not exist, haven,t any folder*/
     public static boolean listOfFolderIsEmpty(){
-        App.initRealm();
-        return (realm.where(FolderTaskObject.class).findAll() == null
-                || realm.where(FolderTaskObject.class).findAll().size() == 0);
+        return RealmDb.realm().where(FolderTaskObject.class).findAll().isEmpty();
     }
 
     /** containre of folders is exist*/
     public static boolean containerOfFolderIsExist(){
-        App.initRealm();
-        return (realm.where(RealmFoldersContainer.class).findFirst() != null);
-    }
-
-    /** Промежуточный запрос */
-    private static RealmQuery<FolderTaskObject> getFoldersQuery(){
-        App.initRealm();
-        foldersQuery = realm.where(FolderTaskObject.class);
-        return foldersQuery;
+        return RealmDb.realm().where(RealmFoldersContainer.class).findFirst() != null;
     }
 
     /** get unique id*/
     static long getIdForNextValue() {
-        long id =  System.currentTimeMillis();
-        App.initRealm();
-        while ((App.realm.where(FolderTaskObject.class).equalTo("id", id)).findFirst()!=null){
-            id ++;
-        }
-        return id;
+        return RealmDb.newUniqueId(FolderTaskObject.class);
     }
 }

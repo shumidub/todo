@@ -1,7 +1,7 @@
 package com.shumidub.todoapprealm.realmcontrollers.taskcontroller;
 
 import android.util.Log;
-import com.shumidub.todoapprealm.App;
+import com.shumidub.todoapprealm.realmcontrollers.RealmDb;
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import java.util.ArrayList;
@@ -11,7 +11,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import io.reactivex.annotations.NonNull;
-import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 import io.realm.Sort;
@@ -25,18 +24,13 @@ public class TasksRealmController {
     //GET TASKS
     /** get all tasks, without folder id !!! if folder if == null !!! do not happend */
     public static List<TaskObject> getTasks(){
-        App.initRealm();
-
-
-
-        return App.realm.where(TaskObject.class).findAll()
+        return RealmDb.realm().where(TaskObject.class).findAll()
                 .sort("done", Sort.ASCENDING, "id",Sort.ASCENDING);
     }
 
     /** get not done tasks , without folder id !!! if folder if == null !!! do not happend*/
     public static List<TaskObject> getNotDoneTasks(){
-        App.initRealm();
-        return App.realm.where(TaskObject.class)
+        return RealmDb.realm().where(TaskObject.class)
                 .equalTo("done", false)
                 .findAll()
                 .sort("done", Sort.ASCENDING, "id",Sort.ASCENDING);
@@ -44,8 +38,7 @@ public class TasksRealmController {
 
     /** get done tasks , without folder id !!! if folder if == null !!! do not happend */
     public static List<TaskObject> getDoneTasks(){
-        App.initRealm();
-        return App.realm.where(TaskObject.class)
+        return RealmDb.realm().where(TaskObject.class)
                 .equalTo("done", true)
                 .findAll()
                 .sort("done", Sort.ASCENDING, "id",Sort.ASCENDING);
@@ -55,8 +48,7 @@ public class TasksRealmController {
      * use for reset daily count value
      */
     public static List<TaskObject> getDoneAndPartiallyDoneTasks(){
-        App.initRealm();
-        return App.realm.where(TaskObject.class)
+        return RealmDb.realm().where(TaskObject.class)
                 .notEqualTo("countAccumulation", 0)
                 .findAll()
                 .sort("done", Sort.ASCENDING, "id",Sort.ASCENDING);
@@ -64,22 +56,14 @@ public class TasksRealmController {
 
     /** get tasks by folder id*/
     public static RealmResults<TaskObject> getTasks(long folderId){
-        App.initRealm();
-        //todo changed!!! new need test + need think and add about sort
-
-
-//       TaskObject task = App.realm.where(TaskObject.class).findFirst();
-//       rlto.indexOf(task);
-
-   // task-002: sort by (done ASC, position ASC) so drag-order is preserved per section/free
-   return getFolderTasksRealmListFromFolder(folderId).sort(
+        // task-002: sort by (done ASC, position ASC) so drag-order is preserved per section/free
+        return getFolderTasksRealmListFromFolder(folderId).sort(
            new String[]{"done", "position"},
            new Sort[]{Sort.ASCENDING, Sort.ASCENDING});
     }
 
     /** get not done tasks by id*/
     public static List<TaskObject> getNotDoneTasks(long folderId){
-        App.initRealm();
         return getFolderTasksRealmListFromFolder(folderId)
                 .where().equalTo("done", false).findAll()
                 .sort("position", Sort.ASCENDING);
@@ -87,7 +71,6 @@ public class TasksRealmController {
 
     /** get done tasks by id*/
     public static List<TaskObject> getDoneTasks(long folderId){
-        App.initRealm();
         return getFolderTasksRealmListFromFolder(folderId)
                 .where().equalTo("done", true).findAll()
                 .sort("position", Sort.ASCENDING);
@@ -95,8 +78,7 @@ public class TasksRealmController {
 
     /** get done and not done tasks but where countAccumulation more than 0 */
     public static List<TaskObject> getDoneAndPartiallyDoneTasks(long folderId){
-        App.initRealm();
-        return App.realm.where(TaskObject.class)
+        return RealmDb.realm().where(TaskObject.class)
                 .equalTo("taskFolderId", folderId)
                 .notEqualTo("countAccumulation", 0)
                 .findAll()
@@ -106,15 +88,13 @@ public class TasksRealmController {
     //SINGLE TASK
     /** get task by id*/
     public static TaskObject getTask(long idTask){
-        App.initRealm();
-        return App.realm.where(TaskObject.class).equalTo("id", idTask).findFirst();
+        return RealmDb.findById(TaskObject.class, idTask);
     }
 
     /** add task*/
     public static  void addTask(String text, int count, int maxAccumulation, boolean cycling, int priority, long taskFolderId ){
-        App.initRealm();
-        App.realm.executeTransaction((transaction) -> {
-            TaskObject task = App.realm.createObject(TaskObject.class);
+        RealmDb.write(() -> {
+            TaskObject task = RealmDb.realm().createObject(TaskObject.class);
             long id = getIdForNextValue();
             task.setId(id);
             task.setText(text);
@@ -129,27 +109,21 @@ public class TasksRealmController {
             task.setSectionId(0);
             task.setPosition(SectionsRealmController.nextOuterPosition(taskFolderId));
             FolderTaskRealmController.getFolder(taskFolderId).folderTasks.add(task);
-//          App.realm.insert(task);
         });
     }
 
     public static  void editTask(TaskObject task, String text, @NonNull int count, @NonNull int maxAccumulation, @NonNull boolean cycling, @NonNull int priority ){
-        App.initRealm();
-        App.realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                if (!text.isEmpty()) task.setText(text);
-                task.setPriority(priority);
-                task.setCountValue(count);
-                task.setMaxAccumulation(maxAccumulation);
-                task.setCycling(cycling);
-            }
+        RealmDb.write(() -> {
+            if (!text.isEmpty()) task.setText(text);
+            task.setPriority(priority);
+            task.setCountValue(count);
+            task.setMaxAccumulation(maxAccumulation);
+            task.setCycling(cycling);
         });
     }
 
     public static void setTaskDoneOrParticullaryDone(TaskObject task, boolean done){
-        App.initRealm();
-        App.realm.executeTransaction((transaction)-> {
+        RealmDb.write(() -> {
             if(done == false){
                 task.setDone(done);
                 task.clearDateCountAccumulation();
@@ -172,13 +146,12 @@ public class TasksRealmController {
 
     /**delete task*/
     public static void deleteTask(TaskObject task) {
-        App.initRealm();
         long taskId = task.getId();
         String taskText = task.getText();
 
-        Runnable body = () -> {
+        RealmDb.write(() -> {
             // remove the task from every folder that references it (primary + extras)
-            for (FolderTaskObject folder : App.realm.where(FolderTaskObject.class).findAll()) {
+            for (FolderTaskObject folder : RealmDb.realm().where(FolderTaskObject.class).findAll()) {
                 if (folder.getTasks() != null && folder.getTasks().contains(task)) {
                     folder.getTasks().remove(task);
                 }
@@ -188,15 +161,9 @@ public class TasksRealmController {
                 if (task.getExtraFolderIds() != null) task.getExtraFolderIds().clear();
                 task.deleteFromRealm();
             }
-        };
+        });
 
-        if (App.realm.isInTransaction()) {
-            body.run();
-        } else {
-            App.realm.executeTransaction((transaction) -> body.run());
-        }
-
-        if (App.realm.where(TaskObject.class).equalTo("id", taskId).findFirst() == null){
+        if (RealmDb.findById(TaskObject.class, taskId) == null){
             Log.d("DEBUG_TAG", "TASK: " + taskText + " id:" + taskId + " DELETED" );
         }else{
             Log.d("DEBUG_TAG", "TASK: " + taskText + " id:" + taskId + " NOT DELETED !!!" );
@@ -205,7 +172,7 @@ public class TasksRealmController {
 
     /**delete task by id*/
     public static void deleteTask(long id){
-        deleteTask(App.realm.where(TaskObject.class).equalTo("id", id).findFirst());
+        deleteTask(RealmDb.findById(TaskObject.class, id));
     }
 
     /**
@@ -227,20 +194,12 @@ public class TasksRealmController {
 
     /** get unique id*/
     private static long getIdForNextValue(){
-        long id =  System.currentTimeMillis();
-        App.initRealm();
-        while ((App.realm.where(TaskObject.class).equalTo("id", id)).findFirst()!=null){
-            id ++;
-        }
-        return id;
+        return RealmDb.newUniqueId(TaskObject.class);
     }
 
     @SuppressWarnings("All")
     public static RealmList<TaskObject> getFolderTasksRealmListFromFolder (long folderId){
-        return ((FolderTaskObject) App.realm.where(FolderTaskObject.class)
-                .equalTo("id", folderId)
-                .findFirst())
-                .folderTasks;
+        return RealmDb.findById(FolderTaskObject.class, folderId).folderTasks;
     }
 
     /** All folder ids this task belongs to — primary first, then extras. Never empty. */
@@ -263,18 +222,17 @@ public class TasksRealmController {
      */
     public static void setTaskCategories(TaskObject task, List<Long> folderIds) {
         if (folderIds == null || folderIds.isEmpty()) return;
-        App.initRealm();
 
         // de-dupe preserving order
         Set<Long> ordered = new LinkedHashSet<>(folderIds);
         List<Long> finalIds = new ArrayList<>(ordered);
 
-        App.realm.executeTransaction((r) -> {
+        RealmDb.write(() -> {
             long newPrimary = finalIds.get(0);
             Set<Long> newSet = new HashSet<>(finalIds);
 
             // remove from folders no longer assigned
-            for (FolderTaskObject folder : App.realm.where(FolderTaskObject.class).findAll()) {
+            for (FolderTaskObject folder : RealmDb.realm().where(FolderTaskObject.class).findAll()) {
                 long fid = folder.getId();
                 boolean contains = folder.getTasks() != null && folder.getTasks().contains(task);
                 if (contains && !newSet.contains(fid)) {
@@ -305,8 +263,7 @@ public class TasksRealmController {
 
     public static void setTaskPriority(TaskObject taskObject, int priority){
         if (priority >= 0 && priority <= 3) {
-            App.initRealm();
-            App.realm.executeTransaction((r) -> taskObject.setPriority(priority));
+            RealmDb.write(() -> taskObject.setPriority(priority));
         }
     }
 
