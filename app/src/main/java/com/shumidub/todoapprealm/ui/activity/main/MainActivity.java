@@ -33,6 +33,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.shumidub.todoapprealm.App;
+import com.shumidub.todoapprealm.Tabs;
 import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.realmmodel.notes.NoteObject;
 import com.shumidub.todoapprealm.realmmodel.report.ReportObject;
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         mainPagerAdapter = new MainPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(mainPagerAdapter);
         viewPager.setOffscreenPageLimit(1);
-        viewPager.setCurrentItem(1);
+        viewPager.setCurrentItem(Tabs.START_PAGE);
 
         rootLayout.post(() -> {
             App.setDayScopeValue();
@@ -216,22 +217,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean isCornflowerTab() {
-        return viewPager != null && viewPager.getCurrentItem() == 2;
+        return viewPager != null && viewPager.getCurrentItem() == Tabs.positionForGroup(1);
     }
 
     public boolean isCanaryTab() {
-        return viewPager != null && viewPager.getCurrentItem() == 3;
+        return viewPager != null && viewPager.getCurrentItem() == Tabs.positionForGroup(2);
     }
 
     public boolean isIndigoTab() {
-        return viewPager != null && viewPager.getCurrentItem() == 4;
+        return viewPager != null && viewPager.getCurrentItem() == Tabs.positionForGroup(3);
     }
 
     /** Task group of the current tab (1/2/3 for the themed tabs, 0 otherwise). */
     public int currentTabTaskGroup() {
         if (viewPager == null) return 0;
-        int pos = viewPager.getCurrentItem();
-        return (pos >= 2 && pos <= 4) ? pos - 1 : 0;
+        return Math.max(0, Tabs.groupForPosition(viewPager.getCurrentItem()));
     }
 
     /** Build a MaterialAlertDialogBuilder applying the per-tab overlay (Cornflower for Tasks2,
@@ -296,10 +296,9 @@ public class MainActivity extends AppCompatActivity {
      *  tabs that don't have a custom palette (Notes / Tasks1). */
     public void tintActionModeBarForCurrentTab() {
         if (viewPager == null) return;
-        int pos = viewPager.getCurrentItem();
-        // Pager position → task group: tab 2/3/4 host groups 1/2/3.
         com.shumidub.todoapprealm.ui.theme.Palette p =
-                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(this, pos - 1);
+                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(
+                        this, Tabs.groupForPosition(viewPager.getCurrentItem()));
         if (p == null) return;
         final int color = p.bg;
         Runnable tint = () -> applyActionModeBarColor(color);
@@ -344,9 +343,8 @@ public class MainActivity extends AppCompatActivity {
         if (rootLayout == null || actionBar == null) return;
         androidx.core.view.WindowInsetsControllerCompat insets =
                 androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        // Pager position → task group: tab 2/3/4 host groups 1/2/3.
         com.shumidub.todoapprealm.ui.theme.Palette p =
-                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(this, position - 1);
+                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(this, Tabs.groupForPosition(position));
         if (p != null) {
             rootLayout.setBackgroundColor(p.bg);
             actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
@@ -354,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
             getWindow().setNavigationBarColor(p.bg);
             if (insets != null) {
                 // R8: dark icons on the Canary tab's yellow background only.
-                boolean light = position == 3;
+                boolean light = Tabs.groupForPosition(position) == 2;
                 insets.setAppearanceLightStatusBars(light);
                 insets.setAppearanceLightNavigationBars(light);
             }
@@ -389,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
         dayScopeMenu = menu.add(2,2,2,"" + App.dayScope);
         dayScopeMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         // Notes tab has no "done" concept — hide the day-scope counter there.
-        dayScopeMenu.setVisible(viewPager == null || viewPager.getCurrentItem() != 4);
+        dayScopeMenu.setVisible(viewPager == null || viewPager.getCurrentItem() != Tabs.positionForGroup(3));
         dayScopeMenu.setOnMenuItemClickListener((v)->{
 
             App.initRealm();

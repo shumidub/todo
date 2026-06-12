@@ -8,7 +8,6 @@ import androidx.multidex.MultiDex;
 
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController;
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController;
-import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.RealmFoldersContainer;
 import com.shumidub.todoapprealm.realmmodel.RealmInteger;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
@@ -33,10 +32,6 @@ public class App extends Application {
 
     public static Realm realm;
     public static RealmFoldersContainer realmFoldersContainer;
-    public static RealmList<FolderTaskObject> folderOfTasksListFromContainer;
-    public static RealmList<FolderTaskObject> folderOfTasksList2FromContainer;
-    public static RealmList<FolderTaskObject> folderOfTasksList3FromContainer;
-    public static RealmList<FolderTaskObject> folderOfTasksList4FromContainer;
     public static RealmList<FolderNotesObject> folderOfNotesContainerList;
     public static FolderSlidingPanelFragment folderSlidingPanelFragment;
     public static final java.util.List<FolderSlidingPanelFragment> folderSlidingPanelFragments = new java.util.ArrayList<>();
@@ -93,10 +88,6 @@ public class App extends Application {
 
         });
 
-        folderOfTasksListFromContainer = realmFoldersContainer.folderOfTasksList;
-        folderOfTasksList2FromContainer = realmFoldersContainer.folderOfTasksList2;
-        folderOfTasksList3FromContainer = realmFoldersContainer.folderOfTasksList3;
-        folderOfTasksList4FromContainer = realmFoldersContainer.folderOfTasksList4;
         folderOfNotesContainerList = realmFoldersContainer.folderOfNotesList;
     }
 
