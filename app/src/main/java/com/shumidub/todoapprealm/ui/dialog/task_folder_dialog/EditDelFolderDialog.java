@@ -41,16 +41,23 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
     MaterialButtonToggleGroup tabColorToggleGroup;
     long defaultFolderId;
     MainActivity activity;
-    static FolderSlidingPanelFragment folderSlidingPanelFragment;
 
-    public static EditDelFolderDialog newInstance(long idList, String mode, FolderSlidingPanelFragment fragment){
-        folderSlidingPanelFragment = fragment;
+    public static EditDelFolderDialog newInstance(long idList, String mode){
         EditDelFolderDialog dialog = new EditDelFolderDialog();
         Bundle arg = new Bundle();
         arg.putLong(ID_FOLDER, idList);
         arg.putString(MODE_LIST, mode);
         dialog.setArguments(arg);
         return dialog;
+    }
+
+    /** Close the contextual action mode and refresh every tab's folder panel.
+     *  Survives rotation: panels are looked up at click time, not captured at show time. */
+    private void finishActionModeAndRefreshPanels() {
+        activity.startSupportActionMode(new com.shumidub.todoapprealm.ui.actionmode.EmptyActionModeCallback());
+        for (FolderSlidingPanelFragment p : com.shumidub.todoapprealm.App.folderSlidingPanelFragments) {
+            p.notifySmallTasksViewPagerListsChanged();
+        }
     }
 
     @NonNull
@@ -91,11 +98,7 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
                         FolderTaskRealmController.editFolder(folderObject, text, cbIsDaily.isChecked());
                         int targetGroup = TabColorPickerHelper.resolveSelectedGroup(tabColorToggleGroup);
                         FolderTaskRealmController.moveFolderToGroup(folderObject, targetGroup);
-                        folderSlidingPanelFragment.finishActionMode();
-                        for (com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment p
-                                : com.shumidub.todoapprealm.App.folderSlidingPanelFragments) {
-                            p.notifySmallTasksViewPagerListsChanged();
-                        }
+                        finishActionModeAndRefreshPanels();
 
                         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(getDialog().getWindow().getDecorView().getWindowToken(), 0);
@@ -112,11 +115,8 @@ public class EditDelFolderDialog extends androidx.fragment.app.DialogFragment{
                         if (folderObject.getId() != defaultFolderId) {
                             FolderTaskRealmController.deleteFolder(folderObject);
 
-//                            Toast.makeText(getContext(), "Deleted", Toast.LENGTH_SHORT).show();
-                            folderSlidingPanelFragment.finishActionMode();
+                            finishActionModeAndRefreshPanels();
                             activity.invalidateOptionsMenu();
-                            folderSlidingPanelFragment.notifySmallTasksViewPagerListsChanged();
-                            if (activity == null) activity = (MainActivity) getActivity();
                             if (activity.isFinishing()) return;
                             activity.showToast("Deleted");
                         }else{

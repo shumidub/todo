@@ -96,9 +96,8 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     RealmFoldersContainer realmFoldersContainer;
 //    RealmResults<FolderObject> folderObjects;
     RealmList<FolderTaskObject> folderObjects;
-    public static Long idFolderFromTag;
+    private Long idFolderFromTag;
     private String title;
-    public static String titleFolder;
     int lastDateResetTasksCountAccumulation;
 
     ////////////////////////////     SMALL TASKS VIEWS AND VARIABLES     //////////////////////////
@@ -276,7 +275,6 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             = (FolderOfTaskRecyclerViewAdapter.ViewHolder holder, int position) -> {
 //            idFolderFromTag = (Long) holder.itemView.findViewById(R.id.item_text).getTag();
             idFolderFromTag = (Long) holder.itemView.findViewById(R.id.tv_note_text).getTag();
-            titleFolder = FolderTaskRealmController.getFolder(idFolderFromTag).getName();
             finishActionMode();
             actionMode = getActivity().startActionMode(getCallback(FOLDER_ACTIONMODE));
 
@@ -587,7 +585,8 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     private ActionMode.Callback getCallback(int callbackType){
         if (callbackType == FOLDER_ACTIONMODE) {
             folderCallback = new FolderActionModeCallback().getListActionModeCallback(
-                    (MainActivity) getActivity(), this, idFolderFromTag);
+                    (MainActivity) getActivity(), this, idFolderFromTag,
+                    FolderTaskRealmController.getFolder(idFolderFromTag).getName());
             return folderCallback;
         }
         else return null;
