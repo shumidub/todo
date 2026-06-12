@@ -151,9 +151,8 @@ public class FolderNoteFragment extends Fragment{
             setNoteViews(idFolderFromAdapter);
         });
         folderAdapter.setOnLongClickListener((h,p,id1)->{
-            actionBar.startActionMode(new FolderNoteActionModeCallback()
-                            .getFolderNoteActionMode((MainActivity) getActivity(), this,
-                                    EditNoteDialog.TYPE_FOLDER, id1));
+            actionBar.startActionMode(new FolderNoteActionModeCallback(
+                    (MainActivity) getActivity(), this, EditNoteDialog.TYPE_FOLDER, id1));
 
             return true;
         });
@@ -187,9 +186,8 @@ public class FolderNoteFragment extends Fragment{
         rv.setAdapter(noteAdapter);
         noteAdapter.setOnClickListener((h,p,id)-> setFolderNoteViews());
         noteAdapter.setOnLongClickListener((h,p,id)->{
-            actionBar.startActionMode(new FolderNoteActionModeCallback()
-                    .getFolderNoteActionMode((MainActivity) getActivity(), this,
-                            EditNoteDialog.TYPE_NOTE, id));
+            actionBar.startActionMode(new FolderNoteActionModeCallback(
+                    (MainActivity) getActivity(), this, EditNoteDialog.TYPE_NOTE, id));
             return true;
         });
         rv.setAdapter(noteAdapter);

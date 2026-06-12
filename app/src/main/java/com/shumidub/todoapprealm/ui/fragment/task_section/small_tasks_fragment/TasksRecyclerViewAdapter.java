@@ -305,7 +305,7 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
             SectionObject s = SectionsRealmController.getSection(sectionId);
             if (s != null && s.isValid()) {
                 activity.startSupportActionMode(
-                        new SectionActionModeCallback().getCallback(activity, smallTasksFragment, sectionId));
+                        new SectionActionModeCallback(activity, smallTasksFragment, sectionId));
             }
             return true;
         });

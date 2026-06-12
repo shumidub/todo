@@ -76,7 +76,7 @@ public class ReportFragment extends Fragment{
         reportRecyclerViewAdapter.setOnLongClicked((v, position, reportId)->{
             setId(reportId);
             ActionMode.Callback actionModeCallback
-                    = new ReportActionModeCallback().getReportActionMode(getActivity(), reportId);
+                    = new ReportActionModeCallback((com.shumidub.todoapprealm.ui.activity.main.MainActivity) getActivity());
             actionBar.startActionMode(actionModeCallback);
             actionModeIsEnabled = true;
             return true;});
