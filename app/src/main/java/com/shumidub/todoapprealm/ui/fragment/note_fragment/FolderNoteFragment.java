@@ -105,10 +105,9 @@ public class FolderNoteFragment extends Fragment{
                 imm.toggleSoftInputFromWindow(
                         getActivity().getWindow().getDecorView().getApplicationWindowToken(),
                         InputMethodManager.SHOW_FORCED, 0);
-            }catch (NullPointerException e){e.printStackTrace();}
-
-
-//            new AddReportDialog().show(getActivity().getSupportFragmentManager(), AddReportDialog.ADD_REPORT_TITLE);
+            } catch (NullPointerException e) {
+                Log.e("FolderNoteFragment", "showing AddNoteDialog failed", e);
+            }
             return true;
         });
 
