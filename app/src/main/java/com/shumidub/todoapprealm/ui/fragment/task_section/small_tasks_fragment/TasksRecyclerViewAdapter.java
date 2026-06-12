@@ -18,9 +18,7 @@ import com.shumidub.todoapprealm.realmmodel.task.SectionObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 import com.shumidub.todoapprealm.ui.actionmode.task.SectionActionModeCallback;
 import com.shumidub.todoapprealm.ui.activity.main.MainActivity;
-import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
-import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
-import com.shumidub.todoapprealm.ui.theme.IndigoPalette;
+import com.shumidub.todoapprealm.ui.theme.Palette;
 import androidx.cardview.widget.CardView;
 
 
@@ -66,28 +64,14 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     private OnItemLongClicked onItemLongClicked;
     private OnItemClicked onItemClicked;
     MainActivity activity;
-    private CornflowerPalette cornflowerPalette;
-    private CanaryPalette canaryPalette;
-    private IndigoPalette indigoPalette;
+    private Palette palette;
     /** Notes tab (taskGroup 3): render tasks as a plain list — no checkbox, no
      *  points/cycling/priority params, no "Done" footer. */
     private boolean plainList = false;
 
-    public void useCornflowerPalette(boolean enabled) {
-        cornflowerPalette = enabled ? new CornflowerPalette(activity) : null;
-        if (enabled) { canaryPalette = null; indigoPalette = null; }
-        notifyDataSetChanged();
-    }
-
-    public void useCanaryPalette(boolean enabled) {
-        canaryPalette = enabled ? new CanaryPalette(activity) : null;
-        if (enabled) { cornflowerPalette = null; indigoPalette = null; }
-        notifyDataSetChanged();
-    }
-
-    public void useIndigoPalette(boolean enabled) {
-        indigoPalette = enabled ? new IndigoPalette(activity) : null;
-        if (enabled) { cornflowerPalette = null; canaryPalette = null; }
+    /** Apply the tab palette for a task group (1/2/3); any other group clears it. */
+    public void usePaletteForGroup(int group) {
+        palette = Palette.forGroup(activity, group);
         notifyDataSetChanged();
     }
 
@@ -99,35 +83,24 @@ public class TasksRecyclerViewAdapter extends RecyclerView.Adapter<TasksRecycler
     }
 
     private boolean hasActivePalette() {
-        return cornflowerPalette != null || canaryPalette != null || indigoPalette != null;
+        return palette != null;
     }
 
     private int activeAccent() {
-        if (cornflowerPalette != null) return cornflowerPalette.accent;
-        if (canaryPalette != null) return canaryPalette.accent;
-        if (indigoPalette != null) return indigoPalette.accent;
+        if (palette != null) return palette.accent;
         return activity.getResources().getColor(R.color.colorAccent);
     }
 
     private int activeSurface() {
-        if (cornflowerPalette != null) return cornflowerPalette.surface;
-        if (canaryPalette != null) return canaryPalette.surface;
-        if (indigoPalette != null) return indigoPalette.surface;
-        return 0;
+        return palette != null ? palette.surface : 0;
     }
 
     private int activeInputText() {
-        if (cornflowerPalette != null) return cornflowerPalette.inputText;
-        if (canaryPalette != null) return canaryPalette.inputText;
-        if (indigoPalette != null) return indigoPalette.inputText;
-        return 0;
+        return palette != null ? palette.inputText : 0;
     }
 
     private int activeCounter() {
-        if (cornflowerPalette != null) return cornflowerPalette.counter;
-        if (canaryPalette != null) return canaryPalette.counter;
-        if (indigoPalette != null) return indigoPalette.counter;
-        return 0;
+        return palette != null ? palette.counter : 0;
     }
 
     public interface OnItemLongClicked { void onLongClick(View view, int position); }

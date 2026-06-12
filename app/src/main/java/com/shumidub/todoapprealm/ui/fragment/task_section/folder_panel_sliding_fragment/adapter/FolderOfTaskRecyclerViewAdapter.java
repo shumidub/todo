@@ -14,9 +14,7 @@ import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.RealmInteger;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
-import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
-import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
-import com.shumidub.todoapprealm.ui.theme.IndigoPalette;
+import com.shumidub.todoapprealm.ui.theme.Palette;
 import androidx.cardview.widget.CardView;
 
 
@@ -37,9 +35,7 @@ public class FolderOfTaskRecyclerViewAdapter
     OnHolderTextViewOnLongClickListener onHolderTextViewOnLongClickListener;
     Activity activity;
     private final int taskGroup;
-    private CornflowerPalette cornflowerPalette;
-    private CanaryPalette canaryPalette;
-    private IndigoPalette indigoPalette;
+    private Palette palette;
 
 
     public interface OnHolderTextViewOnClickListener {
@@ -57,9 +53,7 @@ public class FolderOfTaskRecyclerViewAdapter
         this.realmListFolder = realmListFolder;
         this.activity = activity;
         this.taskGroup = taskGroup;
-        if (taskGroup == 1) cornflowerPalette = new CornflowerPalette(activity);
-        else if (taskGroup == 2) canaryPalette = new CanaryPalette(activity);
-        else if (taskGroup == 3) indigoPalette = new IndigoPalette(activity);
+        this.palette = Palette.forGroup(activity, taskGroup);
     }
 
     @Override
@@ -79,9 +73,7 @@ public class FolderOfTaskRecyclerViewAdapter
         ((ItemViewHolder) holder).textView.setText("" + realmListFolder.get(position).getName());
         ((ItemViewHolder) holder).textView.setTag(realmListFolder.get(position).getId());
 
-        if (cornflowerPalette != null) applyCornflowerPaletteToCard((ItemViewHolder) holder);
-        else if (canaryPalette != null) applyCanaryPaletteToCard((ItemViewHolder) holder);
-        else if (indigoPalette != null) applyIndigoPaletteToCard((ItemViewHolder) holder);
+        if (palette != null) applyPaletteToCard((ItemViewHolder) holder);
 
         ((ItemViewHolder) holder).textView.setOnClickListener(
                 (v)->onHolderTextViewOnClickListener.onClick(holder, position));
@@ -121,12 +113,8 @@ public class FolderOfTaskRecyclerViewAdapter
                 ? String.valueOf(realmList.size())
                 : String.format("%d / %d", done, all);
         ((ItemViewHolder) holder).tvFolderTaskCounts.setText(folderTaskCounts);
-        if (cornflowerPalette != null) {
-            ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(cornflowerPalette.counter);
-        } else if (canaryPalette != null) {
-            ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(canaryPalette.counter);
-        } else if (indigoPalette != null) {
-            ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(indigoPalette.counter);
+        if (palette != null) {
+            ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(palette.counter);
         } else if (realmListFolder.get(position).isDaily){
             ((ItemViewHolder) holder).tvFolderTaskCounts.setTextColor(activity.getApplicationContext().getResources().getColor(R.color.colorPrimaryDark));
         } else {
@@ -134,34 +122,14 @@ public class FolderOfTaskRecyclerViewAdapter
         }
     }
 
-    private void applyCornflowerPaletteToCard(ItemViewHolder holder) {
+    private void applyPaletteToCard(ItemViewHolder holder) {
         View root = holder.itemView;
         if (root instanceof CardView) {
-            ((CardView) root).setCardBackgroundColor(cornflowerPalette.surface);
+            ((CardView) root).setCardBackgroundColor(palette.surface);
         } else {
-            root.setBackgroundColor(cornflowerPalette.surface);
+            root.setBackgroundColor(palette.surface);
         }
-        holder.textView.setTextColor(cornflowerPalette.inputText);
-    }
-
-    private void applyCanaryPaletteToCard(ItemViewHolder holder) {
-        View root = holder.itemView;
-        if (root instanceof CardView) {
-            ((CardView) root).setCardBackgroundColor(canaryPalette.surface);
-        } else {
-            root.setBackgroundColor(canaryPalette.surface);
-        }
-        holder.textView.setTextColor(canaryPalette.inputText);
-    }
-
-    private void applyIndigoPaletteToCard(ItemViewHolder holder) {
-        View root = holder.itemView;
-        if (root instanceof CardView) {
-            ((CardView) root).setCardBackgroundColor(indigoPalette.surface);
-        } else {
-            root.setBackgroundColor(indigoPalette.surface);
-        }
-        holder.textView.setTextColor(indigoPalette.inputText);
+        holder.textView.setTextColor(palette.inputText);
     }
 
 

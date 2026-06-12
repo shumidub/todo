@@ -235,17 +235,10 @@ public class SmallTasksFragment extends Fragment {
         tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
         tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
 
-        if (isInCornflowerTab()) {
-            tasksRecyclerViewAdapter.useCornflowerPalette(true);
-            applyCornflowerToFragmentView();
-        } else if (isInCanaryTab()) {
-            tasksRecyclerViewAdapter.useCanaryPalette(true);
-            applyCanaryToFragmentView();
-        } else if (isInIndigoTab()) {
-            tasksRecyclerViewAdapter.useIndigoPalette(true);
-            tasksRecyclerViewAdapter.setPlainList(true);
-            applyIndigoToFragmentView();
-        }
+        int tabGroup = getTabTaskGroup();
+        tasksRecyclerViewAdapter.usePaletteForGroup(tabGroup);
+        if (isInIndigoTab()) tasksRecyclerViewAdapter.setPlainList(true);
+        applyPaletteToFragmentView(tabGroup);
 
         Log.d("DTAG458", "setTasksAndRV: ATTACHEDDD" + rvTasks.getAdapter().getItemCount());
 
@@ -288,9 +281,8 @@ public class SmallTasksFragment extends Fragment {
             tasksRecyclerViewAdapter = new TasksRecyclerViewAdapter((MainActivity) getActivity(),tasks,doneTasks, this);
             tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
             tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
-            if (isInCornflowerTab()) tasksRecyclerViewAdapter.useCornflowerPalette(true);
-            else if (isInCanaryTab()) tasksRecyclerViewAdapter.useCanaryPalette(true);
-            else if (isInIndigoTab()) { tasksRecyclerViewAdapter.useIndigoPalette(true); tasksRecyclerViewAdapter.setPlainList(true); }
+            tasksRecyclerViewAdapter.usePaletteForGroup(getTabTaskGroup());
+            if (isInIndigoTab()) tasksRecyclerViewAdapter.setPlainList(true);
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
             rvTasks.scrollToPosition(position);
             isAllTaskShowing = true;
@@ -300,9 +292,8 @@ public class SmallTasksFragment extends Fragment {
             tasksRecyclerViewAdapter = new TasksRecyclerViewAdapter((MainActivity) getActivity(),tasks,doneTasks, this);
             tasksRecyclerViewAdapter.setOnLongClicked(onItemLongClicked);
             tasksRecyclerViewAdapter.setOnClicked(onItemClicked);
-            if (isInCornflowerTab()) tasksRecyclerViewAdapter.useCornflowerPalette(true);
-            else if (isInCanaryTab()) tasksRecyclerViewAdapter.useCanaryPalette(true);
-            else if (isInIndigoTab()) { tasksRecyclerViewAdapter.useIndigoPalette(true); tasksRecyclerViewAdapter.setPlainList(true); }
+            tasksRecyclerViewAdapter.usePaletteForGroup(getTabTaskGroup());
+            if (isInIndigoTab()) tasksRecyclerViewAdapter.setPlainList(true);
             rvTasks.setAdapter(tasksRecyclerViewAdapter);
             isAllTaskShowing = false;
         }
@@ -347,25 +338,11 @@ public class SmallTasksFragment extends Fragment {
                 : -1;
     }
 
-    private void applyCornflowerToFragmentView() {
+    private void applyPaletteToFragmentView(int tabGroup) {
         if (getView() == null) return;
-        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
-                new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
-        getView().setBackgroundColor(p.bg);
-    }
-
-    private void applyCanaryToFragmentView() {
-        if (getView() == null) return;
-        com.shumidub.todoapprealm.ui.theme.CanaryPalette p =
-                new com.shumidub.todoapprealm.ui.theme.CanaryPalette(getContext());
-        getView().setBackgroundColor(p.bg);
-    }
-
-    private void applyIndigoToFragmentView() {
-        if (getView() == null) return;
-        com.shumidub.todoapprealm.ui.theme.IndigoPalette p =
-                new com.shumidub.todoapprealm.ui.theme.IndigoPalette(getContext());
-        getView().setBackgroundColor(p.bg);
+        com.shumidub.todoapprealm.ui.theme.Palette p =
+                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(getContext(), tabGroup);
+        if (p != null) getView().setBackgroundColor(p.bg);
     }
 
     private void setEmptyStateIfNeed(){

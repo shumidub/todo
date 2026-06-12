@@ -227,6 +227,13 @@ public class MainActivity extends AppCompatActivity {
         return viewPager != null && viewPager.getCurrentItem() == 4;
     }
 
+    /** Task group of the current tab (1/2/3 for the themed tabs, 0 otherwise). */
+    public int currentTabTaskGroup() {
+        if (viewPager == null) return 0;
+        int pos = viewPager.getCurrentItem();
+        return (pos >= 2 && pos <= 4) ? pos - 1 : 0;
+    }
+
     /** Build a MaterialAlertDialogBuilder applying the per-tab overlay (Cornflower for Tasks2,
      *  Canary for Tasks3, default otherwise). */
     public com.google.android.material.dialog.MaterialAlertDialogBuilder dialogBuilder() {
@@ -290,16 +297,11 @@ public class MainActivity extends AppCompatActivity {
     public void tintActionModeBarForCurrentTab() {
         if (viewPager == null) return;
         int pos = viewPager.getCurrentItem();
-        final int color;
-        if (pos == 2) {
-            color = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this).bg;
-        } else if (pos == 3) {
-            color = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(this).bg;
-        } else if (pos == 4) {
-            color = new com.shumidub.todoapprealm.ui.theme.IndigoPalette(this).bg;
-        } else {
-            return;
-        }
+        // Pager position → task group: tab 2/3/4 host groups 1/2/3.
+        com.shumidub.todoapprealm.ui.theme.Palette p =
+                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(this, pos - 1);
+        if (p == null) return;
+        final int color = p.bg;
         Runnable tint = () -> applyActionModeBarColor(color);
         View decor = getWindow().getDecorView();
         decor.post(tint);
@@ -342,39 +344,19 @@ public class MainActivity extends AppCompatActivity {
         if (rootLayout == null || actionBar == null) return;
         androidx.core.view.WindowInsetsControllerCompat insets =
                 androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        if (position == 2) {
-            com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
-                    new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this);
+        // Pager position → task group: tab 2/3/4 host groups 1/2/3.
+        com.shumidub.todoapprealm.ui.theme.Palette p =
+                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(this, position - 1);
+        if (p != null) {
             rootLayout.setBackgroundColor(p.bg);
             actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
             getWindow().setStatusBarColor(p.bg);
             getWindow().setNavigationBarColor(p.bg);
             if (insets != null) {
-                insets.setAppearanceLightStatusBars(false);
-                insets.setAppearanceLightNavigationBars(false);
-            }
-        } else if (position == 3) {
-            com.shumidub.todoapprealm.ui.theme.CanaryPalette p =
-                    new com.shumidub.todoapprealm.ui.theme.CanaryPalette(this);
-            rootLayout.setBackgroundColor(p.bg);
-            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
-            getWindow().setStatusBarColor(p.bg);
-            getWindow().setNavigationBarColor(p.bg);
-            if (insets != null) {
-                // R8: dark icons on yellow background
-                insets.setAppearanceLightStatusBars(true);
-                insets.setAppearanceLightNavigationBars(true);
-            }
-        } else if (position == 4) {
-            com.shumidub.todoapprealm.ui.theme.IndigoPalette p =
-                    new com.shumidub.todoapprealm.ui.theme.IndigoPalette(this);
-            rootLayout.setBackgroundColor(p.bg);
-            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
-            getWindow().setStatusBarColor(p.bg);
-            getWindow().setNavigationBarColor(p.bg);
-            if (insets != null) {
-                insets.setAppearanceLightStatusBars(false);
-                insets.setAppearanceLightNavigationBars(false);
+                // R8: dark icons on the Canary tab's yellow background only.
+                boolean light = position == 3;
+                insets.setAppearanceLightStatusBars(light);
+                insets.setAppearanceLightNavigationBars(light);
             }
         } else {
             int green = androidx.core.content.ContextCompat.getColor(this, R.color.colorBackgroundActivity);
