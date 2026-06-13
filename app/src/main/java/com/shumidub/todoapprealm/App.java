@@ -33,7 +33,6 @@ public class App extends Application {
     public static Realm realm;
     public static RealmFoldersContainer realmFoldersContainer;
     public static RealmList<FolderNotesObject> folderOfNotesContainerList;
-    public static FolderSlidingPanelFragment folderSlidingPanelFragment;
     public static final java.util.List<FolderSlidingPanelFragment> folderSlidingPanelFragments = new java.util.ArrayList<>();
 
     public static int dayScope;
@@ -53,6 +52,12 @@ public class App extends Application {
         mApp = this;
 
         Realm.init(this);
+        // Deliberate debt: the whole app reads and writes Realm on the main thread
+        // (controllers are synchronous statics, adapters bind managed objects directly).
+        // These flags suppress Realm's thread guards so that works. The cost is that a
+        // large query/write can block the UI — acceptable at the current data scale, but
+        // the real fix is moving reads to background threads / async queries, not flipping
+        // these off (that would crash every existing call site).
         Realm.setDefaultConfiguration(new RealmConfiguration.Builder()
                 .schemaVersion(RealmMigrations.SCHEMA_VERSION)
                 .migration(new RealmMigrations())
@@ -88,6 +93,18 @@ public class App extends Application {
 
         });
 
+        rebindContainers();
+    }
+
+    /**
+     * Re-point the static container references at the current Realm state. Call after a
+     * restore replaces the {@link RealmFoldersContainer} so the old (now-invalidated)
+     * references don't leak into the UI. Does NOT re-run Realm.init / re-create the
+     * activity — the UI is refreshed separately.
+     */
+    public static void rebindContainers(){
+        App.initRealm();
+        realmFoldersContainer = realm.where(RealmFoldersContainer.class).findFirst();
         folderOfNotesContainerList = realmFoldersContainer.folderOfNotesList;
     }
 
@@ -113,9 +130,5 @@ public class App extends Application {
         }
     }
 
-
-    public static FolderSlidingPanelFragment getFolderSlidingPanelFragment(){
-        return folderSlidingPanelFragment;
-    }
 
 }

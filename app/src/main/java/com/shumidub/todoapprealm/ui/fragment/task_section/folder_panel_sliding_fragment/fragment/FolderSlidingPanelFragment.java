@@ -132,7 +132,6 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         super.onCreate(savedInstanceState);
         if (getArguments() != null) taskGroup = getArguments().getInt(ARG_TASK_GROUP, 0);
         resetTasksCountAccumulation();
-        App.folderSlidingPanelFragment = this;
         if (!App.folderSlidingPanelFragments.contains(this)) {
             App.folderSlidingPanelFragments.add(this);
         }
@@ -141,7 +140,6 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     @Override
     public void onDestroy() {
         App.folderSlidingPanelFragments.remove(this);
-        if (App.folderSlidingPanelFragment == this) App.folderSlidingPanelFragment = null;
         super.onDestroy();
     }
 
@@ -633,6 +631,26 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
     public void dataChanged(){
         onResume();
+    }
+
+    /**
+     * Re-read folders + tasks from Realm after a full DB restore replaced the data.
+     * The folder adapter held a RealmList that {@code deleteFromRealmAllContainers()}
+     * invalidated, so a plain notifyDataSetChanged() would show nothing — rebuild it
+     * against the freshly-rebound container, then rebuild the inner task ViewPager.
+     */
+    public void reloadFromRealm(){
+        if (rvFolders == null || folderOfTaskRVAdapter == null) return; // view not created yet
+        if (slidingUpPanelLayout != null) {
+            slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+        }
+        setTitle(defaultTitle());
+        folderObjects = FolderTaskRealmController.getFoldersList(taskGroup);
+        folderOfTaskRVAdapter = new FolderOfTaskRecyclerViewAdapter(folderObjects, getActivity(), taskGroup);
+        folderOfTaskRVAdapter.setOnHolderTextViewOnClickListener(onHolderTextViewOnClickListener);
+        folderOfTaskRVAdapter.setOnHolderTextViewOnLongClickListener(onHolderTextViewOnLongClickListener);
+        rvFolders.setAdapter(folderOfTaskRVAdapter);
+        notifySmallTasksViewPagerListsChanged();
     }
 
     public void notifySmallTasksViewPagerListsChanged(){

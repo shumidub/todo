@@ -186,9 +186,8 @@ public class TaskActionModeCallback  {
 
             @Override
             public void onDestroyActionMode(ActionMode actionMode) {
-                if (App.getFolderSlidingPanelFragment() != null){
-                    App.getFolderSlidingPanelFragment()
-                            .notifyFolderOfTasksRVAdapterDataSetChanged();
+                for (FolderSlidingPanelFragment p : App.folderSlidingPanelFragments) {
+                    p.notifyFolderOfTasksRVAdapterDataSetChanged();
                 }
             }
         };

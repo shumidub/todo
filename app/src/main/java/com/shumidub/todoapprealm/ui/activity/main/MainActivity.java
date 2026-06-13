@@ -371,15 +371,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void resetAllView(){
-
-        viewPager.removeAllViews();
-        mainPagerAdapter = new MainPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(mainPagerAdapter);
-
-        mainPagerAdapter = new MainPagerAdapter(getSupportFragmentManager());
-        viewPager = null;
-
+    /**
+     * Refresh the live screens after a full DB restore replaced the data. Re-reads each
+     * instantiated page from the freshly-rebound Realm containers (see
+     * {@link App#rebindContainers()}) instead of relaunching the activity.
+     */
+    public void refreshAfterRestore(){
+        App.setDayScopeValue();
+        invalidateOptionsMenu();
+        for (Fragment f : getSupportFragmentManager().getFragments()) {
+            if (f instanceof FolderSlidingPanelFragment) {
+                ((FolderSlidingPanelFragment) f).reloadFromRealm();
+            } else if (f instanceof FolderNoteFragment) {
+                ((FolderNoteFragment) f).setFolderNoteViews();
+            }
+        }
     }
 
     @Override

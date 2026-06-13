@@ -1,7 +1,6 @@
 package com.shumidub.todoapprealm.sync;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
@@ -53,100 +52,7 @@ public class JsonSyncUtil {
         } else {
             ((MainActivity)activity).showToast("Error!");
         }
-
-//        Intent sendIntent = new Intent();
-//        sendIntent.setAction(Intent.ACTION_SEND);
-//        sendIntent.putExtra(Intent.EXTRA_TEXT, json);
-//        sendIntent.setType("text/plain");
-//        activity.startActivity(sendIntent);
-
     }
-
-    public void realmBdFromJson(){
-
-
-
-        if (!jsonIsExist()){
-            ((MainActivity)activity).showToast("Backup file (REALM_BD_JSON.txt) not found on Download folder");
-            return;
-        } else {
-
-
-            String json = FileWritter.readFile();
-
-            Log.d("DTAG44444", "realmBdFromJson: " + json);
-
-//            if (!TextUtils.isEmpty(json)) {
-                GsonBuilder builder = new GsonBuilder().setPrettyPrinting();
-                Gson gson = builder.create();
-
-                App.initRealm();
-
-                App.realm.executeTransaction((transaction) -> {
-
-
-                    ContainersRealmController.deleteFromRealmAllContainers();
-
-                    RealmFoldersContainer realmFoldersContainer2 = gson.fromJson(json, RealmFoldersContainer.class);
-
-//                    realmFoldersContainer
-//                            .setFolderOfNotesList(
-//                                    realmFoldersContainer2
-//                                            .getFolderOfNotesList());
-//
-//                    realmFoldersContainer
-//                            .setFolderOfTasksList(
-//                                    realmFoldersContainer2
-//                                            .getFolderOfTasksList());
-
-                    App.realm.insertOrUpdate(realmFoldersContainer2);
-
-                    App.realmFoldersContainer = App.realm.where(RealmFoldersContainer.class).findFirst();
-                    normalizeExtraFolderIds();
-
-                    Log.d("DTAG44444", "realm container count =  "
-                            + App.realm.where(RealmFoldersContainer.class).findAll().size());
-
-
-//                    realmFoldersContainer2 = null;
-
-
-//                    App.realm.copyToRealm(realmFoldersContainer);
-
-                });
-
-
-                ((MainActivity)activity).showToast("Restored!");
-
-                App.getApp().onCreate();
-
-
-                //todo !!!!!!!!!!!!
-
-//                ((MainActivity) activity).finishAndRemoveTask();
-                ((MainActivity) activity).finish();
-
-                ((MainActivity) activity).resetAllView();
-
-                App.getApp().onCreate();
-                Intent intent = new Intent(activity, MainActivity.class);
-                activity.startActivity(intent);
-
-
-
-//                ((MainActivity) activity).onCreateActions();
-
-
-
-//            }else{
-//                ((MainActivity)activity).showToast("File is empty!");
-//            }
-
-
-
-        }
-    }
-
 
     public boolean jsonIsExist(){
         return  FileWritter.isBackupExist();
@@ -193,20 +99,17 @@ public class JsonSyncUtil {
             ContainersRealmController.deleteFromRealmAllContainers();
             RealmFoldersContainer restored = gson.fromJson(json, RealmFoldersContainer.class);
             App.realm.insertOrUpdate(restored);
-            App.realmFoldersContainer = App.realm.where(RealmFoldersContainer.class).findFirst();
             normalizeExtraFolderIds();
             Log.d("DTAG44444", "realm container count = "
                     + App.realm.where(RealmFoldersContainer.class).findAll().size());
         });
 
+        // The restore replaced the RealmFoldersContainer, invalidating the static
+        // references the UI holds. Re-point them and refresh the live screens in place —
+        // no manual Application.onCreate() / activity relaunch needed.
+        App.rebindContainers();
+        ((MainActivity)activity).refreshAfterRestore();
         ((MainActivity)activity).showToast("Restored!");
-
-        App.getApp().onCreate();
-        ((MainActivity)activity).finish();
-        ((MainActivity)activity).resetAllView();
-        App.getApp().onCreate();
-        Intent intent = new Intent(activity, MainActivity.class);
-        activity.startActivity(intent);
     }
 
     private String readJsonFromUri(Uri uri){
