@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import io.reactivex.annotations.NonNull;
+import androidx.annotation.NonNull;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 import io.realm.Sort;
