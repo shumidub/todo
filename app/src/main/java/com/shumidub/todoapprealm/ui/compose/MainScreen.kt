@@ -24,22 +24,20 @@ import com.shumidub.todoapprealm.Tabs
 import com.shumidub.todoapprealm.ui.theme.Todo100Theme
 import com.shumidub.todoapprealm.ui.theme.paletteForGroup
 
-/**
- * Title per task group. Group 3 is the Indigo "Notes" tab (a Tasks-style list).
- * The legacy Notes page (old pager page 0) is intentionally NOT shown in the Compose UI.
- */
+/** A full-screen category view request: which group + which folder to open at. */
+private data class DetailTarget(val group: Int, val folderId: Long)
+
+/** Title per task group. Group 3 is the Indigo "Notes" tab; legacy Notes page is hidden. */
 private fun titleForGroup(group: Int): String = when (group) {
-    0 -> "Tasks 1"
-    1 -> "Tasks 2"
-    2 -> "Tasks 3"
-    3 -> "Notes"
-    else -> "Tab $group"
+    0 -> "Tasks 1"; 1 -> "Tasks 2"; 2 -> "Tasks 3"; 3 -> "Notes"; else -> "Tab $group"
 }
 
 /**
- * Root composable for the Compose UI. One page per task group (0..3) — the legacy Notes
- * page is hidden per the migration. Theme + system bars track the settled page; each page
- * renders its real [TasksScreen] in its own palette.
+ * Two-level shell:
+ *  - **Group level** — a [HorizontalPager] over the 4 task groups, each showing its category
+ *    list. Swiping left/right switches group.
+ *  - **Category level** — tapping a category opens [CategoryDetailScreen] full-screen, itself a
+ *    pager over that group's categories (swipe to switch category). Back returns to the list.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,39 +46,43 @@ fun MainScreen() {
     val pagerState = rememberPagerState(initialPage = 0) { pageCount }
     val currentGroup by remember { derivedStateOf { pagerState.currentPage } }
     var showSync by remember { mutableStateOf(false) }
+    var detail by remember { mutableStateOf<DetailTarget?>(null) }
 
-    Todo100Theme(palette = paletteForGroup(currentGroup)) {
-        val palette = paletteForGroup(currentGroup)
-        Scaffold(
-            containerColor = palette.bg,
-            topBar = {
-                TopAppBar(
-                    title = { Text(titleForGroup(pagerState.currentPage)) },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = palette.systemBar,
-                        titleContentColor = palette.text,
-                    ),
-                    actions = {
-                        IconButton(onClick = { showSync = true }) {
-                            Icon(Icons.Default.Sync, contentDescription = "Бэкап / синхронизация", tint = palette.text)
-                        }
-                    },
-                )
-            },
-        ) { innerPadding ->
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-            ) { page ->
-                // page index maps directly to task group (0..3)
-                TasksScreen(group = page)
+    val themeGroup = detail?.group ?: currentGroup
+
+    Todo100Theme(palette = paletteForGroup(themeGroup)) {
+        val palette = paletteForGroup(themeGroup)
+        val open = detail
+        if (open != null) {
+            CategoryDetailScreen(group = open.group, startFolderId = open.folderId, onBack = { detail = null })
+        } else {
+            Scaffold(
+                containerColor = palette.bg,
+                topBar = {
+                    TopAppBar(
+                        title = { Text(titleForGroup(pagerState.currentPage)) },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = palette.systemBar,
+                            titleContentColor = palette.text,
+                        ),
+                        actions = {
+                            IconButton(onClick = { showSync = true }) {
+                                Icon(Icons.Default.Sync, contentDescription = "Бэкап / синхронизация", tint = palette.text)
+                            }
+                        },
+                    )
+                },
+            ) { innerPadding ->
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                ) { page ->
+                    TasksScreen(group = page, onOpenCategory = { folderId -> detail = DetailTarget(page, folderId) })
+                }
             }
-        }
-
-        if (showSync) {
-            SyncDialog(palette = palette, onDismiss = { showSync = false })
+            if (showSync) {
+                SyncDialog(palette = palette, onDismiss = { showSync = false })
+            }
         }
     }
 }

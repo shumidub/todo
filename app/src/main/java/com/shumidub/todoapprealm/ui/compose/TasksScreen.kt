@@ -1,5 +1,6 @@
 package com.shumidub.todoapprealm.ui.compose
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,19 +12,20 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
@@ -40,15 +42,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,35 +74,24 @@ import com.shumidub.todoapprealm.data.TaskDto
 import com.shumidub.todoapprealm.ui.theme.TabPalette
 import com.shumidub.todoapprealm.ui.theme.paletteForGroup
 
-/**
- * Tasks UI for a group (0..3), modelled on the legacy folder-panel UX (docs/specs/folder-panel.md):
- * the screen shows **categories** (folders); tapping one opens its tasks **from the bottom**
- * ([ModalBottomSheet]). The sheet renders sections (collapsible) + free tasks, supports the
- * bottom add-task panel with toggles, a per-task editor (text / done / points / max / priority /
- * cycling / categories), and a folder menu (rename / delete / move group / add section). The day
- * score is shown atop the category list. Notes group (3) hides task params/toggles.
- *
- * Reads the existing Realm DB through [TasksViewModel] (detached DTO snapshots, invariant G1).
- * Remaining Phase-2 polish: drag-reorder and the custom 24dp-peek panel.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TasksScreen(group: Int) {
-    val vm: TasksViewModel = viewModel(
-        key = "tasks-$group",
-        factory = viewModelFactory { initializer { TasksViewModel(group) } },
-    )
+private fun groupVm(group: Int): TasksViewModel = viewModel(
+    key = "tasks-$group",
+    factory = viewModelFactory { initializer { TasksViewModel(group) } },
+)
+
+/**
+ * Category LIST for a group (0..3): the day score + folder cards. Tapping a card opens that
+ * category full-screen ([CategoryDetailScreen]) via [onOpenCategory]. Swiping left/right here
+ * (handled by the outer pager in [MainScreen]) switches groups.
+ */
+@Composable
+fun TasksScreen(group: Int, onOpenCategory: (Long) -> Unit) {
+    val vm = groupVm(group)
     val state by vm.state.collectAsStateWithLifecycle()
     val folders = state.folders
     val palette = paletteForGroup(group)
-
-    var selectedId by remember { mutableStateOf<Long?>(null) }
     var showAddFolder by remember { mutableStateOf(false) }
-    var editingTaskId by remember { mutableStateOf<Long?>(null) }
-
-    LaunchedEffect(folders, selectedId) {
-        if (selectedId != null && folders.none { it.id == selectedId }) selectedId = null
-    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (folders.isEmpty()) {
@@ -112,55 +104,166 @@ fun TasksScreen(group: Int) {
             ) {
                 item { DayScoreHeader(dayScope = state.dayScope, palette = palette) }
                 items(folders, key = { it.id }) { folder ->
-                    CategoryCard(folder = folder, palette = palette, onClick = { selectedId = folder.id })
+                    CategoryCard(folder = folder, palette = palette, onClick = { onOpenCategory(folder.id) })
                 }
                 item { AddCategoryButton(palette = palette, onClick = { showAddFolder = true }) }
             }
         }
     }
 
-    val selected = folders.firstOrNull { it.id == selectedId }
-    if (selected != null) {
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(
-            onDismissRequest = { selectedId = null },
-            sheetState = sheetState,
-            containerColor = palette.surface,
-        ) {
-            FolderSheet(
-                folder = selected,
-                group = group,
-                palette = palette,
-                vm = vm,
-                onEditTask = { editingTaskId = it },
-            )
-        }
-    }
-
     if (showAddFolder) {
         TextEntryDialog(
-            title = "Новая категория",
-            initial = "",
-            palette = palette,
-            confirmLabel = "Создать",
+            title = "Новая категория", initial = "", palette = palette, confirmLabel = "Создать",
             onConfirm = { name -> vm.addFolder(name); showAddFolder = false },
             onDismiss = { showAddFolder = false },
         )
     }
+}
+
+/**
+ * Full-screen view of a group's categories. A [HorizontalPager] over the group's folders —
+ * swipe left/right to switch category — opened at [startFolderId]. Each page shows that
+ * category's tasks (sections + free) and the bottom add-task panel; the top bar carries the
+ * category name, a back arrow, and the folder menu (rename / move / delete / add section).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
+    val vm = groupVm(group)
+    val state by vm.state.collectAsStateWithLifecycle()
+    val folders = state.folders
+    val palette = paletteForGroup(group)
+
+    BackHandler(onBack = onBack)
+    LaunchedEffect(folders.isEmpty()) { if (folders.isEmpty()) onBack() }
+    if (folders.isEmpty()) return
+
+    val startIndex = remember(startFolderId, folders.size) {
+        folders.indexOfFirst { it.id == startFolderId }.coerceIn(0, folders.size - 1)
+    }
+    val pagerState = rememberPagerState(initialPage = startIndex) { folders.size }
+    val currentPage = pagerState.currentPage.coerceIn(0, folders.size - 1)
+    val currentFolder = folders.getOrNull(currentPage)
+
+    var editingTaskId by remember { mutableStateOf<Long?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var dialog by remember { mutableStateOf<FolderDialog?>(null) }
+
+    Scaffold(
+        containerColor = palette.bg,
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = palette.text)
+                    }
+                },
+                title = { Text(currentFolder?.name?.ifBlank { "Без названия" } ?: "", color = palette.text) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = palette.systemBar,
+                    titleContentColor = palette.text,
+                    navigationIconContentColor = palette.text,
+                ),
+                actions = {
+                    Box {
+                        IconButton(onClick = { menuOpen = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Меню", tint = palette.text)
+                        }
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            if (group != 3) {
+                                DropdownMenuItem(text = { Text("Добавить секцию") }, onClick = { menuOpen = false; dialog = FolderDialog.AddSection })
+                            }
+                            DropdownMenuItem(text = { Text("Переименовать") }, onClick = { menuOpen = false; dialog = FolderDialog.Rename })
+                            DropdownMenuItem(text = { Text("Переместить") }, onClick = { menuOpen = false; dialog = FolderDialog.Move })
+                            DropdownMenuItem(text = { Text("Удалить категорию") }, onClick = { menuOpen = false; dialog = FolderDialog.Delete })
+                        }
+                    }
+                },
+            )
+        },
+    ) { inner ->
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize().padding(inner),
+        ) { page ->
+            folders.getOrNull(page)?.let { folder ->
+                FolderTasksPage(folder = folder, group = group, palette = palette, vm = vm, onEditTask = { editingTaskId = it })
+            }
+        }
+    }
 
     val editing = folders.flatMap { it.tasks }.firstOrNull { it.id == editingTaskId }
     if (editing != null) {
-        TaskEditorDialog(
-            task = editing,
-            group = group,
-            palette = palette,
-            vm = vm,
-            onDismiss = { editingTaskId = null },
-        )
+        TaskEditorDialog(task = editing, group = group, palette = palette, vm = vm, onDismiss = { editingTaskId = null })
+    }
+
+    if (currentFolder != null) {
+        when (dialog) {
+            FolderDialog.Rename -> TextEntryDialog(
+                title = "Переименовать", initial = currentFolder.name, palette = palette, confirmLabel = "Сохранить",
+                onConfirm = { vm.editFolder(currentFolder.id, it, currentFolder.isDaily); dialog = null }, onDismiss = { dialog = null },
+            )
+            FolderDialog.AddSection -> TextEntryDialog(
+                title = "Новая секция", initial = "", palette = palette, confirmLabel = "Создать",
+                onConfirm = { vm.addSection(currentFolder.id, it); dialog = null }, onDismiss = { dialog = null },
+            )
+            FolderDialog.Delete -> ConfirmDialog(
+                title = "Удалить категорию?", message = "«${currentFolder.name}» и все её задачи будут удалены.",
+                onConfirm = { vm.deleteFolder(currentFolder.id); dialog = null }, onDismiss = { dialog = null },
+            )
+            FolderDialog.Move -> MoveGroupDialog(
+                currentGroup = group,
+                onPick = { g -> vm.moveFolderToGroup(currentFolder.id, g); dialog = null },
+                onDismiss = { dialog = null },
+            )
+            null -> {}
+        }
     }
 }
 
-// ---- Category list ----
+/** One full-screen category page: its tasks (sections + free) scroll above a pinned add-task panel. */
+@Composable
+private fun FolderTasksPage(folder: FolderDto, group: Int, palette: TabPalette, vm: TasksViewModel, onEditTask: (Long) -> Unit) {
+    val rows = remember(folder) { buildSheetRows(folder) }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+            .imePadding(),
+    ) {
+        if (rows.isEmpty()) {
+            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text("Нет задач", color = palette.inputText.copy(alpha = 0.6f))
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(vertical = 8.dp)) {
+                items(
+                    rows,
+                    key = { row -> if (row is SheetRow.Header) "h${row.section.id}" else "t${(row as SheetRow.Item).task.id}" },
+                ) { row ->
+                    when (row) {
+                        is SheetRow.Header -> SectionHeaderRow(
+                            section = row.section, palette = palette,
+                            onToggle = { vm.setSectionCollapsed(row.section.id, !row.section.currentlyCollapsed) },
+                            onDelete = { vm.deleteSection(row.section.id) },
+                        )
+                        is SheetRow.Item -> TaskRow(
+                            task = row.task, group = group, palette = palette,
+                            onToggle = { id, done -> vm.toggleDone(id, done) },
+                            onClick = { onEditTask(row.task.id) },
+                            onDelete = { vm.deleteTask(row.task.id) },
+                        )
+                    }
+                }
+            }
+        }
+        HorizontalDivider(color = palette.inputText.copy(alpha = 0.12f))
+        AddTaskPanel(folderId = folder.id, group = group, palette = palette, vm = vm)
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+// ---- Category list pieces ----
 
 @Composable
 private fun DayScoreHeader(dayScope: Int, palette: TabPalette) {
@@ -177,9 +280,7 @@ private fun CategoryCard(folder: FolderDto, palette: TabPalette, onClick: () -> 
     val done = folder.tasks.sumOf { it.countAccumulation * it.countValue }
     val all = folder.tasks.sumOf { it.maxAccumulation * it.countValue }
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = palette.surface),
     ) {
         Row(
@@ -188,8 +289,7 @@ private fun CategoryCard(folder: FolderDto, palette: TabPalette, onClick: () -> 
         ) {
             Text(
                 text = folder.name.ifBlank { "Без названия" },
-                color = palette.inputText,
-                fontWeight = FontWeight.Bold,
+                color = palette.inputText, fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
             Text(text = "$done/$all", color = palette.counter, fontWeight = FontWeight.Medium)
@@ -223,15 +323,15 @@ private fun EmptyState(palette: TabPalette, onAddFolder: () -> Unit) {
     }
 }
 
-// ---- Bottom sheet: a category's tasks (sections + free) + add panel ----
+// ---- task rows / sections / add panel ----
 
 private sealed interface SheetRow {
     data class Header(val section: SectionDto) : SheetRow
     data class Item(val task: TaskDto) : SheetRow
 }
 
-/** Build the ordered display rows: sections interleaved with free tasks by outer position,
- *  each section's tasks (done sink to its bottom) shown when expanded; done free tasks last. */
+/** Sections interleaved with free tasks by outer position; section tasks (done sink) shown
+ *  when expanded; done free tasks last. */
 private fun buildSheetRows(folder: FolderDto): List<SheetRow> {
     val tasks = folder.tasks
     val sections = folder.sections.sortedBy { it.position }
@@ -263,119 +363,14 @@ private fun buildSheetRows(folder: FolderDto): List<SheetRow> {
 }
 
 @Composable
-private fun FolderSheet(
-    folder: FolderDto,
-    group: Int,
-    palette: TabPalette,
-    vm: TasksViewModel,
-    onEditTask: (Long) -> Unit,
-) {
-    var menuOpen by remember { mutableStateOf(false) }
-    var dialog by remember { mutableStateOf<FolderDialog?>(null) }
-
-    val rows = remember(folder) { buildSheetRows(folder) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .navigationBarsPadding()
-            .imePadding(),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = folder.name.ifBlank { "Без названия" },
-                color = palette.inputText,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.weight(1f),
-            )
-            Box {
-                IconButton(onClick = { menuOpen = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Меню", tint = palette.inputText)
-                }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    if (group != 3) {
-                        DropdownMenuItem(text = { Text("Добавить секцию") }, onClick = { menuOpen = false; dialog = FolderDialog.AddSection })
-                    }
-                    DropdownMenuItem(text = { Text("Переименовать") }, onClick = { menuOpen = false; dialog = FolderDialog.Rename })
-                    DropdownMenuItem(text = { Text("Переместить") }, onClick = { menuOpen = false; dialog = FolderDialog.Move })
-                    DropdownMenuItem(text = { Text("Удалить категорию") }, onClick = { menuOpen = false; dialog = FolderDialog.Delete })
-                }
-            }
-        }
-        HorizontalDivider(color = palette.inputText.copy(alpha = 0.12f))
-
-        if (rows.isEmpty()) {
-            Text("Нет задач", color = palette.inputText.copy(alpha = 0.6f), modifier = Modifier.padding(vertical = 16.dp))
-        } else {
-            LazyColumn(modifier = Modifier.heightIn(max = 440.dp)) {
-                items(
-                    rows,
-                    key = { row -> if (row is SheetRow.Header) "h${row.section.id}" else "t${(row as SheetRow.Item).task.id}" },
-                ) { row ->
-                    when (row) {
-                        is SheetRow.Header -> SectionHeaderRow(
-                            section = row.section,
-                            palette = palette,
-                            onToggle = { vm.setSectionCollapsed(row.section.id, !row.section.currentlyCollapsed) },
-                            onDelete = { vm.deleteSection(row.section.id) },
-                        )
-                        is SheetRow.Item -> TaskRow(
-                            task = row.task,
-                            group = group,
-                            palette = palette,
-                            onToggle = { id, done -> vm.toggleDone(id, done) },
-                            onClick = { onEditTask(row.task.id) },
-                            onDelete = { vm.deleteTask(row.task.id) },
-                        )
-                    }
-                }
-            }
-        }
-
-        HorizontalDivider(color = palette.inputText.copy(alpha = 0.12f))
-        AddTaskPanel(folderId = folder.id, group = group, palette = palette, vm = vm)
-        Spacer(Modifier.height(8.dp))
-    }
-
-    when (dialog) {
-        FolderDialog.Rename -> TextEntryDialog(
-            title = "Переименовать", initial = folder.name, palette = palette, confirmLabel = "Сохранить",
-            onConfirm = { vm.editFolder(folder.id, it, folder.isDaily); dialog = null }, onDismiss = { dialog = null },
-        )
-        FolderDialog.AddSection -> TextEntryDialog(
-            title = "Новая секция", initial = "", palette = palette, confirmLabel = "Создать",
-            onConfirm = { vm.addSection(folder.id, it); dialog = null }, onDismiss = { dialog = null },
-        )
-        FolderDialog.Delete -> ConfirmDialog(
-            title = "Удалить категорию?", message = "«${folder.name}» и все её задачи будут удалены.",
-            onConfirm = { vm.deleteFolder(folder.id); dialog = null }, onDismiss = { dialog = null },
-        )
-        FolderDialog.Move -> MoveGroupDialog(
-            currentGroup = group,
-            onPick = { g -> vm.moveFolderToGroup(folder.id, g); dialog = null },
-            onDismiss = { dialog = null },
-        )
-        null -> {}
-    }
-}
-
-private enum class FolderDialog { Rename, AddSection, Delete, Move }
-
-@Composable
 private fun SectionHeaderRow(section: SectionDto, palette: TabPalette, onToggle: () -> Unit, onDelete: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onToggle)
-            .padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             if (section.currentlyCollapsed) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
-            contentDescription = null,
-            tint = palette.inputText,
+            contentDescription = null, tint = palette.inputText,
         )
         Spacer(Modifier.width(4.dp))
         Text(section.name, color = palette.inputText, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
@@ -386,18 +381,8 @@ private fun SectionHeaderRow(section: SectionDto, palette: TabPalette, onToggle:
 }
 
 @Composable
-private fun TaskRow(
-    task: TaskDto,
-    group: Int,
-    palette: TabPalette,
-    onToggle: (Long, Boolean) -> Unit,
-    onClick: () -> Unit,
-    onDelete: (Long) -> Unit,
-) {
-    Row(
-        modifier = Modifier.clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+private fun TaskRow(task: TaskDto, group: Int, palette: TabPalette, onToggle: (Long, Boolean) -> Unit, onClick: () -> Unit, onDelete: (Long) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
         if (group != 3) {
             Checkbox(
                 checked = task.done,
@@ -505,21 +490,14 @@ private fun TaskEditorDialog(task: TaskDto, group: Int, palette: TabPalette, vm:
     }
 
     AlertDialog(
-        onDismissRequest = {
-            // autosave params + text on dismiss
-            vm.editTask(task.id, text, count, max, cycling, priority)
-            onDismiss()
-        },
+        onDismissRequest = { vm.editTask(task.id, text, count, max, cycling, priority); onDismiss() },
         title = { Text(if (group == 3) "Заметка" else "Задача") },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Текст") },
-                    minLines = if (group == 3) 6 else 1,
-                    colors = fieldColors(palette),
+                    value = text, onValueChange = { text = it },
+                    modifier = Modifier.fillMaxWidth(), label = { Text("Текст") },
+                    minLines = if (group == 3) 6 else 1, colors = fieldColors(palette),
                 )
                 if (group != 3) {
                     Spacer(Modifier.height(12.dp))
@@ -544,19 +522,12 @@ private fun TaskEditorDialog(task: TaskDto, group: Int, palette: TabPalette, vm:
                 allFolders.forEach { ref ->
                     val checked = selected.contains(ref.id)
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                if (checked) { if (selected.size > 1) selected.remove(ref.id) }
-                                else selected.add(ref.id)
-                            },
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            if (checked) { if (selected.size > 1) selected.remove(ref.id) } else selected.add(ref.id)
+                        },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Checkbox(
-                            checked = checked,
-                            onCheckedChange = null,
-                            colors = CheckboxDefaults.colors(checkedColor = palette.accent),
-                        )
+                        Checkbox(checked = checked, onCheckedChange = null, colors = CheckboxDefaults.colors(checkedColor = palette.accent))
                         Text("${ref.name} ${groupTag(ref.group)}", color = palette.inputText)
                     }
                 }
@@ -569,14 +540,14 @@ private fun TaskEditorDialog(task: TaskDto, group: Int, palette: TabPalette, vm:
                 onDismiss()
             }) { Text("Готово") }
         },
-        dismissButton = {
-            TextButton(onClick = { vm.deleteTask(task.id); onDismiss() }) { Text("Удалить", color = palette.accent) }
-        },
+        dismissButton = { TextButton(onClick = { vm.deleteTask(task.id); onDismiss() }) { Text("Удалить", color = palette.accent) } },
         containerColor = Color.White,
     )
 }
 
 // ---- shared dialogs ----
+
+private enum class FolderDialog { Rename, AddSection, Delete, Move }
 
 @Composable
 private fun TextEntryDialog(title: String, initial: String, palette: TabPalette, confirmLabel: String, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
@@ -600,8 +571,7 @@ private fun TextEntryDialog(title: String, initial: String, palette: TabPalette,
 private fun ConfirmDialog(title: String, message: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text(message) },
+        title = { Text(title) }, text = { Text(message) },
         confirmButton = { TextButton(onClick = onConfirm) { Text("Удалить") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
         containerColor = Color.White,
