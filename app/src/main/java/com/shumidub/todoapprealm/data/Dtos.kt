@@ -19,6 +19,16 @@ data class TaskDto(
     val sectionId: Long,
     val position: Int,
     val taskFolderId: Long,
+    val extraFolderIds: List<Long> = emptyList(),
+)
+
+/** A task section (collapsible group) inside a folder. */
+data class SectionDto(
+    val id: Long,
+    val name: String,
+    val currentlyCollapsed: Boolean,
+    val collapsedByDefault: Boolean,
+    val position: Int,
 )
 
 data class FolderDto(
@@ -26,4 +36,18 @@ data class FolderDto(
     val name: String,
     val isDaily: Boolean,
     val tasks: List<TaskDto>,
+    val sections: List<SectionDto> = emptyList(),
+)
+
+/** Lightweight folder reference for the task-editor category picker (across all groups). */
+data class FolderRef(
+    val id: Long,
+    val name: String,
+    val group: Int,
+)
+
+/** One emission of a task group's UI state: its folders + the global day-score counter. */
+data class GroupUiState(
+    val folders: List<FolderDto>,
+    val dayScope: Int,
 )

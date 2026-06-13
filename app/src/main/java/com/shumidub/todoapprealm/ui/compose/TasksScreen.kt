@@ -21,14 +21,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -40,8 +47,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -58,19 +66,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.shumidub.todoapprealm.data.FolderDto
+import com.shumidub.todoapprealm.data.SectionDto
 import com.shumidub.todoapprealm.data.TaskDto
 import com.shumidub.todoapprealm.ui.theme.TabPalette
 import com.shumidub.todoapprealm.ui.theme.paletteForGroup
 
 /**
  * Tasks UI for a group (0..3), modelled on the legacy folder-panel UX (docs/specs/folder-panel.md):
- * the screen shows **categories** (folders), not tasks. Tapping a category opens its tasks **from
- * the bottom** (a Material 3 [ModalBottomSheet]); new tasks are added from the bottom add-task panel
- * inside that sheet, with the points / max / priority / cycling toggles (hidden on the Notes group).
+ * the screen shows **categories** (folders); tapping one opens its tasks **from the bottom**
+ * ([ModalBottomSheet]). The sheet renders sections (collapsible) + free tasks, supports the
+ * bottom add-task panel with toggles, a per-task editor (text / done / points / max / priority /
+ * cycling / categories), and a folder menu (rename / delete / move group / add section). The day
+ * score is shown atop the category list. Notes group (3) hides task params/toggles.
  *
  * Reads the existing Realm DB through [TasksViewModel] (detached DTO snapshots, invariant G1).
- * The custom 24dp-peek AnchoredDraggable panel, drag-reorder, sections and folder action-mode are
- * the remaining full-Phase-2 work; this delivers the core category → tasks-from-bottom → add loop.
+ * Remaining Phase-2 polish: drag-reorder and the custom 24dp-peek panel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,13 +89,14 @@ fun TasksScreen(group: Int) {
         key = "tasks-$group",
         factory = viewModelFactory { initializer { TasksViewModel(group) } },
     )
-    val folders by vm.folders.collectAsStateWithLifecycle()
+    val state by vm.state.collectAsStateWithLifecycle()
+    val folders = state.folders
     val palette = paletteForGroup(group)
 
     var selectedId by remember { mutableStateOf<Long?>(null) }
     var showAddFolder by remember { mutableStateOf(false) }
+    var editingTaskId by remember { mutableStateOf<Long?>(null) }
 
-    // If the open folder disappears (deleted/restored), close the sheet.
     LaunchedEffect(folders, selectedId) {
         if (selectedId != null && folders.none { it.id == selectedId }) selectedId = null
     }
@@ -99,6 +110,7 @@ fun TasksScreen(group: Int) {
                 contentPadding = PaddingValues(12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                item { DayScoreHeader(dayScope = state.dayScope, palette = palette) }
                 items(folders, key = { it.id }) { folder ->
                     CategoryCard(folder = folder, palette = palette, onClick = { selectedId = folder.id })
                 }
@@ -115,20 +127,50 @@ fun TasksScreen(group: Int) {
             sheetState = sheetState,
             containerColor = palette.surface,
         ) {
-            FolderSheet(folder = selected, group = group, palette = palette, vm = vm)
+            FolderSheet(
+                folder = selected,
+                group = group,
+                palette = palette,
+                vm = vm,
+                onEditTask = { editingTaskId = it },
+            )
         }
     }
 
     if (showAddFolder) {
-        AddFolderDialog(
+        TextEntryDialog(
+            title = "Новая категория",
+            initial = "",
             palette = palette,
+            confirmLabel = "Создать",
             onConfirm = { name -> vm.addFolder(name); showAddFolder = false },
             onDismiss = { showAddFolder = false },
+        )
+    }
+
+    val editing = folders.flatMap { it.tasks }.firstOrNull { it.id == editingTaskId }
+    if (editing != null) {
+        TaskEditorDialog(
+            task = editing,
+            group = group,
+            palette = palette,
+            vm = vm,
+            onDismiss = { editingTaskId = null },
         )
     }
 }
 
 // ---- Category list ----
+
+@Composable
+private fun DayScoreHeader(dayScope: Int, palette: TabPalette) {
+    Text(
+        text = "Очки за день: $dayScope",
+        color = palette.text,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(start = 4.dp, bottom = 2.dp),
+    )
+}
 
 @Composable
 private fun CategoryCard(folder: FolderDto, palette: TabPalette, onClick: () -> Unit) {
@@ -181,10 +223,58 @@ private fun EmptyState(palette: TabPalette, onAddFolder: () -> Unit) {
     }
 }
 
-// ---- Bottom sheet: a category's tasks + add panel ----
+// ---- Bottom sheet: a category's tasks (sections + free) + add panel ----
+
+private sealed interface SheetRow {
+    data class Header(val section: SectionDto) : SheetRow
+    data class Item(val task: TaskDto) : SheetRow
+}
+
+/** Build the ordered display rows: sections interleaved with free tasks by outer position,
+ *  each section's tasks (done sink to its bottom) shown when expanded; done free tasks last. */
+private fun buildSheetRows(folder: FolderDto): List<SheetRow> {
+    val tasks = folder.tasks
+    val sections = folder.sections.sortedBy { it.position }
+    val freeNotDone = tasks.filter { it.sectionId == 0L && !it.done }.sortedBy { it.position }
+    val freeDone = tasks.filter { it.sectionId == 0L && it.done }.sortedBy { it.position }
+
+    data class Outer(val pos: Int, val section: SectionDto?, val task: TaskDto?)
+    val outer = buildList {
+        sections.forEach { add(Outer(it.position, it, null)) }
+        freeNotDone.forEach { add(Outer(it.position, null, it)) }
+    }.sortedBy { it.pos }
+
+    val rows = mutableListOf<SheetRow>()
+    outer.forEach { e ->
+        when {
+            e.section != null -> {
+                rows.add(SheetRow.Header(e.section))
+                if (!e.section.currentlyCollapsed) {
+                    tasks.filter { it.sectionId == e.section.id }
+                        .sortedWith(compareBy({ it.done }, { it.position }))
+                        .forEach { rows.add(SheetRow.Item(it)) }
+                }
+            }
+            e.task != null -> rows.add(SheetRow.Item(e.task))
+        }
+    }
+    freeDone.forEach { rows.add(SheetRow.Item(it)) }
+    return rows
+}
 
 @Composable
-private fun FolderSheet(folder: FolderDto, group: Int, palette: TabPalette, vm: TasksViewModel) {
+private fun FolderSheet(
+    folder: FolderDto,
+    group: Int,
+    palette: TabPalette,
+    vm: TasksViewModel,
+    onEditTask: (Long) -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    var dialog by remember { mutableStateOf<FolderDialog?>(null) }
+
+    val rows = remember(folder) { buildSheetRows(folder) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -192,30 +282,54 @@ private fun FolderSheet(folder: FolderDto, group: Int, palette: TabPalette, vm: 
             .navigationBarsPadding()
             .imePadding(),
     ) {
-        Text(
-            text = folder.name.ifBlank { "Без названия" },
-            color = palette.inputText,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            modifier = Modifier.padding(bottom = 8.dp),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = folder.name.ifBlank { "Без названия" },
+                color = palette.inputText,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier.weight(1f),
+            )
+            Box {
+                IconButton(onClick = { menuOpen = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Меню", tint = palette.inputText)
+                }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    if (group != 3) {
+                        DropdownMenuItem(text = { Text("Добавить секцию") }, onClick = { menuOpen = false; dialog = FolderDialog.AddSection })
+                    }
+                    DropdownMenuItem(text = { Text("Переименовать") }, onClick = { menuOpen = false; dialog = FolderDialog.Rename })
+                    DropdownMenuItem(text = { Text("Переместить") }, onClick = { menuOpen = false; dialog = FolderDialog.Move })
+                    DropdownMenuItem(text = { Text("Удалить категорию") }, onClick = { menuOpen = false; dialog = FolderDialog.Delete })
+                }
+            }
+        }
         HorizontalDivider(color = palette.inputText.copy(alpha = 0.12f))
 
-        if (folder.tasks.isEmpty()) {
-            Text(
-                text = "Нет задач",
-                color = palette.inputText.copy(alpha = 0.6f),
-                modifier = Modifier.padding(vertical = 16.dp),
-            )
+        if (rows.isEmpty()) {
+            Text("Нет задач", color = palette.inputText.copy(alpha = 0.6f), modifier = Modifier.padding(vertical = 16.dp))
         } else {
-            LazyColumn(modifier = Modifier.heightIn(max = 420.dp)) {
-                items(folder.tasks, key = { it.id }) { task ->
-                    TaskRow(
-                        task = task,
-                        palette = palette,
-                        onToggle = { id, done -> vm.toggleDone(id, done) },
-                        onDelete = { id -> vm.deleteTask(id) },
-                    )
+            LazyColumn(modifier = Modifier.heightIn(max = 440.dp)) {
+                items(
+                    rows,
+                    key = { row -> if (row is SheetRow.Header) "h${row.section.id}" else "t${(row as SheetRow.Item).task.id}" },
+                ) { row ->
+                    when (row) {
+                        is SheetRow.Header -> SectionHeaderRow(
+                            section = row.section,
+                            palette = palette,
+                            onToggle = { vm.setSectionCollapsed(row.section.id, !row.section.currentlyCollapsed) },
+                            onDelete = { vm.deleteSection(row.section.id) },
+                        )
+                        is SheetRow.Item -> TaskRow(
+                            task = row.task,
+                            group = group,
+                            palette = palette,
+                            onToggle = { id, done -> vm.toggleDone(id, done) },
+                            onClick = { onEditTask(row.task.id) },
+                            onDelete = { vm.deleteTask(row.task.id) },
+                        )
+                    }
                 }
             }
         }
@@ -224,20 +338,83 @@ private fun FolderSheet(folder: FolderDto, group: Int, palette: TabPalette, vm: 
         AddTaskPanel(folderId = folder.id, group = group, palette = palette, vm = vm)
         Spacer(Modifier.height(8.dp))
     }
+
+    when (dialog) {
+        FolderDialog.Rename -> TextEntryDialog(
+            title = "Переименовать", initial = folder.name, palette = palette, confirmLabel = "Сохранить",
+            onConfirm = { vm.editFolder(folder.id, it, folder.isDaily); dialog = null }, onDismiss = { dialog = null },
+        )
+        FolderDialog.AddSection -> TextEntryDialog(
+            title = "Новая секция", initial = "", palette = palette, confirmLabel = "Создать",
+            onConfirm = { vm.addSection(folder.id, it); dialog = null }, onDismiss = { dialog = null },
+        )
+        FolderDialog.Delete -> ConfirmDialog(
+            title = "Удалить категорию?", message = "«${folder.name}» и все её задачи будут удалены.",
+            onConfirm = { vm.deleteFolder(folder.id); dialog = null }, onDismiss = { dialog = null },
+        )
+        FolderDialog.Move -> MoveGroupDialog(
+            currentGroup = group,
+            onPick = { g -> vm.moveFolderToGroup(folder.id, g); dialog = null },
+            onDismiss = { dialog = null },
+        )
+        null -> {}
+    }
+}
+
+private enum class FolderDialog { Rename, AddSection, Delete, Move }
+
+@Composable
+private fun SectionHeaderRow(section: SectionDto, palette: TabPalette, onToggle: () -> Unit, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            if (section.currentlyCollapsed) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
+            contentDescription = null,
+            tint = palette.inputText,
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(section.name, color = palette.inputText, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Default.Delete, contentDescription = "Удалить секцию", tint = palette.inputText.copy(alpha = 0.4f))
+        }
+    }
 }
 
 @Composable
-private fun TaskRow(task: TaskDto, palette: TabPalette, onToggle: (Long, Boolean) -> Unit, onDelete: (Long) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(
-            checked = task.done,
-            onCheckedChange = { checked -> onToggle(task.id, checked) },
-            colors = CheckboxDefaults.colors(
-                checkedColor = palette.accent,
-                uncheckedColor = palette.inputText.copy(alpha = 0.5f),
-                checkmarkColor = palette.surface,
-            ),
-        )
+private fun TaskRow(
+    task: TaskDto,
+    group: Int,
+    palette: TabPalette,
+    onToggle: (Long, Boolean) -> Unit,
+    onClick: () -> Unit,
+    onDelete: (Long) -> Unit,
+) {
+    Row(
+        modifier = Modifier.clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (group != 3) {
+            Checkbox(
+                checked = task.done,
+                onCheckedChange = { checked -> onToggle(task.id, checked) },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = palette.accent,
+                    uncheckedColor = palette.inputText.copy(alpha = 0.5f),
+                    checkmarkColor = palette.surface,
+                ),
+            )
+        } else {
+            Spacer(Modifier.width(12.dp))
+        }
+        if (task.priority > 0) {
+            Text("!".repeat(task.priority), color = palette.accent, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.width(4.dp))
+        }
         Text(
             text = task.text,
             color = palette.inputText,
@@ -245,10 +422,7 @@ private fun TaskRow(task: TaskDto, palette: TabPalette, onToggle: (Long, Boolean
             modifier = Modifier.weight(1f),
         )
         if (task.maxAccumulation > 1) {
-            Text(
-                text = "${task.countAccumulation}/${task.maxAccumulation}",
-                color = palette.inputText.copy(alpha = 0.6f),
-            )
+            Text("${task.countAccumulation}/${task.maxAccumulation}", color = palette.inputText.copy(alpha = 0.6f))
             Spacer(Modifier.width(4.dp))
         }
         IconButton(onClick = { onDelete(task.id) }) {
@@ -260,7 +434,6 @@ private fun TaskRow(task: TaskDto, palette: TabPalette, onToggle: (Long, Boolean
 @Composable
 private fun AddTaskPanel(folderId: Long, group: Int, palette: TabPalette, vm: TasksViewModel) {
     var text by remember(folderId) { mutableStateOf("") }
-    // Add-task toggles (legacy bottom panel). Hidden on the Notes group (3).
     var count by remember(folderId) { mutableStateOf(1) }
     var max by remember(folderId) { mutableStateOf(1) }
     var priority by remember(folderId) { mutableStateOf(0) }
@@ -269,20 +442,16 @@ private fun AddTaskPanel(folderId: Long, group: Int, palette: TabPalette, vm: Ta
     fun submit() {
         if (text.isNotBlank()) {
             vm.addTask(folderId, text, count, max, cycling, priority)
-            text = ""
-            count = 1; max = 1; priority = 0; cycling = false
+            text = ""; count = 1; max = 1; priority = 0; cycling = false
         }
     }
 
     Column {
         if (group != 3) {
-            Row(
-                modifier = Modifier.padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                ToggleChip("×$count", active = count > 1, palette = palette) { count = if (count >= 10) 1 else count + 1 }
-                ToggleChip("/$max", active = max > 1, palette = palette) { max = if (max >= 10) 1 else max + 1 }
-                ToggleChip("!$priority", active = priority > 0, palette = palette) { priority = if (priority >= 3) 0 else priority + 1 }
+            Row(modifier = Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ToggleChip("×$count", active = count > 1, palette = palette) { count = cycle1to9(count) }
+                ToggleChip("/$max", active = max > 1, palette = palette) { max = cycle1to9(max) }
+                ToggleChip("!$priority", active = priority > 0, palette = palette) { priority = (priority + 1) % 4 }
                 ToggleChip("↻", active = cycling, palette = palette) { cycling = !cycling }
             }
         }
@@ -290,20 +459,12 @@ private fun AddTaskPanel(folderId: Long, group: Int, palette: TabPalette, vm: Ta
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
-                placeholder = { Text("Новая задача") },
+                placeholder = { Text(if (group == 3) "Новая заметка" else "Новая задача") },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { submit() }),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = palette.inputText,
-                    unfocusedTextColor = palette.inputText,
-                    focusedBorderColor = palette.accent,
-                    unfocusedBorderColor = palette.inputText.copy(alpha = 0.3f),
-                    cursorColor = palette.accent,
-                    focusedPlaceholderColor = palette.inputText.copy(alpha = 0.5f),
-                    unfocusedPlaceholderColor = palette.inputText.copy(alpha = 0.5f),
-                ),
+                colors = fieldColors(palette),
             )
             IconButton(onClick = { submit() }) {
                 Icon(Icons.Default.Add, contentDescription = "Добавить", tint = palette.accent)
@@ -321,31 +482,170 @@ private fun ToggleChip(label: String, active: Boolean, palette: TabPalette, onCl
             .background(bg, RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 8.dp),
-    ) {
-        Text(text = label, color = fg, fontWeight = FontWeight.Medium)
-    }
+    ) { Text(text = label, color = fg, fontWeight = FontWeight.Medium) }
 }
 
+// ---- Task editor ----
+
 @Composable
-private fun AddFolderDialog(palette: TabPalette, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
-    var name by remember { mutableStateOf("") }
+private fun TaskEditorDialog(task: TaskDto, group: Int, palette: TabPalette, vm: TasksViewModel, onDismiss: () -> Unit) {
+    var text by remember(task.id) { mutableStateOf(task.text) }
+    var done by remember(task.id) { mutableStateOf(task.done) }
+    var count by remember(task.id) { mutableStateOf(task.countValue.coerceAtLeast(1)) }
+    var max by remember(task.id) { mutableStateOf(task.maxAccumulation.coerceAtLeast(1)) }
+    var priority by remember(task.id) { mutableStateOf(task.priority) }
+    var cycling by remember(task.id) { mutableStateOf(task.isCycling) }
+
+    val allFolders = remember(task.id) { vm.allFolderRefs() }
+    val selected = remember(task.id) {
+        mutableStateListOf<Long>().apply {
+            add(task.taskFolderId)
+            task.extraFolderIds.forEach { if (!contains(it)) add(it) }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = {
+            // autosave params + text on dismiss
+            vm.editTask(task.id, text, count, max, cycling, priority)
+            onDismiss()
+        },
+        title = { Text(if (group == 3) "Заметка" else "Задача") },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Текст") },
+                    minLines = if (group == 3) 6 else 1,
+                    colors = fieldColors(palette),
+                )
+                if (group != 3) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = done,
+                            onCheckedChange = { done = it; vm.toggleDone(task.id, it) },
+                            colors = CheckboxDefaults.colors(checkedColor = palette.accent),
+                        )
+                        Text("Выполнено", color = palette.inputText)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ToggleChip("×$count", active = count > 1, palette = palette) { count = cycle1to9(count) }
+                        ToggleChip("/$max", active = max > 1, palette = palette) { max = cycle1to9(max) }
+                        ToggleChip("!$priority", active = priority > 0, palette = palette) { priority = (priority + 1) % 4 }
+                        ToggleChip("↻", active = cycling, palette = palette) { cycling = !cycling }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                Text("Категории", color = palette.inputText.copy(alpha = 0.7f), fontWeight = FontWeight.Medium)
+                allFolders.forEach { ref ->
+                    val checked = selected.contains(ref.id)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (checked) { if (selected.size > 1) selected.remove(ref.id) }
+                                else selected.add(ref.id)
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(
+                            checked = checked,
+                            onCheckedChange = null,
+                            colors = CheckboxDefaults.colors(checkedColor = palette.accent),
+                        )
+                        Text("${ref.name} ${groupTag(ref.group)}", color = palette.inputText)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                vm.editTask(task.id, text, count, max, cycling, priority)
+                vm.setCategories(task.id, selected.toList())
+                onDismiss()
+            }) { Text("Готово") }
+        },
+        dismissButton = {
+            TextButton(onClick = { vm.deleteTask(task.id); onDismiss() }) { Text("Удалить", color = palette.accent) }
+        },
+        containerColor = Color.White,
+    )
+}
+
+// ---- shared dialogs ----
+
+@Composable
+private fun TextEntryDialog(title: String, initial: String, palette: TabPalette, confirmLabel: String, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
+    var value by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Новая категория") },
+        title = { Text(title) },
         text = {
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                placeholder = { Text("Название") },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    cursorColor = palette.accent,
-                    focusedBorderColor = palette.accent,
-                ),
+                value = value, onValueChange = { value = it }, singleLine = true,
+                placeholder = { Text("Название") }, colors = fieldColors(palette),
             )
         },
-        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onConfirm(name) }) { Text("Создать") } },
+        confirmButton = { TextButton(onClick = { if (value.isNotBlank()) onConfirm(value) }) { Text(confirmLabel) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
         containerColor = Color.White,
     )
 }
+
+@Composable
+private fun ConfirmDialog(title: String, message: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(message) },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Удалить") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        containerColor = Color.White,
+    )
+}
+
+@Composable
+private fun MoveGroupDialog(currentGroup: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
+    val names = listOf("Tasks 1", "Tasks 2", "Tasks 3", "Notes")
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Переместить в…") },
+        text = {
+            Column {
+                names.forEachIndexed { g, name ->
+                    if (g != currentGroup) {
+                        TextButton(onClick = { onPick(g) }, modifier = Modifier.fillMaxWidth()) {
+                            Text(name, modifier = Modifier.fillMaxWidth())
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        containerColor = Color.White,
+    )
+}
+
+// ---- helpers ----
+
+private fun cycle1to9(v: Int): Int = if (v < 1) 1 else if (v >= 9) 1 else v + 1
+
+private fun groupTag(group: Int): String = when (group) {
+    0 -> "[T1]"; 1 -> "[T2]"; 2 -> "[T3]"; 3 -> "[N]"; else -> ""
+}
+
+@Composable
+private fun fieldColors(palette: TabPalette) = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = palette.inputText,
+    unfocusedTextColor = palette.inputText,
+    focusedBorderColor = palette.accent,
+    unfocusedBorderColor = palette.inputText.copy(alpha = 0.3f),
+    cursorColor = palette.accent,
+    focusedPlaceholderColor = palette.inputText.copy(alpha = 0.5f),
+    unfocusedPlaceholderColor = palette.inputText.copy(alpha = 0.5f),
+)
