@@ -1,5 +1,10 @@
 apply plugin: 'com.android.application'
+// realm-android applied BEFORE the Kotlin plugins on purpose: it auto-switches to kapt
+// when it detects Kotlin, but our Realm models are Java and stay on annotationProcessor.
+// Applying it first keeps the existing (working) Realm processing path untouched.
 apply plugin: 'realm-android'
+apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 // Firebase: uncomment AFTER placing app/google-services.json (downloaded from the
 // Firebase console for package com.shumidub.todoapprealm.alpha8). The plugin fails
 // the build if that file is missing, so it stays off until the project is set up.
@@ -13,6 +18,14 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        compose true
     }
 
     defaultConfig {
@@ -71,4 +84,18 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.7.0')
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-database'
+
+    // --- Jetpack Compose (migration) — BoM pins mutually-compatible versions ---
+    implementation platform('androidx.compose:compose-bom:2024.12.01')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.foundation:foundation'   // HorizontalPager, LazyColumn, AnchoredDraggable
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.material:material-icons-extended'
+    implementation 'androidx.activity:activity-compose:1.9.3'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.8.7'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
 }

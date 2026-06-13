@@ -15,6 +15,14 @@
         <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
     </style>
 
+<!-- Compose migration host theme: no native ActionBar (Compose draws its own TopAppBar),
+         transparent bars for edge-to-edge (Todo100Theme tints them per tab at runtime). -->
+    <style name="Theme.Todo100.Compose" parent="Theme.MaterialComponents.Light.NoActionBar.Bridge">
+        <item name="android:windowBackground">@color/colorPrimaryDark</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
 <!-- AppCompat AlertDialog overlay — kept so legacy AlertDialog.Builder uses our colors. -->
     <style name="ThemeOverlay.App.AlertDialog" parent="ThemeOverlay.AppCompat.Dialog.Alert">
         <item name="android:windowBackground">@drawable/bg_dialog_rounded</item>
