@@ -4,7 +4,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -12,7 +16,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.shumidub.todoapprealm.Tabs
 import com.shumidub.todoapprealm.ui.theme.Todo100Theme
@@ -41,6 +47,7 @@ fun MainScreen() {
     val pageCount = Tabs.GROUP_COUNT // 4 task groups, no legacy Notes page
     val pagerState = rememberPagerState(initialPage = 0) { pageCount }
     val currentGroup by remember { derivedStateOf { pagerState.currentPage } }
+    var showSync by remember { mutableStateOf(false) }
 
     Todo100Theme(palette = paletteForGroup(currentGroup)) {
         val palette = paletteForGroup(currentGroup)
@@ -53,6 +60,11 @@ fun MainScreen() {
                         containerColor = palette.systemBar,
                         titleContentColor = palette.text,
                     ),
+                    actions = {
+                        IconButton(onClick = { showSync = true }) {
+                            Icon(Icons.Default.Sync, contentDescription = "Бэкап / синхронизация", tint = palette.text)
+                        }
+                    },
                 )
             },
         ) { innerPadding ->
@@ -65,6 +77,10 @@ fun MainScreen() {
                 // page index maps directly to task group (0..3)
                 TasksScreen(group = page)
             }
+        }
+
+        if (showSync) {
+            SyncDialog(palette = palette, onDismiss = { showSync = false })
         }
     }
 }

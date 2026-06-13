@@ -10,7 +10,9 @@ import io.realm.Realm
 import io.realm.RealmChangeListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 /**
@@ -27,6 +29,11 @@ import java.util.Calendar
  */
 object TasksRepository {
 
+    /** Pinged after a restore swaps the container, to force the flows to re-read (gap G2). */
+    private val restoreSignal = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    fun notifyRestored() { restoreSignal.tryEmit(Unit) }
+
     /** Detached state for a task group (0..3) plus the global day-score, reactive to any commit. */
     fun groupFlow(group: Int): Flow<GroupUiState> = callbackFlow {
         val realm: Realm? = App.realm
@@ -37,8 +44,9 @@ object TasksRepository {
         }
         val listener = RealmChangeListener<Realm> { trySend(readState(group)) }
         realm.addChangeListener(listener)
+        val job = launch { restoreSignal.collect { trySend(readState(group)) } }
         trySend(readState(group)) // initial snapshot
-        awaitClose { realm.removeChangeListener(listener) }
+        awaitClose { realm.removeChangeListener(listener); job.cancel() }
     }
 
     private fun readState(group: Int): GroupUiState =
