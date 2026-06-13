@@ -20,9 +20,10 @@
         android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <!-- Compose UI is now the launcher (Phase 5). -->
         <activity
-            android:name=".ui.activity.main.MainActivity"
-            android:theme="@style/AppTheme"
+            android:name=".ui.compose.ComposeHostActivity"
+            android:theme="@style/Theme.Todo100.Compose"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
             android:label="100todo"
@@ -31,19 +32,17 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            </activity>
+        </activity>
 
-        <!-- Compose migration host (see docs/COMPOSE-MIGRATION-PLAN.md). Not the launcher
-             during the transition; start manually for verification:
-             adb shell am start -n com.shumidub.todoapprealm.alpha8/com.shumidub.todoapprealm.ui.compose.ComposeHostActivity
-             Becomes the launcher in Phase 5 when MainActivity is deleted. -->
+        <!-- Legacy Fragment UI — retired as launcher; kept declared until the old code
+             is fully removed (some sync utils still reference it). -->
         <activity
-            android:name=".ui.compose.ComposeHostActivity"
-            android:theme="@style/Theme.Todo100.Compose"
+            android:name=".ui.activity.main.MainActivity"
+            android:theme="@style/AppTheme"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
-            android:label="100todo (Compose)"
-            android:exported="true"/>
+            android:label="100todo (legacy)"
+            android:exported="false"/>
     </application>
 
 </manifest>
