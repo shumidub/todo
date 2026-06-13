@@ -164,7 +164,28 @@ before implementing each phase.
     counts; bottom sheet opens per category; **done-toggle writes through to Realm and the
     list reactively re-sorts** (done→bottom); per-tab palette correct; no crash. (adb text
     injection into Compose fields is flaky in automation — manual typing works.)
-- **Next:** full Phase 2 polish — custom 24dp-peek `AnchoredDraggable` panel, sections
-  (collapse), drag-reorder, folder edit/delete + color picker/move, task params editor,
-  daily reset, "Done N" footer. Then Phase 3 (real Notes), Phase 4 (Sync), Phase 5 (cleanup +
-  flip launcher to `ComposeHostActivity`). Specs in `docs/specs/`.
+- 2026-06-13 — **Phase 4 (Sync) ✅** — `data/SyncManager.kt` + `ui/compose/SyncScreen.kt`:
+  JSON export to Downloads, restore from SAF file / string, share-as-text, Firebase
+  email/password auth + upload/download. Decoupled from MainActivity. Sync action in the
+  top bar. Verified: dialog opens, Firebase signed in, JSON export writes to Downloads.
+- 2026-06-13 — **Phase 5 (Cleanup) ✅** — `ComposeHostActivity` is the launcher; deleted the
+  entire legacy Fragment UI (activity/fragment/actionmode/dialog), the MainActivity-coupled
+  sync utils, `Palette.java`, all `res/layout` XML, and dropped RxJava2 / SlidingUpPanel /
+  keyboardvisibilityevent. `ReportObject` data kept (screen gone). Verified: clean build,
+  launches from icon, renders real Realm data, no crash. App is now **22 Java + 10 Kotlin**
+  files (Java = data layer only).
+- **Phase 3 (legacy Notes) — DROPPED** per user request ("старые Notes можешь скрыть").
+
+## Status: MIGRATION COMPLETE
+
+The app ships as a Jetpack Compose UI over the unchanged Realm data layer. Done: scaffold,
+data-interop (detached Flow snapshots), category → bottom-sheet tasks with sections / editor /
+multi-category / day-score / daily-reset / folder CRUD, backup-sync (JSON + Firebase),
+launcher flip + legacy cleanup. Existing `.realm` DB + old JSON backups still work
+(schema v5, never bumped).
+
+**Deferred polish (optional, non-blocking):** drag-reorder of tasks/sections; the custom
+24dp-peek `AnchoredDraggable` panel (ModalBottomSheet used instead); standing up a proper
+Dagger ViewModel factory (currently a plain `viewModel(factory=…)` initializer); the
+Notes-group (3) "curtain" full-screen note editor nuance. Drag-reorder is the only legacy
+feature not yet reproduced — see `docs/specs/tasks.md` / `folder-panel.md`.
