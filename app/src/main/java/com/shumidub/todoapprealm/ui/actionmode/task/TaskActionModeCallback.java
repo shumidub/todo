@@ -79,15 +79,11 @@ public class TaskActionModeCallback  {
                 taskCycling = task.isCycling();
 
                 defaultColor = activity.getResources().getColor(R.color.colorWhite);
-                if (TaskActionModeCallback.this.activity.isCornflowerTab()) {
-                    accentColor = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(activity).accent;
-                } else if (TaskActionModeCallback.this.activity.isCanaryTab()) {
-                    accentColor = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(activity).accent;
-                } else if (TaskActionModeCallback.this.activity.isIndigoTab()) {
-                    accentColor = new com.shumidub.todoapprealm.ui.theme.IndigoPalette(activity).accent;
-                } else {
-                    accentColor = activity.getResources().getColor(R.color.colorAccent);
-                }
+                com.shumidub.todoapprealm.ui.theme.Palette p =
+                        com.shumidub.todoapprealm.ui.theme.Palette.forGroup(
+                                activity, TaskActionModeCallback.this.activity.currentTabTaskGroup());
+                accentColor = p != null ? p.accent
+                        : activity.getResources().getColor(R.color.colorAccent);
 
                 int tvTaskCyclingColor  = taskCycling ? accentColor : defaultColor;
 
@@ -190,9 +186,8 @@ public class TaskActionModeCallback  {
 
             @Override
             public void onDestroyActionMode(ActionMode actionMode) {
-                if (App.getFolderSlidingPanelFragment() != null){
-                    App.getFolderSlidingPanelFragment()
-                            .notifyFolderOfTasksRVAdapterDataSetChanged();
+                for (FolderSlidingPanelFragment p : App.folderSlidingPanelFragments) {
+                    p.notifyFolderOfTasksRVAdapterDataSetChanged();
                 }
             }
         };

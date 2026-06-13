@@ -33,6 +33,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.shumidub.todoapprealm.App;
+import com.shumidub.todoapprealm.Tabs;
 import com.shumidub.todoapprealm.R;
 import com.shumidub.todoapprealm.realmmodel.notes.NoteObject;
 import com.shumidub.todoapprealm.realmmodel.report.ReportObject;
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         mainPagerAdapter = new MainPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(mainPagerAdapter);
         viewPager.setOffscreenPageLimit(1);
-        viewPager.setCurrentItem(1);
+        viewPager.setCurrentItem(Tabs.START_PAGE);
 
         rootLayout.post(() -> {
             App.setDayScopeValue();
@@ -216,15 +217,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean isCornflowerTab() {
-        return viewPager != null && viewPager.getCurrentItem() == 2;
+        return viewPager != null && viewPager.getCurrentItem() == Tabs.positionForGroup(1);
     }
 
     public boolean isCanaryTab() {
-        return viewPager != null && viewPager.getCurrentItem() == 3;
+        return viewPager != null && viewPager.getCurrentItem() == Tabs.positionForGroup(2);
     }
 
     public boolean isIndigoTab() {
-        return viewPager != null && viewPager.getCurrentItem() == 4;
+        return viewPager != null && viewPager.getCurrentItem() == Tabs.positionForGroup(3);
+    }
+
+    /** Task group of the current tab (1/2/3 for the themed tabs, 0 otherwise). */
+    public int currentTabTaskGroup() {
+        if (viewPager == null) return 0;
+        return Math.max(0, Tabs.groupForPosition(viewPager.getCurrentItem()));
     }
 
     /** Build a MaterialAlertDialogBuilder applying the per-tab overlay (Cornflower for Tasks2,
@@ -289,17 +296,11 @@ public class MainActivity extends AppCompatActivity {
      *  tabs that don't have a custom palette (Notes / Tasks1). */
     public void tintActionModeBarForCurrentTab() {
         if (viewPager == null) return;
-        int pos = viewPager.getCurrentItem();
-        final int color;
-        if (pos == 2) {
-            color = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this).bg;
-        } else if (pos == 3) {
-            color = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(this).bg;
-        } else if (pos == 4) {
-            color = new com.shumidub.todoapprealm.ui.theme.IndigoPalette(this).bg;
-        } else {
-            return;
-        }
+        com.shumidub.todoapprealm.ui.theme.Palette p =
+                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(
+                        this, Tabs.groupForPosition(viewPager.getCurrentItem()));
+        if (p == null) return;
+        final int color = p.bg;
         Runnable tint = () -> applyActionModeBarColor(color);
         View decor = getWindow().getDecorView();
         decor.post(tint);
@@ -342,39 +343,18 @@ public class MainActivity extends AppCompatActivity {
         if (rootLayout == null || actionBar == null) return;
         androidx.core.view.WindowInsetsControllerCompat insets =
                 androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        if (position == 2) {
-            com.shumidub.todoapprealm.ui.theme.CornflowerPalette p =
-                    new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(this);
+        com.shumidub.todoapprealm.ui.theme.Palette p =
+                com.shumidub.todoapprealm.ui.theme.Palette.forGroup(this, Tabs.groupForPosition(position));
+        if (p != null) {
             rootLayout.setBackgroundColor(p.bg);
             actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
             getWindow().setStatusBarColor(p.bg);
             getWindow().setNavigationBarColor(p.bg);
             if (insets != null) {
-                insets.setAppearanceLightStatusBars(false);
-                insets.setAppearanceLightNavigationBars(false);
-            }
-        } else if (position == 3) {
-            com.shumidub.todoapprealm.ui.theme.CanaryPalette p =
-                    new com.shumidub.todoapprealm.ui.theme.CanaryPalette(this);
-            rootLayout.setBackgroundColor(p.bg);
-            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
-            getWindow().setStatusBarColor(p.bg);
-            getWindow().setNavigationBarColor(p.bg);
-            if (insets != null) {
-                // R8: dark icons on yellow background
-                insets.setAppearanceLightStatusBars(true);
-                insets.setAppearanceLightNavigationBars(true);
-            }
-        } else if (position == 4) {
-            com.shumidub.todoapprealm.ui.theme.IndigoPalette p =
-                    new com.shumidub.todoapprealm.ui.theme.IndigoPalette(this);
-            rootLayout.setBackgroundColor(p.bg);
-            actionBar.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(p.bg));
-            getWindow().setStatusBarColor(p.bg);
-            getWindow().setNavigationBarColor(p.bg);
-            if (insets != null) {
-                insets.setAppearanceLightStatusBars(false);
-                insets.setAppearanceLightNavigationBars(false);
+                // R8: dark icons on the Canary tab's yellow background only.
+                boolean light = Tabs.groupForPosition(position) == 2;
+                insets.setAppearanceLightStatusBars(light);
+                insets.setAppearanceLightNavigationBars(light);
             }
         } else {
             int green = androidx.core.content.ContextCompat.getColor(this, R.color.colorBackgroundActivity);
@@ -391,49 +371,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void resetAllView(){
-
-        viewPager.removeAllViews();
-        mainPagerAdapter = new MainPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(mainPagerAdapter);
-
-        mainPagerAdapter = new MainPagerAdapter(getSupportFragmentManager());
-        viewPager = null;
-
+    /**
+     * Refresh the live screens after a full DB restore replaced the data. Re-reads each
+     * instantiated page from the freshly-rebound Realm containers (see
+     * {@link App#rebindContainers()}) instead of relaunching the activity.
+     */
+    public void refreshAfterRestore(){
+        App.setDayScopeValue();
+        invalidateOptionsMenu();
+        for (Fragment f : getSupportFragmentManager().getFragments()) {
+            if (f instanceof FolderSlidingPanelFragment) {
+                ((FolderSlidingPanelFragment) f).reloadFromRealm();
+            } else if (f instanceof FolderNoteFragment) {
+                ((FolderNoteFragment) f).setFolderNoteViews();
+            }
+        }
     }
-
-    @Override
-    protected void onPause() {
-        App.closeRealm();
-        super.onPause();
-    }
-
-    @Override
-    protected void onRestart() {
-//        /**Проверка на возможность загрузить список при возврате на экран.
-//        * Например, после ухода с экрана, категория со списком могла быть удалена и при возврате на
-//        * экран и тапе на список - была ошибка.
-//        */
-//        if (FolderRealmController.getFolder(listId)==null){
-//
-//            long defaultListId = new SharedPrefHelper(this).getDefaultListId();
-//            if (FolderRealmController.getFolder(defaultListId)!=null)  listId = defaultListId;
-//            else listId = 0;
-//            fragmentManager.beginTransaction().replace(R.id.container,
-//                    FolderSlidingPanelFragment.newInstance(listId)).commitAllowingStateLoss();
-////          try fix run method before savedInstance outStatte
-////          FolderSlidingPanelFragment.newInstance(listId)).commit();
-//        }
-        super.onRestart();
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         dayScopeMenu = menu.add(2,2,2,"" + App.dayScope);
         dayScopeMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         // Notes tab has no "done" concept — hide the day-scope counter there.
-        dayScopeMenu.setVisible(viewPager == null || viewPager.getCurrentItem() != 4);
+        dayScopeMenu.setVisible(viewPager == null || viewPager.getCurrentItem() != Tabs.positionForGroup(3));
         dayScopeMenu.setOnMenuItemClickListener((v)->{
 
             App.initRealm();

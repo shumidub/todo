@@ -96,9 +96,8 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     RealmFoldersContainer realmFoldersContainer;
 //    RealmResults<FolderObject> folderObjects;
     RealmList<FolderTaskObject> folderObjects;
-    public static Long idFolderFromTag;
+    private Long idFolderFromTag;
     private String title;
-    public static String titleFolder;
     int lastDateResetTasksCountAccumulation;
 
     ////////////////////////////     SMALL TASKS VIEWS AND VARIABLES     //////////////////////////
@@ -112,9 +111,7 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
     /** Which Tasks tab this fragment represents. 0 = Tasks1, 1 = Tasks2, 2 = Tasks3. */
     private int taskGroup = 0;
-    private com.shumidub.todoapprealm.ui.theme.CornflowerPalette cornflowerPalette;
-    private com.shumidub.todoapprealm.ui.theme.CanaryPalette canaryPalette;
-    private com.shumidub.todoapprealm.ui.theme.IndigoPalette indigoPalette;
+    private com.shumidub.todoapprealm.ui.theme.Palette palette;
     private static final String ARG_TASK_GROUP = "task_group";
 
     /** Default action-bar title for this tab (Notes tab is its own name). */
@@ -135,7 +132,6 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         super.onCreate(savedInstanceState);
         if (getArguments() != null) taskGroup = getArguments().getInt(ARG_TASK_GROUP, 0);
         resetTasksCountAccumulation();
-        App.folderSlidingPanelFragment = this;
         if (!App.folderSlidingPanelFragments.contains(this)) {
             App.folderSlidingPanelFragments.add(this);
         }
@@ -144,7 +140,6 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     @Override
     public void onDestroy() {
         App.folderSlidingPanelFragments.remove(this);
-        if (App.folderSlidingPanelFragment == this) App.folderSlidingPanelFragment = null;
         super.onDestroy();
     }
 
@@ -278,7 +273,6 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
             = (FolderOfTaskRecyclerViewAdapter.ViewHolder holder, int position) -> {
 //            idFolderFromTag = (Long) holder.itemView.findViewById(R.id.item_text).getTag();
             idFolderFromTag = (Long) holder.itemView.findViewById(R.id.tv_note_text).getTag();
-            titleFolder = FolderTaskRealmController.getFolder(idFolderFromTag).getName();
             finishActionMode();
             actionMode = getActivity().startActionMode(getCallback(FOLDER_ACTIONMODE));
 
@@ -384,14 +378,13 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
                     ((MainActivity) getActivity()).setPageCanChangedScrolled(!lockPaging);
                 });
 
-        if (taskGroup == 1) applyCornflowerPalette(view);
-        else if (taskGroup == 2) applyCanaryPalette(view);
-        else if (taskGroup == 3) applyIndigoPalette(view);
+        applyPalette(view);
     }
 
-    private void applyCornflowerPalette(View root) {
-        cornflowerPalette = new com.shumidub.todoapprealm.ui.theme.CornflowerPalette(getContext());
-        com.shumidub.todoapprealm.ui.theme.CornflowerPalette p = cornflowerPalette;
+    private void applyPalette(View root) {
+        palette = com.shumidub.todoapprealm.ui.theme.Palette.forGroup(getContext(), taskGroup);
+        com.shumidub.todoapprealm.ui.theme.Palette p = palette;
+        if (p == null) return;
 
         root.setBackgroundColor(p.bg);
         View cl = root.findViewById(R.id.cl);
@@ -407,77 +400,8 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         if (bottomAddArea != null) bottomAddArea.setBackgroundColor(p.surfaceMuted);
 
         if (et != null) {
-            et.setTextColor(p.text);
-            et.setHintTextColor(p.textSoft);
-            et.setBackgroundTintList(android.content.res.ColorStateList.valueOf(p.accent));
-            if (android.os.Build.VERSION.SDK_INT >= 29) {
-                android.graphics.drawable.Drawable cursor = new android.graphics.drawable.ColorDrawable(p.accent) {
-                    @Override public int getIntrinsicWidth() { return (int) (2 * getResources().getDisplayMetrics().density); }
-                };
-                et.setTextCursorDrawable(cursor);
-            }
-        }
-        if (tvBottomText != null) tvBottomText.setTextColor(p.text);
-        if (tvTaskCountValue != null) tvTaskCountValue.setTextColor(p.text);
-        if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setTextColor(p.text);
-        if (tvTaskPriority != null) tvTaskPriority.setTextColor(p.text);
-        if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
-    }
-
-    private void applyCanaryPalette(View root) {
-        canaryPalette = new com.shumidub.todoapprealm.ui.theme.CanaryPalette(getContext());
-        com.shumidub.todoapprealm.ui.theme.CanaryPalette p = canaryPalette;
-
-        root.setBackgroundColor(p.bg);
-        View cl = root.findViewById(R.id.cl);
-        if (cl != null) cl.setBackgroundColor(p.bg);
-
-        View footer = root.findViewById(R.id.ll_footer);
-        if (footer != null) footer.setBackgroundColor(p.surfaceMuted);
-
-        TextView bottomText = root.findViewById(R.id.bottom_text);
-        if (bottomText != null) bottomText.setTextColor(p.text);
-
-        View bottomAddArea = root.findViewById(R.id.ll_bottom);
-        if (bottomAddArea != null) bottomAddArea.setBackgroundColor(p.surfaceMuted);
-
-        if (et != null) {
-            et.setTextColor(p.inputText);
-            et.setHintTextColor(p.textSoft);
-            et.setBackgroundTintList(android.content.res.ColorStateList.valueOf(p.accent));
-            if (android.os.Build.VERSION.SDK_INT >= 29) {
-                android.graphics.drawable.Drawable cursor = new android.graphics.drawable.ColorDrawable(p.accent) {
-                    @Override public int getIntrinsicWidth() { return (int) (2 * getResources().getDisplayMetrics().density); }
-                };
-                et.setTextCursorDrawable(cursor);
-            }
-        }
-        if (tvBottomText != null) tvBottomText.setTextColor(p.text);
-        if (tvTaskCountValue != null) tvTaskCountValue.setTextColor(p.text);
-        if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setTextColor(p.text);
-        if (tvTaskPriority != null) tvTaskPriority.setTextColor(p.text);
-        if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
-    }
-
-    private void applyIndigoPalette(View root) {
-        indigoPalette = new com.shumidub.todoapprealm.ui.theme.IndigoPalette(getContext());
-        com.shumidub.todoapprealm.ui.theme.IndigoPalette p = indigoPalette;
-
-        root.setBackgroundColor(p.bg);
-        View cl = root.findViewById(R.id.cl);
-        if (cl != null) cl.setBackgroundColor(p.bg);
-
-        View footer = root.findViewById(R.id.ll_footer);
-        if (footer != null) footer.setBackgroundColor(p.surfaceMuted);
-
-        TextView bottomText = root.findViewById(R.id.bottom_text);
-        if (bottomText != null) bottomText.setTextColor(p.text);
-
-        View bottomAddArea = root.findViewById(R.id.ll_bottom);
-        if (bottomAddArea != null) bottomAddArea.setBackgroundColor(p.surfaceMuted);
-
-        if (et != null) {
-            et.setTextColor(p.text);
+            // Canary keeps a dedicated input colour; the other tabs reuse the body text colour.
+            et.setTextColor(taskGroup == 2 ? p.inputText : p.text);
             et.setHintTextColor(p.textSoft);
             et.setBackgroundTintList(android.content.res.ColorStateList.valueOf(p.accent));
             if (android.os.Build.VERSION.SDK_INT >= 29) {
@@ -489,20 +413,25 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
         }
         if (tvBottomText != null) tvBottomText.setTextColor(p.text);
 
-        // Notes tab: no points / cycling / priority — hide the add-panel param controls.
-        // They keep their default values ("1", priority 0, cycling false) so addTask still works.
-        if (tvTaskCountValue != null) tvTaskCountValue.setVisibility(View.GONE);
-        if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setVisibility(View.GONE);
-        if (tvTaskPriority != null) tvTaskPriority.setVisibility(View.GONE);
-        if (tvTaskCycling != null) tvTaskCycling.setVisibility(View.GONE);
+        if (taskGroup == 3) {
+            // Notes tab: no points / cycling / priority — hide the add-panel param controls.
+            // They keep their default values ("1", priority 0, cycling false) so addTask still works.
+            if (tvTaskCountValue != null) tvTaskCountValue.setVisibility(View.GONE);
+            if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setVisibility(View.GONE);
+            if (tvTaskPriority != null) tvTaskPriority.setVisibility(View.GONE);
+            if (tvTaskCycling != null) tvTaskCycling.setVisibility(View.GONE);
+        } else {
+            if (tvTaskCountValue != null) tvTaskCountValue.setTextColor(p.text);
+            if (tvTaskMaxAccumulate != null) tvTaskMaxAccumulate.setTextColor(p.text);
+            if (tvTaskPriority != null) tvTaskPriority.setTextColor(p.text);
+            if (tvTaskCycling != null) tvTaskCycling.setTextColor(p.accent);
+        }
     }
 
-    /** Returns the accent the bottom-panel click handlers should use — cornflower on Tasks2,
-     *  canary on Tasks3, indigo on Notes, default colorAccent otherwise. */
+    /** Returns the accent the bottom-panel click handlers should use — the tab palette's
+     *  accent when one is active, default colorAccent otherwise. */
     private int activeAccent() {
-        if (cornflowerPalette != null) return cornflowerPalette.accent;
-        if (canaryPalette != null) return canaryPalette.accent;
-        if (indigoPalette != null) return indigoPalette.accent;
+        if (palette != null) return palette.accent;
         return getResources().getColor(R.color.colorAccent);
     }
 
@@ -654,7 +583,8 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
     private ActionMode.Callback getCallback(int callbackType){
         if (callbackType == FOLDER_ACTIONMODE) {
             folderCallback = new FolderActionModeCallback().getListActionModeCallback(
-                    (MainActivity) getActivity(), this, idFolderFromTag);
+                    (MainActivity) getActivity(), this, idFolderFromTag,
+                    FolderTaskRealmController.getFolder(idFolderFromTag).getName());
             return folderCallback;
         }
         else return null;
@@ -701,6 +631,26 @@ public class FolderSlidingPanelFragment extends Fragment implements IViewFolderS
 
     public void dataChanged(){
         onResume();
+    }
+
+    /**
+     * Re-read folders + tasks from Realm after a full DB restore replaced the data.
+     * The folder adapter held a RealmList that {@code deleteFromRealmAllContainers()}
+     * invalidated, so a plain notifyDataSetChanged() would show nothing — rebuild it
+     * against the freshly-rebound container, then rebuild the inner task ViewPager.
+     */
+    public void reloadFromRealm(){
+        if (rvFolders == null || folderOfTaskRVAdapter == null) return; // view not created yet
+        if (slidingUpPanelLayout != null) {
+            slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+        }
+        setTitle(defaultTitle());
+        folderObjects = FolderTaskRealmController.getFoldersList(taskGroup);
+        folderOfTaskRVAdapter = new FolderOfTaskRecyclerViewAdapter(folderObjects, getActivity(), taskGroup);
+        folderOfTaskRVAdapter.setOnHolderTextViewOnClickListener(onHolderTextViewOnClickListener);
+        folderOfTaskRVAdapter.setOnHolderTextViewOnLongClickListener(onHolderTextViewOnLongClickListener);
+        rvFolders.setAdapter(folderOfTaskRVAdapter);
+        notifySmallTasksViewPagerListsChanged();
     }
 
     public void notifySmallTasksViewPagerListsChanged(){

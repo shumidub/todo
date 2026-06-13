@@ -178,4 +178,109 @@ public class BaseReportDialog extends androidx.fragment.app.DialogFragment {
         tilCountValue.setErrorEnabled(errorEnable);
         tilCountValue.setError(errorText);
     }
+
+    // ---------- shared form validation / collection (Add + Edit) ----------
+
+    /** Whether the form is in week-report mode. Add: the switch; Edit: the stored flag. */
+    protected boolean isWeekMode() {
+        return switchWeek != null && switchWeek.isChecked();
+    }
+
+    private static Integer parseIntOrNull(String s) {
+        try {
+            return Integer.valueOf(s.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Validates the form, showing/clearing the field errors.
+     * Week mode accepts only the current or previous week number.
+     * @return true when the report can be saved.
+     */
+    protected boolean validateFormAndShowErrors() {
+        String dateText = etDate.getText().toString();
+        String countText = etCountValue.getText().toString();
+        boolean isWeek = isWeekMode();
+
+        Integer count = parseIntOrNull(countText);
+        Integer weekNumber = parseIntOrNull(dateText);
+
+        boolean countOk = count != null && count < 500;
+        boolean weekOk = weekNumber != null
+                && (weekNumber == currentWeekNumber || weekNumber == currentWeekNumber - 1);
+        boolean dateOk = isWeek ? weekOk : dateText.length() == 10;
+
+        if (dateText.isEmpty()) {
+            setDateError("Should be filled", true);
+        } else if (!dateOk) {
+            setDateError(isWeek ? "Not valid week number" : "Not valid date", true);
+        } else {
+            setDateError("", false);
+        }
+
+        if (countText.isEmpty()) {
+            setCountValueError("Should be filled", true);
+        } else if (!countOk) {
+            setCountValueError("Count value too match", true);
+        } else {
+            setCountValueError("", false);
+        }
+
+        return !dateText.isEmpty() && dateOk && countOk;
+    }
+
+    /** Snapshot of the validated form values, ready for the controller call. */
+    protected static final class ReportForm {
+        public final String date;
+        public final int dayCount;
+        public final String textReport;
+        public final int soulRating, healthRating, phinanceRating;
+        public final int englishRating, socialRating, famillyRating;
+        public final int weekNumber;
+
+        ReportForm(String date, int dayCount, String textReport,
+                   int soulRating, int healthRating, int phinanceRating,
+                   int englishRating, int socialRating, int famillyRating, int weekNumber) {
+            this.date = date;
+            this.dayCount = dayCount;
+            this.textReport = textReport;
+            this.soulRating = soulRating;
+            this.healthRating = healthRating;
+            this.phinanceRating = phinanceRating;
+            this.englishRating = englishRating;
+            this.socialRating = socialRating;
+            this.famillyRating = famillyRating;
+            this.weekNumber = weekNumber;
+        }
+    }
+
+    /** Collect form values. Call only after {@link #validateFormAndShowErrors()} passed. */
+    protected ReportForm collectForm() {
+        String date;
+        int weekNumber;
+        if (isWeekMode()) {
+            weekNumber = Integer.parseInt(etDate.getText().toString().trim());
+            date = calendar.get(Calendar.DATE) + "." + calendar.get(Calendar.MONTH) + "."
+                    + calendar.get(Calendar.YEAR);
+        } else {
+            date = etDate.getText().toString();
+            weekNumber = currentWeekNumber;
+        }
+        return new ReportForm(date,
+                Integer.parseInt(etCountValue.getText().toString().trim()),
+                etTextReport.getText().toString(),
+                rbSoul.getProgress(), rbHealth.getProgress(), ratingBarPhinance.getProgress(),
+                ratingBarEnglish.getProgress(), ratingBarSocial.getProgress(),
+                ratingBarFamilly.getProgress(), weekNumber);
+    }
+
+    /** Refresh the report list, hide the keyboard and close the dialog. */
+    protected void finishAfterSave() {
+        notifyDataChanged();
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(getDialog().getWindow().getDecorView().getWindowToken(), 0);
+        dismiss();
+    }
 }

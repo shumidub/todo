@@ -1,7 +1,6 @@
 package com.shumidub.todoapprealm.ui.dialog.task_bottomsheet;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
@@ -18,7 +17,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,9 +30,7 @@ import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealm
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController;
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
-import com.shumidub.todoapprealm.ui.theme.CanaryPalette;
-import com.shumidub.todoapprealm.ui.theme.CornflowerPalette;
-import com.shumidub.todoapprealm.ui.theme.IndigoPalette;
+import com.shumidub.todoapprealm.ui.theme.Palette;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -124,6 +120,7 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
         }
 
         palette = Palette.forGroup(requireContext(), taskGroup);
+        if (palette == null) palette = Palette.dialogDefault(requireContext());
 
         root = view.findViewById(R.id.bs_root);
         dragHandle = view.findViewById(R.id.bs_drag_handle);
@@ -482,68 +479,6 @@ public class TaskEditorBottomSheet extends BottomSheetDialogFragment {
             super(v);
             check = v.findViewById(R.id.bs_cat_row_check);
             name = v.findViewById(R.id.bs_cat_row_name);
-        }
-    }
-
-    // -------- Palette wrapper --------
-
-    /** Unified colour set so the UI code has no per-tab branches. */
-    private static final class Palette {
-        final int bg;
-        final int surface;
-        final int text;
-        final int textSoft;
-        final int inputText;
-        final int counter;
-        final int accent;
-        final int divider;
-
-        private Palette(int bg, int surface, int text, int textSoft,
-                        int inputText, int counter, int accent, int divider) {
-            this.bg = bg;
-            this.surface = surface;
-            this.text = text;
-            this.textSoft = textSoft;
-            this.inputText = inputText;
-            this.counter = counter;
-            this.accent = accent;
-            this.divider = divider;
-        }
-
-        static Palette forGroup(Context ctx, int group) {
-            switch (group) {
-                case 1: {
-                    CornflowerPalette p = new CornflowerPalette(ctx);
-                    return new Palette(p.bg, p.surface, p.text, p.textSoft,
-                            p.inputText, p.counter, p.accent, p.divider);
-                }
-                case 2: {
-                    CanaryPalette p = new CanaryPalette(ctx);
-                    return new Palette(p.bg, p.surface, p.text, p.textSoft,
-                            p.inputText, p.counter, p.accent, p.divider);
-                }
-                case 3: {
-                    IndigoPalette p = new IndigoPalette(ctx);
-                    return new Palette(p.bg, p.surface, p.text, p.textSoft,
-                            p.inputText, p.counter, p.accent, p.divider);
-                }
-                default: {
-                    int accent = ContextCompat.getColor(ctx, R.color.colorAccent);
-                    int onSurface = ContextCompat.getColor(ctx, R.color.colorDialogOnSurface);
-                    int onSurfaceVariant = ContextCompat.getColor(ctx, R.color.colorDialogOnSurfaceVariant);
-                    int white = ContextCompat.getColor(ctx, R.color.colorWhite);
-                    int dialogSurface = ContextCompat.getColor(ctx, R.color.colorDialogSurface);
-                    return new Palette(
-                            /* bg */ dialogSurface,
-                            /* surface */ dialogSurface,
-                            /* text */ onSurface,
-                            /* textSoft */ onSurfaceVariant,
-                            /* inputText */ white,
-                            /* counter */ white,
-                            /* accent */ accent,
-                            /* divider */ onSurfaceVariant);
-                }
-            }
         }
     }
 }

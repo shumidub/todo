@@ -25,6 +25,18 @@ public class RealmFoldersContainer extends RealmObject implements Serializable{
     public RealmList<FolderNotesObject> folderOfNotesList;
     public RealmList<ReportObject> reportObjectList;
 
+    /**
+     * Folder list backing a task group (0..3). The numbered fields stay separate
+     * for Realm schema compatibility; everyone else addresses them by group.
+     */
+    public RealmList<FolderTaskObject> tasksListForGroup(int group) {
+        switch (group) {
+            case 1: return folderOfTasksList2;
+            case 2: return folderOfTasksList3;
+            case 3: return folderOfTasksList4;
+            default: return folderOfTasksList;
+        }
+    }
 }
 
 

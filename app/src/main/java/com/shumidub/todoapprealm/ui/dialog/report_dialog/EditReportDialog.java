@@ -1,16 +1,12 @@
 package com.shumidub.todoapprealm.ui.dialog.report_dialog;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 
 import com.shumidub.todoapprealm.realmcontrollers.reportcontroller.ReportRealmController;
 import com.shumidub.todoapprealm.realmmodel.report.ReportObject;
 import com.shumidub.todoapprealm.ui.fragment.report_section.report_fragment.ReportFragment;
-
-import java.util.Calendar;
 
 /**
  * Created by A.shumidub on 05.02.18.
@@ -80,109 +76,27 @@ public class EditReportDialog extends BaseReportDialog {
     }
 
     @Override
+    protected boolean isWeekMode() {
+        return reportObject != null && reportObject.isWeekReport();
+    }
+
+    @Override
     protected void setPositiveButtonInterface() {
         positiveButtonInterface = (v)-> {
+            if (!validateFormAndShowErrors()) return;
 
-
-            //todo need check
-            if (!etDate.getText().toString().isEmpty() && !etCountValue.getText().toString().isEmpty()
-                    && (Integer.valueOf(etCountValue.getText().toString()) < 500)
-                    && ((( !reportObject.isWeekReport() && etDate.getText().toString().length()==10 )
-                    || (reportObject.isWeekReport()
-                        && ((Integer.valueOf(etDate.getText().toString())== currentWeekNumber
-                        || (Integer.valueOf(etDate.getText().toString())== currentWeekNumber -1 ))))))){
-
-                String date;
-                int dayCount = Integer.valueOf(etCountValue.getText().toString());
-                String textReport = etTextReport.getText().toString();
-
-                int soulRating = rbSoul.getProgress();
-                int healthRating = rbHealth.getProgress();
-                int phinanceRating = ratingBarPhinance.getProgress();
-                int englishRating = ratingBarEnglish.getProgress();
-                int socialRating = ratingBarSocial.getProgress();
-                int famillyRating = ratingBarFamilly.getProgress();
-
-                int weekNumber;
-
-                if (reportObject.isWeekReport()){
-                    weekNumber = Integer.valueOf(etDate.getText().toString());
-                    date = calendar.get(Calendar.DATE) + "." + calendar.get(Calendar.MONTH) + "."
-                            + calendar.get(Calendar.YEAR);
-                    Log.d("DTAG", "setPositiveButtonInterface: date = " + date);
-                }
-                else {
-                    date = etDate.getText().toString();
-                    weekNumber = currentWeekNumber;
-                }
-
-                ReportRealmController.editReport(id, date, dayCount, textReport,
-                        soulRating, healthRating, phinanceRating,
-                        englishRating, socialRating, famillyRating,
-                        weekNumber);
-                notifyDataChanged();
-                InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(getDialog().getWindow().getDecorView().getWindowToken(), 0);
-                dismiss();
-
-            } else {
-                if (etDate.getText().toString().isEmpty()) {
-                    setDateError("Should be filled", true);
-                } else if (!reportObject.isWeekReport() && etDate.getText().toString().length()!=10){
-                    setDateError("Not valid date", true);
-                }else {
-                    setDateError("", false);
-                }
-
-                if (etCountValue.getText().toString().isEmpty()) {
-                    setCountValueError("Should be filled", true);
-                } else {
-                    setCountValueError("", false);
-                }
-
-                boolean weekNumberValid = false;
-                if (reportObject.isWeekReport() && !etDate.getText().toString().isEmpty() ){
-                    weekNumberValid
-                            =  ((Integer.valueOf(etDate.getText().toString())== currentWeekNumber
-                            || (Integer.valueOf(etDate.getText().toString())== currentWeekNumber -1)));
-                }
-
-                if ( reportObject.isWeekReport() && !etDate.getText().toString().isEmpty()
-                        && !weekNumberValid ) {
-                    setDateError("Not valid week number", true);
-                } else if (reportObject.isWeekReport() && !etDate.getText().toString().isEmpty()
-                        && weekNumberValid){
-                    setDateError("", false);
-                }
-
-
-                if (!(Integer.valueOf(etCountValue.getText().toString()) < 500)){
-                    setCountValueError("Count value too match", true);
-                } else {
-                    setCountValueError("", false);
-                }
-
-
-            }
-
-
-
-
-
-
-
-
-
-
-
+            ReportForm f = collectForm();
+            ReportRealmController.editReport(id, f.date, f.dayCount, f.textReport,
+                    f.soulRating, f.healthRating, f.phinanceRating,
+                    f.englishRating, f.socialRating, f.famillyRating,
+                    f.weekNumber);
+            finishAfterSave();
         };
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        actionButton.setOnClickListener((v)->
-                positiveButtonInterface.onClick(v));
         etTextReport.requestFocus();
         if (id == 0) dismiss();
     }

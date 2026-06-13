@@ -15,7 +15,6 @@ import com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_f
 
 import static com.shumidub.todoapprealm.ui.dialog.task_folder_dialog.EditDelFolderDialog.DELETE_LIST;
 import static com.shumidub.todoapprealm.ui.dialog.task_folder_dialog.EditDelFolderDialog.EDIT_LIST;
-import static com.shumidub.todoapprealm.ui.fragment.task_section.folder_panel_sliding_fragment.fragment.FolderSlidingPanelFragment.titleFolder;
 
 
 /**
@@ -28,7 +27,8 @@ public class FolderActionModeCallback {
     FolderSlidingPanelFragment folderSlidingPanelFragment;
 
 
-    public ActionMode.Callback getListActionModeCallback(MainActivity activity, FolderSlidingPanelFragment folderSlidingPanelFragment, long idOnTag) {
+    public ActionMode.Callback getListActionModeCallback(MainActivity activity, FolderSlidingPanelFragment folderSlidingPanelFragment,
+                                                         long idOnTag, String folderTitle) {
 
         this.folderSlidingPanelFragment = folderSlidingPanelFragment;
 
@@ -40,7 +40,7 @@ public class FolderActionModeCallback {
                 MenuItem editList = menu.add("edit ");
                 editList.setIcon(R.drawable.ic_edit);
                 editList.setOnMenuItemClickListener((MenuItem a) -> {
-                    EditDelFolderDialog dialog = EditDelFolderDialog.newInstance(idOnTag, EDIT_LIST, folderSlidingPanelFragment);
+                    EditDelFolderDialog dialog = EditDelFolderDialog.newInstance(idOnTag, EDIT_LIST);
                     dialog.show(activity.getSupportFragmentManager(), "editlist");
                     InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.toggleSoftInputFromWindow(
@@ -53,7 +53,7 @@ public class FolderActionModeCallback {
                 MenuItem deleteList = menu.add("delete ");
                 deleteList.setIcon(R.drawable.ic_del);
                 deleteList.setOnMenuItemClickListener((MenuItem a) -> {
-                    EditDelFolderDialog dialog = EditDelFolderDialog.newInstance(idOnTag, DELETE_LIST, folderSlidingPanelFragment);
+                    EditDelFolderDialog dialog = EditDelFolderDialog.newInstance(idOnTag, DELETE_LIST);
                     dialog.show(activity.getSupportFragmentManager(), "deletelist");
                     return true;
                 });
@@ -63,7 +63,7 @@ public class FolderActionModeCallback {
 
             @Override
             public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
-                actionMode.setTitle(titleFolder);
+                actionMode.setTitle(folderTitle);
 
                 return false;
             }

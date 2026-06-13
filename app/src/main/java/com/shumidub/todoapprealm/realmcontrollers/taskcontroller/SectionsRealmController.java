@@ -1,6 +1,6 @@
 package com.shumidub.todoapprealm.realmcontrollers.taskcontroller;
 
-import com.shumidub.todoapprealm.App;
+import com.shumidub.todoapprealm.realmcontrollers.RealmDb;
 import com.shumidub.todoapprealm.realmmodel.task.SectionObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 
@@ -33,29 +33,26 @@ public final class SectionsRealmController {
     // ---------- Reads ----------
 
     public static RealmResults<SectionObject> getSections(long folderId) {
-        App.initRealm();
-        return App.realm.where(SectionObject.class)
+        return RealmDb.realm().where(SectionObject.class)
                 .equalTo("parentFolderId", folderId)
                 .findAll()
                 .sort("position", Sort.ASCENDING);
     }
 
     public static SectionObject getSection(long sectionId) {
-        App.initRealm();
-        return App.realm.where(SectionObject.class).equalTo("id", sectionId).findFirst();
+        return RealmDb.findById(SectionObject.class, sectionId);
     }
 
     // ---------- Mutations ----------
 
     public static SectionObject addSection(long folderId, String name,
                                            boolean collapsedByDefault, int position) {
-        App.initRealm();
         final String trimmed = name == null ? "" : name.trim();
         if (trimmed.isEmpty() || trimmed.length() > 40) {
             throw new IllegalArgumentException("Section name must be 1..40 chars");
         }
         final long id = getIdForNextValue();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             SectionObject s = r.createObject(SectionObject.class, id);
             s.setName(trimmed);
             s.setCollapsedByDefault(collapsedByDefault);
@@ -63,7 +60,7 @@ public final class SectionsRealmController {
             s.setParentFolderId(folderId);
             s.setPosition(position);
         });
-        SectionObject managed = App.realm.where(SectionObject.class).equalTo("id", id).findFirst();
+        SectionObject managed = RealmDb.findById(SectionObject.class, id);
         compactPositions(folderId);
         return managed;
     }
@@ -74,8 +71,7 @@ public final class SectionsRealmController {
         if (trimmed.isEmpty() || trimmed.length() > 40) {
             throw new IllegalArgumentException("Section name must be 1..40 chars");
         }
-        App.initRealm();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             s.setName(trimmed);
             s.setCollapsedByDefault(collapsedByDefault);
         });
@@ -87,10 +83,9 @@ public final class SectionsRealmController {
      */
     public static void deleteSection(SectionObject s) {
         if (s == null || !s.isValid()) return;
-        App.initRealm();
         final long folderId = s.getParentFolderId();
         final long sectionId = s.getId();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             RealmResults<TaskObject> inSection = r.where(TaskObject.class)
                     .equalTo("taskFolderId", folderId)
                     .equalTo("sectionId", sectionId)
@@ -105,8 +100,7 @@ public final class SectionsRealmController {
 
     public static void setCurrentlyCollapsed(SectionObject s, boolean collapsed) {
         if (s == null || !s.isValid()) return;
-        App.initRealm();
-        App.realm.executeTransaction(r -> s.setCurrentlyCollapsed(collapsed));
+        RealmDb.write(r -> s.setCurrentlyCollapsed(collapsed));
     }
 
     /**
@@ -115,8 +109,7 @@ public final class SectionsRealmController {
      * so manual collapse/expand from the previous session does not persist.
      */
     public static void resetAllCollapseStates() {
-        App.initRealm();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             for (SectionObject s : r.where(SectionObject.class).findAll()) {
                 if (s.isCurrentlyCollapsed() != s.isCollapsedByDefault()) {
                     s.setCurrentlyCollapsed(s.isCollapsedByDefault());
@@ -127,8 +120,7 @@ public final class SectionsRealmController {
 
     public static void moveTaskToSection(TaskObject task, long newSectionId, int newPosition) {
         if (task == null || !task.isValid()) return;
-        App.initRealm();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             task.setSectionId(newSectionId);
             task.setPosition(newPosition);
         });
@@ -154,8 +146,7 @@ public final class SectionsRealmController {
     /** Apply drag-n-drop moves atomically, then re-stamp positions. */
     public static void reorderItems(long folderId, List<ItemMove> moves) {
         if (moves == null || moves.isEmpty()) return;
-        App.initRealm();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             for (ItemMove m : moves) {
                 if (m.kind == ItemMove.Kind.SECTION) {
                     SectionObject s = r.where(SectionObject.class).equalTo("id", m.id).findFirst();
@@ -185,8 +176,7 @@ public final class SectionsRealmController {
      */
     public static void rearrangeTasksInContainer(long folderId, long sectionId, List<Long> orderedTaskIds) {
         if (orderedTaskIds == null) return;
-        App.initRealm();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             for (int i = 0; i < orderedTaskIds.size(); i++) {
                 TaskObject t = r.where(TaskObject.class).equalTo("id", orderedTaskIds.get(i)).findFirst();
                 if (t == null) continue;
@@ -207,8 +197,7 @@ public final class SectionsRealmController {
      */
     public static void rearrangeOuterSpace(long folderId, List<ItemMove> orderedEntries) {
         if (orderedEntries == null) return;
-        App.initRealm();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             for (int i = 0; i < orderedEntries.size(); i++) {
                 ItemMove e = orderedEntries.get(i);
                 if (e.kind == ItemMove.Kind.SECTION) {
@@ -231,8 +220,7 @@ public final class SectionsRealmController {
      * Outer space (sections + free tasks) is compacted independently from each inner space.
      */
     public static void compactPositions(long folderId) {
-        App.initRealm();
-        App.realm.executeTransaction(r -> {
+        RealmDb.write(r -> {
             // Outer space: sections + free tasks (sectionId == 0).
             List<SectionObject> sections = new ArrayList<>(
                     r.where(SectionObject.class)
@@ -282,10 +270,9 @@ public final class SectionsRealmController {
 
     /** Next outer position for a new section/task appended at the end. */
     public static int nextOuterPosition(long folderId) {
-        App.initRealm();
-        Number maxSec = App.realm.where(SectionObject.class)
+        Number maxSec = RealmDb.realm().where(SectionObject.class)
                 .equalTo("parentFolderId", folderId).max("position");
-        Number maxTask = App.realm.where(TaskObject.class)
+        Number maxTask = RealmDb.realm().where(TaskObject.class)
                 .equalTo("taskFolderId", folderId)
                 .equalTo("sectionId", 0L)
                 .max("position");
@@ -295,11 +282,6 @@ public final class SectionsRealmController {
     }
 
     private static long getIdForNextValue() {
-        App.initRealm();
-        long id = System.currentTimeMillis();
-        while (App.realm.where(SectionObject.class).equalTo("id", id).findFirst() != null) {
-            id++;
-        }
-        return id;
+        return RealmDb.newUniqueId(SectionObject.class);
     }
 }
