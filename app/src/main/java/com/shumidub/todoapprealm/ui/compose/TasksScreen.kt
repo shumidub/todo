@@ -723,7 +723,7 @@ private fun ConfirmDialog(title: String, message: String, onConfirm: () -> Unit,
 
 @Composable
 private fun MoveGroupDialog(currentGroup: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
-    val names = listOf("Tasks 1", "Tasks 2", "Tasks 3", "Notes")
+    val names = TabNames.load(LocalContext.current)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Переместить в…") },
