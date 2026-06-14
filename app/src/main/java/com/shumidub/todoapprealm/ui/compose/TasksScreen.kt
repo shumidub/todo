@@ -684,7 +684,7 @@ private fun AddTaskPanel(folderId: Long, group: Int, palette: TabPalette, vm: Ta
         // Controls row: point (×) / repeat (/) / cycling (↻) chips for tasks, plus the add button —
         // all the same fixed size (CtrlWidth × CtrlHeight).
         Row(
-            modifier = Modifier.padding(vertical = 6.dp),
+            modifier = Modifier.padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
