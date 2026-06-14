@@ -312,6 +312,7 @@ private fun FolderTasksPage(
     // drag; it resets whenever Realm re-emits this folder or the show-done toggle flips.
     var rows by remember(folder, showDone) { mutableStateOf(buildSheetRows(folder, showDone)) }
     var draggedKey by remember(folder.id) { mutableStateOf<String?>(null) }
+    var dragStartKeys by remember(folder.id) { mutableStateOf(emptyList<String>()) }
 
     val lazyState = rememberLazyListState()
     val reorderState = rememberReorderableLazyListState(lazyState) { from, to ->
@@ -341,10 +342,19 @@ private fun FolderTasksPage(
                         // for dragging AND selects it for the action bar. A real drag consumes the
                         // gesture, so the plain tap-to-edit click only fires on a short tap.
                         val handle = Modifier.longPressDraggableHandle(
-                            onDragStarted = { draggedKey = rowKey(row); onSelect(selectionOf(row)) },
+                            onDragStarted = {
+                                draggedKey = rowKey(row)
+                                onSelect(selectionOf(row))
+                                dragStartKeys = rows.map { rowKey(it) }
+                            },
                             onDragStopped = {
-                                val (outer, inner) = resolveReorder(rows, draggedKey)
-                                vm.applyReorder(folder.id, outer, inner)
+                                // Only persist + close the action bar if the item actually moved;
+                                // a long-press without a move keeps the bar open (for delete).
+                                if (rows.map { rowKey(it) } != dragStartKeys) {
+                                    val (outer, inner) = resolveReorder(rows, draggedKey)
+                                    vm.applyReorder(folder.id, outer, inner)
+                                    onSelect(null)
+                                }
                                 draggedKey = null
                             },
                         )
