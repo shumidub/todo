@@ -49,6 +49,21 @@ object TasksRepository {
         awaitClose { realm.removeChangeListener(listener); job.cancel() }
     }
 
+    /** The global day-score, reactive to any commit (shown in the shell's top bar). */
+    fun dayScoreFlow(): Flow<Int> = callbackFlow {
+        val realm: Realm? = App.realm
+        if (realm == null) {
+            trySend(0)
+            awaitClose { }
+            return@callbackFlow
+        }
+        val listener = RealmChangeListener<Realm> { trySend(computeDayScope()) }
+        realm.addChangeListener(listener)
+        val job = launch { restoreSignal.collect { trySend(computeDayScope()) } }
+        trySend(computeDayScope())
+        awaitClose { realm.removeChangeListener(listener); job.cancel() }
+    }
+
     private fun readState(group: Int): GroupUiState =
         GroupUiState(folders = readGroup(group), dayScope = computeDayScope())
 
@@ -152,6 +167,34 @@ object TasksRepository {
     fun setSectionCollapsed(sectionId: Long, collapsed: Boolean) {
         val s = SectionsRealmController.getSection(sectionId) ?: return
         SectionsRealmController.setCurrentlyCollapsed(s, collapsed)
+    }
+
+    /**
+     * Persist a drag-reorder. The caller (UI) resolves each visible row to a container, since
+     * only it knows which item was dragged and how the visual rows map to sections:
+     *
+     *  - [outer] is the outer-space order (section headers + free tasks, sectionId 0) in their
+     *    new visual order — restamped via [SectionsRealmController.rearrangeOuterSpace], which
+     *    forces every TASK entry into the free-zone.
+     *  - [inner] maps a sectionId to its members' new order — restamped via
+     *    [SectionsRealmController.rearrangeTasksInContainer], which also re-homes tasks dragged
+     *    into that section across a boundary.
+     *
+     * Tasks/sections absent from both (e.g. a collapsed section's hidden members) keep their
+     * positions; the final compaction interleaves everything deterministically.
+     */
+    fun applyReorder(folderId: Long, outer: List<ReorderEntry>, inner: Map<Long, List<Long>>) {
+        val outerMoves = ArrayList<SectionsRealmController.ItemMove>(outer.size)
+        for (e in outer) {
+            outerMoves.add(
+                if (e.isSection)
+                    SectionsRealmController.ItemMove(SectionsRealmController.ItemMove.Kind.SECTION, e.id, 0, -1L)
+                else
+                    SectionsRealmController.ItemMove(SectionsRealmController.ItemMove.Kind.TASK, e.id, 0, 0L),
+            )
+        }
+        SectionsRealmController.rearrangeOuterSpace(folderId, outerMoves)
+        inner.forEach { (sectionId, ids) -> SectionsRealmController.rearrangeTasksInContainer(folderId, sectionId, ids) }
     }
 
     // ---- daily lifecycle (replaces FolderSlidingPanelFragment.onResume / App start) ----

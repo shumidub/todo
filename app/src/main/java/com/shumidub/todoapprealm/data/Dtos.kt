@@ -39,6 +39,9 @@ data class FolderDto(
     val sections: List<SectionDto> = emptyList(),
 )
 
+/** One entry in a folder's visual order, for drag-reorder persistence (section header or task). */
+data class ReorderEntry(val isSection: Boolean, val id: Long)
+
 /** Lightweight folder reference for the task-editor category picker (across all groups). */
 data class FolderRef(
     val id: Long,

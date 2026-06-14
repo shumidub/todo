@@ -1,6 +1,7 @@
 package com.shumidub.todoapprealm.ui.compose
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,16 +18,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -42,6 +43,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -58,9 +60,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,10 +71,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.shumidub.todoapprealm.data.FolderDto
+import com.shumidub.todoapprealm.data.ReorderEntry
 import com.shumidub.todoapprealm.data.SectionDto
 import com.shumidub.todoapprealm.data.TaskDto
 import com.shumidub.todoapprealm.ui.theme.TabPalette
 import com.shumidub.todoapprealm.ui.theme.paletteForGroup
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 private fun groupVm(group: Int): TasksViewModel = viewModel(
@@ -134,7 +139,9 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
     val folders = state.folders
     val palette = paletteForGroup(group)
 
-    BackHandler(onBack = onBack)
+    // Action mode (contextual bar): a long-press selects a task/section header for deletion.
+    var selection by remember { mutableStateOf<Selection?>(null) }
+    BackHandler { if (selection != null) selection = null else onBack() }
     LaunchedEffect(folders.isEmpty()) { if (folders.isEmpty()) onBack() }
     if (folders.isEmpty()) return
 
@@ -144,42 +151,68 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
     val pagerState = rememberPagerState(initialPage = startIndex) { folders.size }
     val currentPage = pagerState.currentPage.coerceIn(0, folders.size - 1)
     val currentFolder = folders.getOrNull(currentPage)
+    LaunchedEffect(currentPage) { selection = null }
 
     var editingTaskId by remember { mutableStateOf<Long?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     var dialog by remember { mutableStateOf<FolderDialog?>(null) }
 
+    val barColors = TopAppBarDefaults.topAppBarColors(
+        containerColor = palette.systemBar,
+        titleContentColor = palette.text,
+        navigationIconContentColor = palette.text,
+        actionIconContentColor = palette.text,
+    )
+
     Scaffold(
         containerColor = palette.bg,
         topBar = {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = palette.text)
-                    }
-                },
-                title = { Text(currentFolder?.name?.ifBlank { "Без названия" } ?: "", color = palette.text) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = palette.systemBar,
-                    titleContentColor = palette.text,
-                    navigationIconContentColor = palette.text,
-                ),
-                actions = {
-                    Box {
-                        IconButton(onClick = { menuOpen = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Меню", tint = palette.text)
+            val sel = selection
+            if (sel != null) {
+                // Contextual action bar: cancel + delete the selected task/section.
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = { selection = null }) {
+                            Icon(Icons.Default.Close, contentDescription = "Отмена", tint = palette.text)
                         }
-                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            if (group != 3) {
-                                DropdownMenuItem(text = { Text("Добавить секцию") }, onClick = { menuOpen = false; dialog = FolderDialog.AddSection })
+                    },
+                    title = { Text("", color = palette.text) },
+                    colors = barColors,
+                    actions = {
+                        IconButton(onClick = {
+                            if (sel.isSection) vm.deleteSection(sel.id) else vm.deleteTask(sel.id)
+                            selection = null
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = palette.text)
+                        }
+                    },
+                )
+            } else {
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = palette.text)
+                        }
+                    },
+                    title = { Text(currentFolder?.name?.ifBlank { "Без названия" } ?: "", color = palette.text) },
+                    colors = barColors,
+                    actions = {
+                        Box {
+                            IconButton(onClick = { menuOpen = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "Меню", tint = palette.text)
                             }
-                            DropdownMenuItem(text = { Text("Переименовать") }, onClick = { menuOpen = false; dialog = FolderDialog.Rename })
-                            DropdownMenuItem(text = { Text("Переместить") }, onClick = { menuOpen = false; dialog = FolderDialog.Move })
-                            DropdownMenuItem(text = { Text("Удалить категорию") }, onClick = { menuOpen = false; dialog = FolderDialog.Delete })
+                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                if (group != 3) {
+                                    DropdownMenuItem(text = { Text("Добавить секцию") }, onClick = { menuOpen = false; dialog = FolderDialog.AddSection })
+                                }
+                                DropdownMenuItem(text = { Text("Переименовать") }, onClick = { menuOpen = false; dialog = FolderDialog.Rename })
+                                DropdownMenuItem(text = { Text("Переместить") }, onClick = { menuOpen = false; dialog = FolderDialog.Move })
+                                DropdownMenuItem(text = { Text("Удалить категорию") }, onClick = { menuOpen = false; dialog = FolderDialog.Delete })
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                )
+            }
         },
     ) { inner ->
         HorizontalPager(
@@ -187,7 +220,11 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize().padding(inner),
         ) { page ->
             folders.getOrNull(page)?.let { folder ->
-                FolderTasksPage(folder = folder, group = group, palette = palette, vm = vm, onEditTask = { editingTaskId = it })
+                FolderTasksPage(
+                    folder = folder, group = group, palette = palette, vm = vm,
+                    selection = selection, onSelect = { selection = it },
+                    onEditTask = { editingTaskId = it },
+                )
             }
         }
     }
@@ -223,8 +260,25 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
 
 /** One full-screen category page: its tasks (sections + free) scroll above a pinned add-task panel. */
 @Composable
-private fun FolderTasksPage(folder: FolderDto, group: Int, palette: TabPalette, vm: TasksViewModel, onEditTask: (Long) -> Unit) {
-    val rows = remember(folder) { buildSheetRows(folder) }
+private fun FolderTasksPage(
+    folder: FolderDto,
+    group: Int,
+    palette: TabPalette,
+    vm: TasksViewModel,
+    selection: Selection?,
+    onSelect: (Selection?) -> Unit,
+    onEditTask: (Long) -> Unit,
+) {
+    // Local, mutable copy of the visible rows so the reorderable list can shuffle live during a
+    // drag; it resets whenever Realm re-emits this folder (i.e. between drags).
+    var rows by remember(folder) { mutableStateOf(buildSheetRows(folder)) }
+    var draggedKey by remember(folder.id) { mutableStateOf<String?>(null) }
+
+    val lazyState = rememberLazyListState()
+    val reorderState = rememberReorderableLazyListState(lazyState) { from, to ->
+        rows = rows.toMutableList().apply { add(to.index, removeAt(from.index)) }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -236,23 +290,42 @@ private fun FolderTasksPage(folder: FolderDto, group: Int, palette: TabPalette, 
                 Text("Нет задач", color = palette.inputText.copy(alpha = 0.6f))
             }
         } else {
-            LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(vertical = 8.dp)) {
-                items(
-                    rows,
-                    key = { row -> if (row is SheetRow.Header) "h${row.section.id}" else "t${(row as SheetRow.Item).task.id}" },
-                ) { row ->
-                    when (row) {
-                        is SheetRow.Header -> SectionHeaderRow(
-                            section = row.section, palette = palette,
-                            onToggle = { vm.setSectionCollapsed(row.section.id, !row.section.currentlyCollapsed) },
-                            onDelete = { vm.deleteSection(row.section.id) },
-                        )
-                        is SheetRow.Item -> TaskRow(
-                            task = row.task, group = group, palette = palette,
-                            onToggle = { id, done -> vm.toggleDone(id, done) },
-                            onClick = { onEditTask(row.task.id) },
-                            onDelete = { vm.deleteTask(row.task.id) },
-                        )
+            LazyColumn(state = lazyState, modifier = Modifier.weight(1f), contentPadding = PaddingValues(vertical = 8.dp)) {
+                items(rows, key = { rowKey(it) }) { row ->
+                    ReorderableItem(reorderState, key = rowKey(row)) { isDragging ->
+                        val selected = selection?.matches(row) == true
+                        // The drag handle is the sole long-press owner: long-press picks the row up
+                        // for dragging AND selects it for the action bar. A real drag consumes the
+                        // gesture, so the plain tap-to-edit click only fires on a short tap.
+                        val rowModifier = Modifier
+                            .longPressDraggableHandle(
+                                onDragStarted = { draggedKey = rowKey(row); onSelect(selectionOf(row)) },
+                                onDragStopped = {
+                                    val (outer, inner) = resolveReorder(rows, draggedKey)
+                                    vm.applyReorder(folder.id, outer, inner)
+                                    draggedKey = null
+                                },
+                            )
+                            .then(if (isDragging) Modifier.shadow(4.dp, RoundedCornerShape(8.dp)) else Modifier)
+                            .background(
+                                when {
+                                    isDragging -> palette.inputText.copy(alpha = 0.12f)
+                                    selected -> palette.accent.copy(alpha = 0.18f)
+                                    else -> Color.Transparent
+                                },
+                                RoundedCornerShape(8.dp),
+                            )
+                        when (row) {
+                            is SheetRow.Header -> SectionHeaderRow(
+                                section = row.section, palette = palette, modifier = rowModifier,
+                                onToggle = { vm.setSectionCollapsed(row.section.id, !row.section.currentlyCollapsed) },
+                            )
+                            is SheetRow.Item -> TaskRow(
+                                task = row.task, group = group, palette = palette, modifier = rowModifier,
+                                onToggle = { id, done -> vm.toggleDone(id, done) },
+                                onClick = { onEditTask(row.task.id) },
+                            )
+                        }
                     }
                 }
             }
@@ -284,12 +357,12 @@ private fun CategoryCard(folder: FolderDto, palette: TabPalette, onClick: () -> 
         colors = CardDefaults.cardColors(containerColor = palette.surface),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = folder.name.ifBlank { "Без названия" },
-                color = palette.inputText, fontWeight = FontWeight.Bold,
+                color = palette.inputText, fontWeight = FontWeight.Normal,
                 modifier = Modifier.weight(1f),
             )
             Text(text = "$done/$all", color = palette.counter, fontWeight = FontWeight.Medium)
@@ -330,6 +403,66 @@ private sealed interface SheetRow {
     data class Item(val task: TaskDto) : SheetRow
 }
 
+/** Action-mode target: a long-pressed task or section header, identified by kind + id. */
+private data class Selection(val isSection: Boolean, val id: Long)
+
+private fun selectionOf(row: SheetRow): Selection = when (row) {
+    is SheetRow.Header -> Selection(isSection = true, id = row.section.id)
+    is SheetRow.Item -> Selection(isSection = false, id = row.task.id)
+}
+
+private fun Selection.matches(row: SheetRow): Boolean = when (row) {
+    is SheetRow.Header -> isSection && id == row.section.id
+    is SheetRow.Item -> !isSection && id == row.task.id
+}
+
+/** Stable LazyColumn / reorderable key per row (header vs task can share an id space). */
+private fun rowKey(row: SheetRow): String = when (row) {
+    is SheetRow.Header -> "h${row.section.id}"
+    is SheetRow.Item -> "t${row.task.id}"
+}
+
+/**
+ * Resolve a folder's reordered visible rows into persistence instructions for
+ * [TasksViewModel.applyReorder]. Each task's new container is the section whose **expanded**
+ * header is nearest above it, but only the dragged task may *change* container — a non-dragged
+ * task keeps its existing [TaskDto.sectionId], so an unrelated free task that merely sits under
+ * a section header is not silently absorbed into it (and a done free task parked at the bottom
+ * is never re-homed). A collapsed header acts as a free-zone boundary.
+ *
+ * @return the outer-space order (section headers + free tasks) and the per-section member order.
+ */
+private fun resolveReorder(
+    rows: List<SheetRow>,
+    draggedKey: String?,
+): Pair<List<ReorderEntry>, Map<Long, List<Long>>> {
+    val outer = ArrayList<ReorderEntry>()
+    val inner = LinkedHashMap<Long, MutableList<Long>>()
+    var header: SectionDto? = null
+    for (row in rows) {
+        when (row) {
+            is SheetRow.Header -> {
+                header = row.section
+                outer.add(ReorderEntry(isSection = true, id = row.section.id))
+            }
+            is SheetRow.Item -> {
+                val task = row.task
+                val h = header
+                val dragged = rowKey(row) == draggedKey
+                val container = when {
+                    h == null || h.currentlyCollapsed -> 0L
+                    dragged -> h.id
+                    task.sectionId == h.id -> h.id
+                    else -> 0L
+                }
+                if (container == 0L) outer.add(ReorderEntry(isSection = false, id = task.id))
+                else inner.getOrPut(container) { ArrayList() }.add(task.id)
+            }
+        }
+    }
+    return outer to inner
+}
+
 /** Sections interleaved with free tasks by outer position; section tasks (done sink) shown
  *  when expanded; done free tasks last. */
 private fun buildSheetRows(folder: FolderDto): List<SheetRow> {
@@ -363,9 +496,9 @@ private fun buildSheetRows(folder: FolderDto): List<SheetRow> {
 }
 
 @Composable
-private fun SectionHeaderRow(section: SectionDto, palette: TabPalette, onToggle: () -> Unit, onDelete: () -> Unit) {
+private fun SectionHeaderRow(section: SectionDto, palette: TabPalette, modifier: Modifier = Modifier, onToggle: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 8.dp),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -374,15 +507,15 @@ private fun SectionHeaderRow(section: SectionDto, palette: TabPalette, onToggle:
         )
         Spacer(Modifier.width(4.dp))
         Text(section.name, color = palette.inputText, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = "Удалить секцию", tint = palette.inputText.copy(alpha = 0.4f))
-        }
     }
 }
 
 @Composable
-private fun TaskRow(task: TaskDto, group: Int, palette: TabPalette, onToggle: (Long, Boolean) -> Unit, onClick: () -> Unit, onDelete: (Long) -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+private fun TaskRow(task: TaskDto, group: Int, palette: TabPalette, modifier: Modifier = Modifier, onToggle: (Long, Boolean) -> Unit, onClick: () -> Unit) {
+    Row(
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         if (group != 3) {
             Checkbox(
                 checked = task.done,
@@ -407,12 +540,10 @@ private fun TaskRow(task: TaskDto, group: Int, palette: TabPalette, onToggle: (L
             modifier = Modifier.weight(1f),
         )
         if (task.maxAccumulation > 1) {
-            Text("${task.countAccumulation}/${task.maxAccumulation}", color = palette.inputText.copy(alpha = 0.6f))
             Spacer(Modifier.width(4.dp))
+            Text("${task.countAccumulation}/${task.maxAccumulation}", color = palette.inputText.copy(alpha = 0.6f))
         }
-        IconButton(onClick = { onDelete(task.id) }) {
-            Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = palette.inputText.copy(alpha = 0.5f))
-        }
+        Spacer(Modifier.width(12.dp))
     }
 }
 
@@ -421,53 +552,74 @@ private fun AddTaskPanel(folderId: Long, group: Int, palette: TabPalette, vm: Ta
     var text by remember(folderId) { mutableStateOf("") }
     var count by remember(folderId) { mutableStateOf(1) }
     var max by remember(folderId) { mutableStateOf(1) }
-    var priority by remember(folderId) { mutableStateOf(0) }
     var cycling by remember(folderId) { mutableStateOf(false) }
 
     fun submit() {
         if (text.isNotBlank()) {
-            vm.addTask(folderId, text, count, max, cycling, priority)
-            text = ""; count = 1; max = 1; priority = 0; cycling = false
+            vm.addTask(folderId, text, count, max, cycling, 0)
+            text = ""; count = 1; max = 1; cycling = false
         }
     }
 
     Column {
-        if (group != 3) {
-            Row(modifier = Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ToggleChip("×$count", active = count > 1, palette = palette) { count = cycle1to9(count) }
-                ToggleChip("/$max", active = max > 1, palette = palette) { max = cycle1to9(max) }
-                ToggleChip("!$priority", active = priority > 0, palette = palette) { priority = (priority + 1) % 4 }
-                ToggleChip("↻", active = cycling, palette = palette) { cycling = !cycling }
+        // Controls row: point (×) / repeat (/) / cycling (↻) chips for tasks, plus the add button —
+        // all the same fixed size (CtrlWidth × CtrlHeight).
+        Row(
+            modifier = Modifier.padding(vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (group != 3) {
+                ToggleChip("×$count", active = count > 1, palette = palette, compact = true) { count = cycle1to9(count) }
+                ToggleChip("/$max", active = max > 1, palette = palette, compact = true) { max = cycle1to9(max) }
+                ToggleChip("↻", active = cycling, palette = palette, compact = true) { cycling = !cycling }
             }
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                placeholder = { Text(if (group == 3) "Новая заметка" else "Новая задача") },
-                singleLine = true,
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { submit() }),
-                colors = fieldColors(palette),
-            )
-            IconButton(onClick = { submit() }) {
+            Spacer(Modifier.weight(1f))
+            OutlinedButton(
+                onClick = { submit() },
+                modifier = Modifier.width(CtrlWidth).height(CtrlHeight),
+                contentPadding = PaddingValues(0.dp),
+                shape = RoundedCornerShape(6.dp),
+                border = BorderStroke(1.dp, palette.accent),
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Добавить", tint = palette.accent)
             }
         }
+        OutlinedTextField(
+            value = text,
+            onValueChange = { text = it },
+            placeholder = { Text(if (group == 3) "Новая заметка" else "Новая задача") },
+            maxLines = 7,
+            modifier = Modifier.fillMaxWidth(),
+            colors = fieldColors(palette),
+        )
     }
 }
 
+/** Shared size for the add-panel controls: the toggle chips and the add button all match. */
+private val CtrlWidth = 60.dp
+private val CtrlHeight = 32.dp
+
 @Composable
-private fun ToggleChip(label: String, active: Boolean, palette: TabPalette, onClick: () -> Unit) {
+private fun ToggleChip(label: String, active: Boolean, palette: TabPalette, compact: Boolean = false, onClick: () -> Unit) {
     val bg = if (active) palette.accent else palette.inputText.copy(alpha = 0.10f)
     val fg = if (active) palette.surface else palette.inputText.copy(alpha = 0.7f)
-    Box(
-        modifier = Modifier
-            .background(bg, RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-    ) { Text(text = label, color = fg, fontWeight = FontWeight.Medium) }
+    if (compact) {
+        Box(
+            modifier = Modifier
+                .width(CtrlWidth).height(CtrlHeight)
+                .background(bg, RoundedCornerShape(6.dp))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) { Text(text = label, color = fg, fontWeight = FontWeight.Medium, fontSize = 13.sp) }
+    } else {
+        Box(
+            modifier = Modifier
+                .background(bg, RoundedCornerShape(8.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        ) { Text(text = label, color = fg, fontWeight = FontWeight.Medium) }
+    }
 }
 
 // ---- Task editor ----

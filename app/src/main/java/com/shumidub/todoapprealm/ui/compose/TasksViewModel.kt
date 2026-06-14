@@ -46,4 +46,10 @@ class TasksViewModel(private val group: Int) : ViewModel() {
     fun editSection(sectionId: Long, name: String) = TasksRepository.editSection(sectionId, name)
     fun deleteSection(sectionId: Long) = TasksRepository.deleteSection(sectionId)
     fun setSectionCollapsed(sectionId: Long, collapsed: Boolean) = TasksRepository.setSectionCollapsed(sectionId, collapsed)
+
+    fun applyReorder(
+        folderId: Long,
+        outer: List<com.shumidub.todoapprealm.data.ReorderEntry>,
+        inner: Map<Long, List<Long>>,
+    ) = TasksRepository.applyReorder(folderId, outer, inner)
 }
