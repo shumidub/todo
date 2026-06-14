@@ -98,6 +98,24 @@ public class FolderTaskRealmController {
         });
     }
 
+    /** Reorder this tab's folders to match the given id order (drag-and-drop). */
+    public static void reorderFolders(int group, java.util.List<Long> orderedIds){
+        if (orderedIds == null) return;
+        RealmDb.write(() -> {
+            RealmList<FolderTaskObject> list = getFoldersList(group);
+            if (list == null) return;
+            for (int target = 0; target < orderedIds.size() && target < list.size(); target++) {
+                long id = orderedIds.get(target);
+                int cur = -1;
+                for (int i = target; i < list.size(); i++) {
+                    FolderTaskObject f = list.get(i);
+                    if (f != null && f.getId() == id) { cur = i; break; }
+                }
+                if (cur > target) list.move(cur, target);
+            }
+        });
+    }
+
     /** delete folder by folderobject */
     public static void deleteFolder(FolderTaskObject folderObject){
         long folderId = folderObject.getId();

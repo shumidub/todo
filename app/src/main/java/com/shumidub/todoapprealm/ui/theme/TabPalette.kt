@@ -62,16 +62,16 @@ val CornflowerPalette = TabPalette(
 
 /** Mimosa/Canary — group 2 (Tasks3). Light background → dark system icons. */
 val CanaryPalette = TabPalette(
-    bg = Color(0xFFFFD93D),
-    surface = Color(0xFFFFFCEA),
-    surfaceMuted = Color(0xFFF2CC30),
+    bg = Color(0xFFF3C551),
+    surface = Color(0xFFF6F0E5),
+    surfaceMuted = Color(0xFFEAB63E),
     text = Color(0xFF2E2406),
     textSoft = Color(0xA82E2406),
     inputText = Color(0xFF2E2406),
     counter = Color(0xFF94802E),
-    accent = Color(0xFFD7305C),
+    accent = Color(0xFFDF5C55),
     divider = Color(0x242E2406),
-    systemBar = Color(0xFFFFD93D),
+    systemBar = Color(0xFFF3C551),
     darkSystemIcons = true,
 )
 

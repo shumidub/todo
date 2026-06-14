@@ -3,6 +3,10 @@
 > Target architecture for migrating the Java/Fragment/RecyclerView UI to **Jetpack
 > Compose + Material 3**. The "before" picture is in [PROJECT-INFO.md](PROJECT-INFO.md).
 > Approved 2026-06-13.
+>
+> **Migration complete.** For how the app works *today* (functionality, architecture, themes)
+> see [APP-OVERVIEW.md](APP-OVERVIEW.md) — the current source of truth. This file is kept as
+> the historical plan.
 
 ## Guiding decisions
 

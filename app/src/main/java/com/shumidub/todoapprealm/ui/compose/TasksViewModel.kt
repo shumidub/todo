@@ -40,12 +40,15 @@ class TasksViewModel(private val group: Int) : ViewModel() {
     fun editFolder(folderId: Long, name: String, isDaily: Boolean) = TasksRepository.editFolder(folderId, name, isDaily)
     fun deleteFolder(folderId: Long) = TasksRepository.deleteFolder(folderId)
     fun moveFolderToGroup(folderId: Long, targetGroup: Int) = TasksRepository.moveFolderToGroup(folderId, targetGroup)
+    fun reorderFolders(orderedIds: List<Long>) = TasksRepository.reorderFolders(group, orderedIds)
 
     // sections
     fun addSection(folderId: Long, name: String) = TasksRepository.addSection(folderId, name)
     fun editSection(sectionId: Long, name: String) = TasksRepository.editSection(sectionId, name)
     fun deleteSection(sectionId: Long) = TasksRepository.deleteSection(sectionId)
     fun setSectionCollapsed(sectionId: Long, collapsed: Boolean) = TasksRepository.setSectionCollapsed(sectionId, collapsed)
+    fun setSectionCollapsedByDefault(sectionId: Long, collapsedByDefault: Boolean) =
+        TasksRepository.setSectionCollapsedByDefault(sectionId, collapsedByDefault)
 
     fun applyReorder(
         folderId: Long,

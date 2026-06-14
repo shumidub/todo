@@ -144,6 +144,10 @@ object TasksRepository {
         FolderTaskRealmController.moveFolderToGroup(folder, targetGroup)
     }
 
+    /** Persist a drag-reorder of a tab's folders. */
+    fun reorderFolders(group: Int, orderedIds: List<Long>) =
+        FolderTaskRealmController.reorderFolders(group, orderedIds)
+
     // ---- section writes ----
 
     fun addSection(folderId: Long, name: String) {
@@ -167,6 +171,14 @@ object TasksRepository {
     fun setSectionCollapsed(sectionId: Long, collapsed: Boolean) {
         val s = SectionsRealmController.getSection(sectionId) ?: return
         SectionsRealmController.setCurrentlyCollapsed(s, collapsed)
+    }
+
+    /** Whether the section starts collapsed when the app opens (the per-session reset target). */
+    fun setSectionCollapsedByDefault(sectionId: Long, collapsedByDefault: Boolean) {
+        val s = SectionsRealmController.getSection(sectionId) ?: return
+        val n = s.name?.trim().orEmpty()
+        if (n.isEmpty()) return
+        SectionsRealmController.editSection(s, n, collapsedByDefault)
     }
 
     /**
