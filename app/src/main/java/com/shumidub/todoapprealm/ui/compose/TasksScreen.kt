@@ -62,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -73,6 +74,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.shumidub.todoapprealm.data.FolderDto
 import com.shumidub.todoapprealm.data.ReorderEntry
 import com.shumidub.todoapprealm.data.SectionDto
+import com.shumidub.todoapprealm.data.TabNames
 import com.shumidub.todoapprealm.data.TaskDto
 import com.shumidub.todoapprealm.ui.theme.TabPalette
 import com.shumidub.todoapprealm.ui.theme.paletteForGroup
@@ -107,7 +109,6 @@ fun TasksScreen(group: Int, onOpenCategory: (Long) -> Unit) {
                 contentPadding = PaddingValues(12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                item { DayScoreHeader(dayScope = state.dayScope, palette = palette) }
                 items(folders, key = { it.id }) { folder ->
                     CategoryCard(folder = folder, palette = palette, onClick = { onOpenCategory(folder.id) })
                 }
@@ -337,16 +338,6 @@ private fun FolderTasksPage(
 }
 
 // ---- Category list pieces ----
-
-@Composable
-private fun DayScoreHeader(dayScope: Int, palette: TabPalette) {
-    Text(
-        text = "Очки за день: $dayScope",
-        color = palette.text,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(start = 4.dp, bottom = 2.dp),
-    )
-}
 
 @Composable
 private fun CategoryCard(folder: FolderDto, palette: TabPalette, onClick: () -> Unit) {
