@@ -360,7 +360,7 @@ private fun FolderTasksPage(
                             )
                             is SheetRow.Item -> Card(
                                 modifier = Modifier
-                                    .padding(start = if (row.task.sectionId != 0L) 6.dp else 0.dp)
+                                    .padding(start = if (row.task.sectionId != 0L) 12.dp else 0.dp)
                                     .then(handle).fillMaxWidth()
                                     .then(if (isDragging) Modifier.shadow(4.dp, RoundedCornerShape(3.dp)) else Modifier),
                                 shape = RoundedCornerShape(3.dp),
