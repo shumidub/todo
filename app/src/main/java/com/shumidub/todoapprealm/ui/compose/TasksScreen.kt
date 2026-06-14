@@ -330,7 +330,7 @@ private fun FolderTasksPage(
         } else {
             LazyColumn(
                 state = lazyState,
-                modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
                 contentPadding = PaddingValues(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
@@ -360,7 +360,7 @@ private fun FolderTasksPage(
                             )
                             is SheetRow.Item -> Card(
                                 modifier = Modifier
-                                    .padding(start = if (row.task.sectionId != 0L) 12.dp else 0.dp)
+                                    .padding(start = if (row.task.sectionId != 0L) 6.dp else 0.dp)
                                     .then(handle).fillMaxWidth()
                                     .then(if (isDragging) Modifier.shadow(4.dp, RoundedCornerShape(3.dp)) else Modifier),
                                 shape = RoundedCornerShape(3.dp),
