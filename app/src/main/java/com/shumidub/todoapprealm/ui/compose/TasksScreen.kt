@@ -122,7 +122,7 @@ fun TasksScreen(group: Int, onOpenCategory: (Long) -> Unit) {
                 state = lazyState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 items(cards, key = { it.id }) { folder ->
                     ReorderableItem(reorderState, key = folder.id) { isDragging ->
@@ -130,7 +130,7 @@ fun TasksScreen(group: Int, onOpenCategory: (Long) -> Unit) {
                             folder = folder, palette = palette,
                             modifier = Modifier
                                 .longPressDraggableHandle(onDragStopped = { vm.reorderFolders(cards.map { it.id }) })
-                                .then(if (isDragging) Modifier.shadow(6.dp, RoundedCornerShape(6.dp)) else Modifier),
+                                .then(if (isDragging) Modifier.shadow(6.dp, RoundedCornerShape(3.dp)) else Modifier),
                             onClick = { onOpenCategory(folder.id) },
                         )
                     }
@@ -332,7 +332,7 @@ private fun FolderTasksPage(
                 state = lazyState,
                 modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
                 contentPadding = PaddingValues(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 items(rows, key = { rowKey(it) }) { row ->
                     ReorderableItem(reorderState, key = rowKey(row)) { isDragging ->
@@ -362,8 +362,8 @@ private fun FolderTasksPage(
                                 modifier = Modifier
                                     .padding(start = if (row.task.sectionId != 0L) 12.dp else 0.dp)
                                     .then(handle).fillMaxWidth()
-                                    .then(if (isDragging) Modifier.shadow(4.dp, RoundedCornerShape(6.dp)) else Modifier),
-                                shape = RoundedCornerShape(6.dp),
+                                    .then(if (isDragging) Modifier.shadow(4.dp, RoundedCornerShape(3.dp)) else Modifier),
+                                shape = RoundedCornerShape(3.dp),
                                 colors = CardDefaults.cardColors(containerColor = palette.surface),
                                 border = if (selected) BorderStroke(2.dp, palette.accent) else null,
                             ) {
@@ -409,7 +409,7 @@ private fun CategoryCard(folder: FolderDto, palette: TabPalette, modifier: Modif
     val all = folder.tasks.sumOf { it.maxAccumulation * it.countValue }
     Card(
         modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
-        shape = RoundedCornerShape(6.dp),
+        shape = RoundedCornerShape(3.dp),
         colors = CardDefaults.cardColors(containerColor = palette.surface),
     ) {
         Row(
