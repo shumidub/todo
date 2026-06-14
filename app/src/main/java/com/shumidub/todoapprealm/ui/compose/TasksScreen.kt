@@ -312,11 +312,12 @@ private fun FolderTasksPage(
     // drag; it resets whenever Realm re-emits this folder or the show-done toggle flips.
     var rows by remember(folder, showDone) { mutableStateOf(buildSheetRows(folder, showDone)) }
     var draggedKey by remember(folder.id) { mutableStateOf<String?>(null) }
-    var dragStartKeys by remember(folder.id) { mutableStateOf(emptyList<String>()) }
+    var movedDuringDrag by remember(folder.id) { mutableStateOf(false) }
 
     val lazyState = rememberLazyListState()
     val reorderState = rememberReorderableLazyListState(lazyState) { from, to ->
         rows = rows.toMutableList().apply { add(to.index, removeAt(from.index)) }
+        movedDuringDrag = true
     }
 
     Column(
@@ -345,12 +346,12 @@ private fun FolderTasksPage(
                             onDragStarted = {
                                 draggedKey = rowKey(row)
                                 onSelect(selectionOf(row))
-                                dragStartKeys = rows.map { rowKey(it) }
+                                movedDuringDrag = false
                             },
                             onDragStopped = {
-                                // Only persist + close the action bar if the item actually moved;
-                                // a long-press without a move keeps the bar open (for delete).
-                                if (rows.map { rowKey(it) } != dragStartKeys) {
+                                // Only persist + close the action bar if the item actually moved
+                                // (onMove fired); a long-press without a move keeps the bar open.
+                                if (movedDuringDrag) {
                                     val (outer, inner) = resolveReorder(rows, draggedKey)
                                     vm.applyReorder(folder.id, outer, inner)
                                     onSelect(null)
