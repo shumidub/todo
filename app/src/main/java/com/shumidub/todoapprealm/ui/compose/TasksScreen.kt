@@ -332,7 +332,7 @@ private fun FolderTasksPage(
                 state = lazyState,
                 modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
                 contentPadding = PaddingValues(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 items(rows, key = { rowKey(it) }) { row ->
                     ReorderableItem(reorderState, key = rowKey(row)) { isDragging ->
