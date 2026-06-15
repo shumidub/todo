@@ -2,6 +2,7 @@ package com.shumidub.todoapprealm.ui.compose
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -202,10 +203,12 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
     )
 
     // Pull the open category down (only when the list is already at the top) to dismiss it.
-    val dismissPx = with(LocalDensity.current) { 120.dp.toPx() }
+    val density = LocalDensity.current
+    val dismissPx = with(density) { 120.dp.toPx() }
+    val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
     var dragY by remember { mutableStateOf(0f) }
     val currentOnBack by rememberUpdatedState(onBack)
-    val dismissNestedScroll = remember(dismissPx) {
+    val dismissNestedScroll = remember(dismissPx, screenHeightPx) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 // Scrolling back up first cancels the pull-down offset before the list scrolls.
@@ -228,8 +231,13 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
             }
 
             override suspend fun onPreFling(available: Velocity): Velocity {
-                if (dragY > dismissPx) currentOnBack()
-                else if (dragY > 0f) animate(dragY, 0f) { v, _ -> dragY = v }
+                if (dragY > dismissPx) {
+                    // Slide the whole screen off the bottom, then dismiss (no abrupt vanish).
+                    animate(dragY, screenHeightPx, animationSpec = tween(220)) { v, _ -> dragY = v }
+                    currentOnBack()
+                } else if (dragY > 0f) {
+                    animate(dragY, 0f) { v, _ -> dragY = v }
+                }
                 return Velocity.Zero
             }
         }
