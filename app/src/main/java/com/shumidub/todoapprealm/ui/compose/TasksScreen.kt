@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
@@ -69,6 +70,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -233,6 +235,8 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
                     title = { Text(currentFolder?.name?.ifBlank { "Без названия" } ?: "", color = palette.text) },
                     colors = barColors,
                     actions = {
+                        Text(state.dayScope.toString(), color = palette.text, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(4.dp))
                         Box {
                             IconButton(onClick = { menuOpen = true }) {
                                 Icon(Icons.Default.MoreVert, contentDescription = "Меню", tint = palette.text)
@@ -779,8 +783,9 @@ private fun TaskEditorDialog(task: TaskDto, group: Int, palette: TabPalette, vm:
         }
     }
 
+    val maxDialogHeight = (LocalConfiguration.current.screenHeightDp * 0.9f).dp
     AlertDialog(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(max = maxDialogHeight).padding(horizontal = 8.dp),
         properties = DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = { vm.editTask(task.id, text, count, max, cycling, priority); onDismiss() },
         title = { Text(if (group == 3) "Заметка" else "Задача") },
