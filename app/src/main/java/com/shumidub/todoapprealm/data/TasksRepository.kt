@@ -73,7 +73,9 @@ object TasksRepository {
         val folders = container.tasksListForGroup(group) ?: return emptyList()
         return folders.mapNotNull { f ->
             if (f == null || !f.isValid) return@mapNotNull null
-            val tasks = TasksRealmController.getTasks(f.id).map { it.toDto() }
+            // distinctBy id: a multi-category task can land in a folder's RealmList more than once;
+            // duplicates would crash the LazyColumn (non-unique key) and double-count scores.
+            val tasks = TasksRealmController.getTasks(f.id).map { it.toDto() }.distinctBy { it.id }
             val sections = SectionsRealmController.getSections(f.id).map { it.toDto() }
             FolderDto(id = f.id, name = f.name ?: "", isDaily = f.isDaily, tasks = tasks, sections = sections)
         }
