@@ -229,23 +229,20 @@ public class TasksRealmController {
 
         RealmDb.write(() -> {
             long newPrimary = finalIds.get(0);
-            Set<Long> newSet = new HashSet<>(finalIds);
 
-            // remove from folders no longer assigned
+            // Remove the task from EVERY folder, dropping ALL occurrences (a task may have been
+            // added to a folder's list more than once — a plain remove() leaves a duplicate behind,
+            // so unchecking a category wouldn't take effect). Then re-add it exactly once to each
+            // assigned folder. This also de-duplicates the membership data.
             for (FolderTaskObject folder : RealmDb.realm().where(FolderTaskObject.class).findAll()) {
-                long fid = folder.getId();
-                boolean contains = folder.getTasks() != null && folder.getTasks().contains(task);
-                if (contains && !newSet.contains(fid)) {
-                    folder.getTasks().remove(task);
-                }
+                RealmList<TaskObject> list = folder.getTasks();
+                if (list == null) continue;
+                while (list.remove(task)) { /* drop all occurrences */ }
             }
-
-            // add to folders newly assigned
             for (Long fid : finalIds) {
                 FolderTaskObject folder = FolderTaskRealmController.getFolder(fid);
-                if (folder == null) continue;
-                if (folder.getTasks() == null) continue;
-                if (!folder.getTasks().contains(task)) folder.getTasks().add(task);
+                if (folder == null || folder.getTasks() == null) continue;
+                folder.getTasks().add(task);
             }
 
             task.setTaskFolderId(newPrimary);
