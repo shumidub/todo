@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -246,6 +247,9 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            // Own the status-bar inset here (transparent) so when pulled down the list shows
+            // through instead of an opaque status-bar band; the bars themselves add no top inset.
+            .statusBarsPadding()
             .nestedScroll(dismissNestedScroll)
             .offset { IntOffset(0, dragY.roundToInt()) },
     ) {
