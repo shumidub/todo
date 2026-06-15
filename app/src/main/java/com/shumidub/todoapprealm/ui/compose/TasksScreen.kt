@@ -1,6 +1,7 @@
 package com.shumidub.todoapprealm.ui.compose
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
@@ -64,16 +66,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.sp
@@ -90,6 +100,7 @@ import com.shumidub.todoapprealm.ui.theme.TabPalette
 import com.shumidub.todoapprealm.ui.theme.paletteForGroup
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.math.roundToInt
 
 @Composable
 private fun groupVm(group: Int): TasksViewModel = viewModel(
@@ -190,6 +201,46 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
         actionIconContentColor = palette.text,
     )
 
+    // Pull the open category down (only when the list is already at the top) to dismiss it.
+    val dismissPx = with(LocalDensity.current) { 120.dp.toPx() }
+    var dragY by remember { mutableStateOf(0f) }
+    val currentOnBack by rememberUpdatedState(onBack)
+    val dismissNestedScroll = remember(dismissPx) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // Scrolling back up first cancels the pull-down offset before the list scrolls.
+                if (available.y < 0f && dragY > 0f) {
+                    val newDrag = (dragY + available.y).coerceAtLeast(0f)
+                    val consumed = newDrag - dragY
+                    dragY = newDrag
+                    return Offset(0f, consumed)
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                // Leftover downward drag (list at top) pulls the whole screen down.
+                if (source == NestedScrollSource.UserInput && available.y > 0f) {
+                    dragY += available.y
+                    return Offset(0f, available.y)
+                }
+                return Offset.Zero
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                if (dragY > dismissPx) currentOnBack()
+                else if (dragY > 0f) animate(dragY, 0f) { v, _ -> dragY = v }
+                return Velocity.Zero
+            }
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(dismissNestedScroll)
+            .offset { IntOffset(0, dragY.roundToInt()) },
+    ) {
     Scaffold(
         containerColor = palette.bg,
         topBar = {
@@ -267,6 +318,7 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
                 )
             }
         }
+    }
     }
 
     val editing = folders.flatMap { it.tasks }.firstOrNull { it.id == editingTaskId }
