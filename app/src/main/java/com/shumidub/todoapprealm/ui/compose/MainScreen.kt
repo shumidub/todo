@@ -69,9 +69,7 @@ fun MainScreen() {
     Todo100Theme(palette = paletteForGroup(themeGroup)) {
         val palette = paletteForGroup(themeGroup)
         val open = detail
-        if (open != null) {
-            CategoryDetailScreen(group = open.group, startFolderId = open.folderId, onBack = { detail = null })
-        } else {
+        Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
                 containerColor = palette.bg,
                 topBar = {
@@ -114,6 +112,10 @@ fun MainScreen() {
                 ) { page ->
                     TasksScreen(group = page, onOpenCategory = { folderId -> detail = DetailTarget(page, folderId) })
                 }
+            }
+            // Detail overlays the list; pulling it down reveals the list underneath.
+            if (open != null) {
+                CategoryDetailScreen(group = open.group, startFolderId = open.folderId, onBack = { detail = null })
             }
             if (showSync) {
                 SyncDialog(palette = palette, onDismiss = { showSync = false })
