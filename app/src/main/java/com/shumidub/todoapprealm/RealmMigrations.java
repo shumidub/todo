@@ -11,7 +11,7 @@ import io.realm.RealmSchema;
 
 public class RealmMigrations implements RealmMigration {
 
-    public static final long SCHEMA_VERSION = 5;
+    public static final long SCHEMA_VERSION = 6;
 
     @Override
     public void migrate(DynamicRealm realm, long oldVersion, long newVersion) {
@@ -72,6 +72,21 @@ public class RealmMigrations implements RealmMigration {
             // Notes tab (taskGroup 3) folder list
             schema.get("RealmFoldersContainer")
                     .addRealmListField("folderOfTasksList4", schema.get("FolderTaskObject"));
+        }
+
+        if (oldVersion < 6) {
+            // ---- task-004: per-category ordering + section placement ----
+            // Embedded TaskPlacement {folderId, position, sectionId}, one per folder a task
+            // belongs to. NO per-record backfill: placements are materialized lazily when a task
+            // becomes multi-category (see TasksRealmController), so existing tasks keep ordering
+            // by their legacy position/sectionId until then — behavior is unchanged on upgrade.
+            RealmObjectSchema placementSchema = schema.create("TaskPlacement")
+                    .addField("folderId", long.class)
+                    .addField("position", int.class)
+                    .addField("sectionId", long.class);
+            placementSchema.setEmbedded(true);
+            schema.get("TaskObject")
+                    .addRealmListField("placements", placementSchema);
         }
     }
 

@@ -28,6 +28,11 @@ public class TaskObject extends RealmObject {
      *  Nullable for backwards compatibility with backups created before multi-category support. */
     private RealmList<Long> extraFolderIds;
 
+    /** Per-category placements (position + section) — one per folder this task belongs to.
+     *  Empty for single-category tasks, which fall back to {@link #position}/{@link #sectionId}.
+     *  Added in SCHEMA_VERSION 6 (task-004). */
+    private RealmList<TaskPlacement> placements;
+
     /** Id of the {@link SectionObject} this task belongs to, or 0 if the task is "free"
      *  (not under any section). Added in SCHEMA_VERSION 4 (task-002). */
     private long sectionId;
@@ -48,6 +53,14 @@ public class TaskObject extends RealmObject {
 
     public void setExtraFolderIds(RealmList<Long> extraFolderIds) {
         this.extraFolderIds = extraFolderIds;
+    }
+
+    public RealmList<TaskPlacement> getPlacements() {
+        return placements;
+    }
+
+    public void setPlacements(RealmList<TaskPlacement> placements) {
+        this.placements = placements;
     }
 
 

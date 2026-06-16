@@ -6,12 +6,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -68,6 +70,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -87,7 +90,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -102,6 +104,7 @@ import com.shumidub.todoapprealm.ui.theme.TabPalette
 import com.shumidub.todoapprealm.ui.theme.paletteForGroup
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
@@ -178,9 +181,27 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
     val folders = state.folders
     val palette = paletteForGroup(group)
 
+    // Bottom-sheet feel: the screen slides up from the bottom on open and animates back down on
+    // dismiss. The same vertical offset (dragY) drives both the entrance and the pull-down-to-
+    // dismiss gesture below, so opening and closing are symmetric.
+    val density = LocalDensity.current
+    val detailContext = LocalContext.current
+    val dismissPx = with(density) { 120.dp.toPx() }
+    val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
+    var dragY by remember { mutableStateOf(screenHeightPx) }
+    val scope = rememberCoroutineScope()
+    val currentOnBack by rememberUpdatedState(onBack)
+    LaunchedEffect(Unit) { animate(screenHeightPx, 0f, animationSpec = tween(260)) { v, _ -> dragY = v } }
+    fun animatedBack() {
+        scope.launch {
+            animate(dragY, screenHeightPx, animationSpec = tween(220)) { v, _ -> dragY = v }
+            currentOnBack()
+        }
+    }
+
     // Action mode (contextual bar): a long-press selects a task/section header for deletion.
     var selection by remember { mutableStateOf<Selection?>(null) }
-    BackHandler { if (selection != null) selection = null else onBack() }
+    BackHandler { if (selection != null) selection = null else animatedBack() }
     LaunchedEffect(folders.isEmpty()) { if (folders.isEmpty()) onBack() }
     if (folders.isEmpty()) return
 
@@ -204,11 +225,6 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
     )
 
     // Pull the open category down (only when the list is already at the top) to dismiss it.
-    val density = LocalDensity.current
-    val dismissPx = with(density) { 120.dp.toPx() }
-    val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
-    var dragY by remember { mutableStateOf(0f) }
-    val currentOnBack by rememberUpdatedState(onBack)
     val dismissNestedScroll = remember(dismissPx, screenHeightPx) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -291,14 +307,17 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
             } else {
                 TopAppBar(
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
+                        IconButton(onClick = { animatedBack() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = palette.text)
                         }
                     },
                     title = { Text(currentFolder?.name?.ifBlank { "Без названия" } ?: "", color = palette.text) },
                     colors = barColors,
                     actions = {
-                        Text(state.dayScope.toString(), color = palette.text, fontWeight = FontWeight.Bold)
+                        Text(
+                            state.dayScope.toString(), color = palette.text, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { launchDayScoreApp(detailContext) },
+                        )
                         Spacer(Modifier.width(4.dp))
                         Box {
                             IconButton(onClick = { menuOpen = true }) {
@@ -335,7 +354,7 @@ fun CategoryDetailScreen(group: Int, startFolderId: Long, onBack: () -> Unit) {
 
     val editing = folders.flatMap { it.tasks }.firstOrNull { it.id == editingTaskId }
     if (editing != null) {
-        TaskEditorDialog(task = editing, group = group, palette = palette, vm = vm, onDismiss = { editingTaskId = null })
+        TaskEditorSheet(task = editing, group = group, palette = palette, vm = vm, onDismiss = { editingTaskId = null })
     }
 
     if (currentFolder != null) {
@@ -404,7 +423,7 @@ private fun FolderTasksPage(
                 contentPadding = PaddingValues(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
-                items(rows, key = { rowKey(it) }) { row ->
+                items(rows, key = { rowKey(it) }, contentType = { rowContentType(it) }) { row ->
                     ReorderableItem(reorderState, key = rowKey(row)) { isDragging ->
                         val selected = selection?.matches(row) == true
                         // The drag handle is the sole long-press owner: long-press picks the row up
@@ -444,6 +463,9 @@ private fun FolderTasksPage(
                                     .then(if (isDragging) Modifier.shadow(4.dp, RoundedCornerShape(3.dp)) else Modifier),
                                 shape = RoundedCornerShape(3.dp),
                                 colors = CardDefaults.cardColors(containerColor = palette.surface),
+                                // No constant tonal shadow per card — it forces overdraw on every
+                                // visible row and is the main source of scroll jank in long lists.
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                                 border = if (selected) BorderStroke(2.dp, palette.accent) else null,
                             ) {
                                 TaskRow(
@@ -561,6 +583,14 @@ private fun rowKey(row: SheetRow): String = when (row) {
     is SheetRow.Header -> "h${row.section.id}"
     is SheetRow.Item -> "t${row.task.id}"
     is SheetRow.Empty -> "e${row.section.id}"
+}
+
+/** Row kind for LazyColumn item reuse — lets Compose recycle compositions of the same type
+ *  while scrolling instead of rebuilding across header/item/placeholder boundaries. */
+private fun rowContentType(row: SheetRow): String = when (row) {
+    is SheetRow.Header -> "header"
+    is SheetRow.Item -> "item"
+    is SheetRow.Empty -> "empty"
 }
 
 /**
@@ -721,7 +751,7 @@ private fun TaskRow(task: TaskDto, group: Int, palette: TabPalette, modifier: Mo
                         Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = 1.dp)
-                            .width(16.dp)
+                            .width(20.dp)
                             .height(2.dp)
                             .background(
                                 if (task.isCycling) palette.accent else palette.inputText.copy(alpha = 0.5f),
@@ -832,7 +862,7 @@ private fun ToggleChip(label: String, active: Boolean, palette: TabPalette, comp
 // ---- Task editor ----
 
 @Composable
-private fun TaskEditorDialog(task: TaskDto, group: Int, palette: TabPalette, vm: TasksViewModel, onDismiss: () -> Unit) {
+private fun TaskEditorSheet(task: TaskDto, group: Int, palette: TabPalette, vm: TasksViewModel, onDismiss: () -> Unit) {
     var text by remember(task.id) { mutableStateOf(task.text) }
     var count by remember(task.id) { mutableStateOf(task.countValue.coerceAtLeast(1)) }
     var max by remember(task.id) { mutableStateOf(task.maxAccumulation.coerceAtLeast(1)) }
@@ -847,14 +877,102 @@ private fun TaskEditorDialog(task: TaskDto, group: Int, palette: TabPalette, vm:
         }
     }
 
-    val maxDialogHeight = (LocalConfiguration.current.screenHeightDp * 0.9f).dp
-    AlertDialog(
-        modifier = Modifier.fillMaxWidth().heightIn(max = maxDialogHeight).padding(horizontal = 8.dp),
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-        onDismissRequest = { vm.editTask(task.id, text, count, max, cycling, priority); onDismiss() },
-        title = { Text(if (group == 3) "Заметка" else "Задача") },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+    fun persist() = vm.editTask(task.id, text, count, max, cycling, priority)
+
+    // In-window bottom sheet — deliberately NOT Material3 ModalBottomSheet, which renders in a
+    // separate Dialog window whose creation is felt as a delay before the sheet appears. This is
+    // just a composable in the current window that slides up on open and is dragged down to
+    // dismiss via the content's nested-scroll — the same instant pattern as CategoryDetailScreen.
+    val density = LocalDensity.current
+    val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
+    val dismissPx = with(density) { 120.dp.toPx() }
+    var dragY by remember(task.id) { mutableStateOf(screenHeightPx) }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(task.id) { animate(screenHeightPx, 0f, animationSpec = tween(240)) { v, _ -> dragY = v } }
+    val commit by rememberUpdatedState<() -> Unit> { persist(); onDismiss() }
+    fun close(after: () -> Unit) {
+        scope.launch {
+            animate(dragY, screenHeightPx, animationSpec = tween(200)) { v, _ -> dragY = v }
+            after()
+        }
+    }
+    BackHandler { close { commit() } }
+
+    val dismissNestedScroll = remember(dismissPx, screenHeightPx) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // Scrolling back up first cancels the pull-down offset before the list scrolls.
+                if (available.y < 0f && dragY > 0f) {
+                    val newDrag = (dragY + available.y).coerceAtLeast(0f)
+                    val consumed = newDrag - dragY
+                    dragY = newDrag
+                    return Offset(0f, consumed)
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                // Leftover downward drag (content at top) pulls the whole sheet down.
+                if (source == NestedScrollSource.UserInput && available.y > 0f) {
+                    dragY += available.y
+                    return Offset(0f, available.y)
+                }
+                return Offset.Zero
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                if (dragY > dismissPx) {
+                    animate(dragY, screenHeightPx, animationSpec = tween(200)) { v, _ -> dragY = v }
+                    commit()
+                } else if (dragY > 0f) {
+                    animate(dragY, 0f) { v, _ -> dragY = v }
+                }
+                return Velocity.Zero
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Scrim behind the sheet: fades as it slides, tap to dismiss.
+        val scrimAlpha = 0.32f * (1f - (dragY / screenHeightPx).coerceIn(0f, 1f))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = scrimAlpha))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { close { commit() } },
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .statusBarsPadding()
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .offset { IntOffset(0, dragY.roundToInt()) }
+                .background(Color.White, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .nestedScroll(dismissNestedScroll)
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
+                .imePadding(),
+        ) {
+            // Grabber affordance.
+            Box(
+                modifier = Modifier
+                    .padding(top = 8.dp, bottom = 6.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .width(36.dp).height(4.dp)
+                    .background(palette.inputText.copy(alpha = 0.25f), RoundedCornerShape(2.dp)),
+            )
+            Text(
+                if (group == 3) "Заметка" else "Задача",
+                color = palette.inputText, fontWeight = FontWeight.Bold, fontSize = 18.sp,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+            Column(
+                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+            ) {
                 OutlinedTextField(
                     value = text, onValueChange = { text = it },
                     modifier = Modifier.fillMaxWidth(), label = { Text("Текст") },
@@ -873,30 +991,49 @@ private fun TaskEditorDialog(task: TaskDto, group: Int, palette: TabPalette, vm:
                 Text("Категории", color = palette.inputText.copy(alpha = 0.7f), fontWeight = FontWeight.Medium)
                 allFolders.forEach { ref ->
                     val checked = selected.contains(ref.id)
+                    // A task must always belong to at least one category: the sole checked box is
+                    // rendered disabled so it's clear it can't be unchecked.
+                    val isLastChecked = checked && selected.size == 1
                     Row(
-                        modifier = Modifier.fillMaxWidth().clickable {
+                        modifier = Modifier.fillMaxWidth().clickable(enabled = !isLastChecked) {
                             if (checked) { if (selected.size > 1) selected.remove(ref.id) } else selected.add(ref.id)
                             vm.setCategories(task.id, selected.toList())
                         }.padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Checkbox(checked = checked, onCheckedChange = null, colors = CheckboxDefaults.colors(checkedColor = palette.accent))
+                        Checkbox(
+                            checked = checked, onCheckedChange = null, enabled = !isLastChecked,
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = palette.accent,
+                                disabledCheckedColor = palette.accent.copy(alpha = 0.4f),
+                            ),
+                        )
                         Spacer(Modifier.width(8.dp))
-                        Text("${ref.name} ${groupTag(ref.group)}", color = palette.inputText, fontSize = 17.sp)
+                        Text(
+                            "${ref.name} ${groupTag(ref.group)}",
+                            color = if (isLastChecked) palette.inputText.copy(alpha = 0.5f) else palette.inputText,
+                            fontSize = 17.sp,
+                        )
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                vm.editTask(task.id, text, count, max, cycling, priority)
-                vm.setCategories(task.id, selected.toList())
-                onDismiss()
-            }) { Text("Готово") }
-        },
-        dismissButton = { TextButton(onClick = { vm.deleteTask(task.id); onDismiss() }) { Text("Удалить", color = palette.accent) } },
-        containerColor = Color.White,
-    )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = { close { vm.deleteTask(task.id); onDismiss() } }) {
+                    Text("Удалить", color = palette.accent)
+                }
+                TextButton(onClick = {
+                    persist()
+                    vm.setCategories(task.id, selected.toList())
+                    close { onDismiss() }
+                }) { Text("Готово") }
+            }
+        }
+    }
 }
 
 // ---- shared dialogs ----

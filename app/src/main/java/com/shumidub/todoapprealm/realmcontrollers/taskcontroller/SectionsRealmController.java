@@ -1,10 +1,12 @@
 package com.shumidub.todoapprealm.realmcontrollers.taskcontroller;
 
 import com.shumidub.todoapprealm.realmcontrollers.RealmDb;
+import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.task.SectionObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -86,16 +88,28 @@ public final class SectionsRealmController {
         final long folderId = s.getParentFolderId();
         final long sectionId = s.getId();
         RealmDb.write(r -> {
-            RealmResults<TaskObject> inSection = r.where(TaskObject.class)
-                    .equalTo("taskFolderId", folderId)
-                    .equalTo("sectionId", sectionId)
-                    .findAll();
-            for (TaskObject t : inSection) {
-                t.setSectionId(0);
+            // Members placed in this section (in THIS folder) become free; uses per-category
+            // section so a multi-category task is only freed in the folder the section belongs to.
+            for (TaskObject t : folderMembers(folderId)) {
+                if (TasksRealmController.effectiveSection(t, folderId) == sectionId) {
+                    TasksRealmController.setEffectiveSection(t, folderId, 0L);
+                }
             }
             s.deleteFromRealm();
         });
         compactPositions(folderId);
+    }
+
+    /** Distinct, valid members of a folder's task list (the membership source of truth). */
+    private static List<TaskObject> folderMembers(long folderId) {
+        FolderTaskObject folder = RealmDb.findById(FolderTaskObject.class, folderId);
+        LinkedHashMap<Long, TaskObject> byId = new LinkedHashMap<>();
+        if (folder != null && folder.getTasks() != null) {
+            for (TaskObject t : folder.getTasks()) {
+                if (t != null && t.isValid()) byId.put(t.getId(), t);
+            }
+        }
+        return new ArrayList<>(byId.values());
     }
 
     public static void setCurrentlyCollapsed(SectionObject s, boolean collapsed) {
@@ -180,8 +194,8 @@ public final class SectionsRealmController {
             for (int i = 0; i < orderedTaskIds.size(); i++) {
                 TaskObject t = r.where(TaskObject.class).equalTo("id", orderedTaskIds.get(i)).findFirst();
                 if (t == null) continue;
-                if (t.getSectionId() != sectionId) t.setSectionId(sectionId);
-                t.setPosition(i);
+                TasksRealmController.setEffectiveSection(t, folderId, sectionId);
+                TasksRealmController.setEffectivePosition(t, folderId, i);
             }
         });
         compactPositions(folderId);
@@ -206,8 +220,8 @@ public final class SectionsRealmController {
                 } else {
                     TaskObject t = r.where(TaskObject.class).equalTo("id", e.id).findFirst();
                     if (t != null) {
-                        if (t.getSectionId() != 0L) t.setSectionId(0L);
-                        t.setPosition(i);
+                        TasksRealmController.setEffectiveSection(t, folderId, 0L);
+                        TasksRealmController.setEffectivePosition(t, folderId, i);
                     }
                 }
             }
@@ -221,64 +235,72 @@ public final class SectionsRealmController {
      */
     public static void compactPositions(long folderId) {
         RealmDb.write(r -> {
-            // Outer space: sections + free tasks (sectionId == 0).
             List<SectionObject> sections = new ArrayList<>(
                     r.where(SectionObject.class)
                             .equalTo("parentFolderId", folderId)
                             .findAll()
                             .sort("position", Sort.ASCENDING));
-            List<TaskObject> freeTasks = new ArrayList<>(
-                    r.where(TaskObject.class)
-                            .equalTo("taskFolderId", folderId)
-                            .equalTo("sectionId", 0L)
-                            .findAll()
-                            .sort("position", Sort.ASCENDING));
+            // Membership is the folder's task list (a folder also holds tasks whose primary
+            // category is elsewhere); ordering is the per-category effective position/section.
+            List<TaskObject> members = folderMembers(folderId);
 
-            // Merge by current position; stable order keeps existing relative order on ties.
-            // Build interleaved outer list.
+            // Outer space: free tasks (no section IN THIS folder), by effective position.
+            List<TaskObject> freeTasks = new ArrayList<>();
+            for (TaskObject t : members) {
+                if (TasksRealmController.effectiveSection(t, folderId) == 0L) freeTasks.add(t);
+            }
+            freeTasks.sort((a, b) -> Integer.compare(
+                    TasksRealmController.effectivePosition(a, folderId),
+                    TasksRealmController.effectivePosition(b, folderId)));
+
+            // Merge sections + free tasks by current position; stable on ties.
             List<Object> outer = new ArrayList<>(sections.size() + freeTasks.size());
             int si = 0, ti = 0;
             while (si < sections.size() && ti < freeTasks.size()) {
-                if (sections.get(si).getPosition() <= freeTasks.get(ti).getPosition()) {
-                    outer.add(sections.get(si++));
-                } else {
-                    outer.add(freeTasks.get(ti++));
-                }
+                int sp = sections.get(si).getPosition();
+                int tp = TasksRealmController.effectivePosition(freeTasks.get(ti), folderId);
+                if (sp <= tp) outer.add(sections.get(si++));
+                else outer.add(freeTasks.get(ti++));
             }
             while (si < sections.size()) outer.add(sections.get(si++));
             while (ti < freeTasks.size()) outer.add(freeTasks.get(ti++));
             for (int i = 0; i < outer.size(); i++) {
                 Object it = outer.get(i);
                 if (it instanceof SectionObject) ((SectionObject) it).setPosition(i);
-                else ((TaskObject) it).setPosition(i);
+                else TasksRealmController.setEffectivePosition((TaskObject) it, folderId, i);
             }
 
-            // Inner spaces: per section, re-stamp tasks in that section.
+            // Inner spaces: per section, re-stamp its members (done sinks to the bottom).
             for (SectionObject s : sections) {
-                List<TaskObject> inner = new ArrayList<>(
-                        r.where(TaskObject.class)
-                                .equalTo("taskFolderId", folderId)
-                                .equalTo("sectionId", s.getId())
-                                .findAll()
-                                .sort("done", Sort.ASCENDING, "position", Sort.ASCENDING));
+                List<TaskObject> inner = new ArrayList<>();
+                for (TaskObject t : members) {
+                    if (TasksRealmController.effectiveSection(t, folderId) == s.getId()) inner.add(t);
+                }
+                inner.sort((a, b) -> {
+                    if (a.isDone() != b.isDone()) return a.isDone() ? 1 : -1;
+                    return Integer.compare(
+                            TasksRealmController.effectivePosition(a, folderId),
+                            TasksRealmController.effectivePosition(b, folderId));
+                });
                 for (int i = 0; i < inner.size(); i++) {
-                    inner.get(i).setPosition(i);
+                    TasksRealmController.setEffectivePosition(inner.get(i), folderId, i);
                 }
             }
         });
     }
 
-    /** Next outer position for a new section/task appended at the end. */
+    /** Next outer position for a new section/task appended at the end of this folder's free zone. */
     public static int nextOuterPosition(long folderId) {
+        int max = -1;
         Number maxSec = RealmDb.realm().where(SectionObject.class)
                 .equalTo("parentFolderId", folderId).max("position");
-        Number maxTask = RealmDb.realm().where(TaskObject.class)
-                .equalTo("taskFolderId", folderId)
-                .equalTo("sectionId", 0L)
-                .max("position");
-        int a = maxSec == null ? -1 : maxSec.intValue();
-        int b = maxTask == null ? -1 : maxTask.intValue();
-        return Math.max(a, b) + 1;
+        if (maxSec != null) max = maxSec.intValue();
+        for (TaskObject t : folderMembers(folderId)) {
+            if (TasksRealmController.effectiveSection(t, folderId) == 0L) {
+                max = Math.max(max, TasksRealmController.effectivePosition(t, folderId));
+            }
+        }
+        return max + 1;
     }
 
     private static long getIdForNextValue() {

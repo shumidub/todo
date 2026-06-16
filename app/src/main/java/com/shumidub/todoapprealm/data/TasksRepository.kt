@@ -1,6 +1,7 @@
 package com.shumidub.todoapprealm.data
 
 import com.shumidub.todoapprealm.App
+import com.shumidub.todoapprealm.Tabs
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.FolderTaskRealmController
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.SectionsRealmController
 import com.shumidub.todoapprealm.realmcontrollers.taskcontroller.TasksRealmController
@@ -73,9 +74,9 @@ object TasksRepository {
         val folders = container.tasksListForGroup(group) ?: return emptyList()
         return folders.mapNotNull { f ->
             if (f == null || !f.isValid) return@mapNotNull null
-            // distinctBy id: a multi-category task can land in a folder's RealmList more than once;
-            // duplicates would crash the LazyColumn (non-unique key) and double-count scores.
-            val tasks = TasksRealmController.getTasks(f.id).map { it.toDto() }.distinctBy { it.id }
+            // getFolderMembers returns the folder's tasks (deduped) ordered by this folder's own
+            // per-category placement; toDto(folderId) projects each task's position/section for it.
+            val tasks = TasksRealmController.getFolderMembers(f.id).map { it.toDto(f.id) }
             val sections = SectionsRealmController.getSections(f.id).map { it.toDto() }
             FolderDto(id = f.id, name = f.name ?: "", isDaily = f.isDaily, tasks = tasks, sections = sections)
         }
@@ -86,12 +87,19 @@ object TasksRepository {
         return App.dayScope
     }
 
-    /** All folders across every group, for the editor's category picker. */
-    fun allFolderRefs(): List<FolderRef> =
-        FolderTaskRealmController.getAllFolders().mapNotNull { f ->
-            if (f == null || !f.isValid) null
-            else FolderRef(id = f.id, name = f.name ?: "", group = FolderTaskRealmController.getFolderGroup(f))
+    /** All folders across every group, for the editor's category picker. Single pass per group
+     *  list — the group is known from the loop, so no per-folder getFolderGroup() scan (which made
+     *  this O(folders²) and stuttered the editor open). */
+    fun allFolderRefs(): List<FolderRef> {
+        val refs = ArrayList<FolderRef>()
+        for (g in 0 until Tabs.GROUP_COUNT) {
+            val list = FolderTaskRealmController.getFoldersList(g) ?: continue
+            for (f in list) {
+                if (f != null && f.isValid) refs.add(FolderRef(id = f.id, name = f.name ?: "", group = g))
+            }
         }
+        return refs
+    }
 
     // ---- task writes ----
 
@@ -241,7 +249,9 @@ object TasksRepository {
     }
 }
 
-private fun TaskObject.toDto() = TaskDto(
+/** Project a task for a specific folder: [sectionId]/[position] come from that folder's
+ *  per-category placement (task-004), falling back to the legacy shared fields. */
+private fun TaskObject.toDto(folderId: Long) = TaskDto(
     id = id,
     text = text ?: "",
     done = isDone,
@@ -250,8 +260,8 @@ private fun TaskObject.toDto() = TaskDto(
     maxAccumulation = maxAccumulation,
     countAccumulation = countAccumulation,
     isCycling = isCycling,
-    sectionId = sectionId,
-    position = position,
+    sectionId = TasksRealmController.effectiveSection(this, folderId),
+    position = TasksRealmController.effectivePosition(this, folderId),
     taskFolderId = taskFolderId,
     extraFolderIds = extraFolderIds?.filterNotNull() ?: emptyList(),
 )
