@@ -70,7 +70,14 @@ object TasksRepository {
     /** Reads the group's folders (tasks + sections) into plain DTOs. Main-thread; objects stay local. */
     private fun readGroup(group: Int): List<FolderDto> {
         val container = App.realmFoldersContainer ?: return emptyList()
+        // Во время restore deleteAll() инвалидирует старый контейнер, а статик
+        // App.realmFoldersContainer переустанавливается лишь ПОСЛЕ транзакции. Realm
+        // шлёт change-уведомление прямо на коммите — здесь ссылка ещё устаревшая, и
+        // итерация её списков бросала "List is no longer valid". Пропускаем такой тик;
+        // корректные данные придут после rebindContainers()+notifyRestored().
+        if (!container.isValid) return emptyList()
         val folders = container.tasksListForGroup(group) ?: return emptyList()
+        if (!folders.isValid) return emptyList()
         return folders.mapNotNull { f ->
             if (f == null || !f.isValid) return@mapNotNull null
             // distinctBy id: a multi-category task can land in a folder's RealmList more than once;

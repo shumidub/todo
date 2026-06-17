@@ -614,8 +614,13 @@ private fun resolveReorder(
 private fun buildSheetRows(folder: FolderDto, showDone: Boolean): List<SheetRow> {
     val tasks = folder.tasks
     val sections = folder.sections.sortedBy { it.position }
-    val freeNotDone = tasks.filter { it.sectionId == 0L && !it.done }.sortedBy { it.position }
-    val freeDone = tasks.filter { it.sectionId == 0L && it.done }.sortedBy { it.position }
+    val sectionIds = sections.mapTo(HashSet()) { it.id }
+    // "Free" = no section OR a section that no longer exists. The backup format omits
+    // SectionObject, so after a restore a task keeps a sectionId pointing at a section
+    // that's gone — without this fallback such a task lands in no bucket and looks lost.
+    val isFree = { t: TaskDto -> t.sectionId == 0L || t.sectionId !in sectionIds }
+    val freeNotDone = tasks.filter { isFree(it) && !it.done }.sortedBy { it.position }
+    val freeDone = tasks.filter { isFree(it) && it.done }.sortedBy { it.position }
 
     data class Outer(val pos: Int, val section: SectionDto?, val task: TaskDto?)
     val outer = buildList {
