@@ -395,6 +395,11 @@ private fun FolderTasksPage(
     // Done tasks are hidden until the footer is tapped.
     var showDone by remember(folder.id) { mutableStateOf(false) }
     val doneCount = folder.tasks.count { it.done }
+    // "Muscle" reward: shown when every FREE-zone task is done (tasks inside sections are not
+    // counted) and there was at least one to do. Hidden while the done list is expanded.
+    val sectionIds = folder.sections.mapTo(HashSet()) { it.id }
+    val freeTasks = folder.tasks.filter { it.sectionId == 0L || it.sectionId !in sectionIds }
+    val allFreeDone = freeTasks.isNotEmpty() && freeTasks.none { !it.done }
     // Local, mutable copy of the visible rows so the reorderable list can shuffle live during a
     // drag; it resets whenever Realm re-emits this folder or the show-done toggle flips.
     var rows by remember(folder, showDone) { mutableStateOf(buildSheetRows(folder, showDone)) }
@@ -412,14 +417,15 @@ private fun FolderTasksPage(
             .fillMaxSize()
             .imePadding(),
     ) {
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
         if (rows.isEmpty() && doneCount == 0) {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
                 Text("Нет задач", color = palette.inputText.copy(alpha = 0.6f))
             }
         } else {
             LazyColumn(
                 state = lazyState,
-                modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                 contentPadding = PaddingValues(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
@@ -488,6 +494,11 @@ private fun FolderTasksPage(
                         DoneFooter(count = doneCount, showDone = showDone, palette = palette) { showDone = !showDone }
                     }
                 }
+            }
+        }
+            // All free-zone tasks done → reward muscle, centered over the (now empty) list.
+            if (allFreeDone && !showDone) {
+                Text("💪", fontSize = 96.sp, modifier = Modifier.align(Alignment.Center))
             }
         }
         // Bottom panel: a full-width band in a slightly darker shade of the tab background.
