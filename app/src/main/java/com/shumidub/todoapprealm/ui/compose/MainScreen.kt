@@ -1,5 +1,9 @@
 package com.shumidub.todoapprealm.ui.compose
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.shumidub.todoapprealm.Tabs
 import com.shumidub.todoapprealm.data.TabNames
 import com.shumidub.todoapprealm.data.TasksRepository
 import com.shumidub.todoapprealm.ui.theme.Todo100Theme
@@ -41,6 +44,17 @@ import com.shumidub.todoapprealm.ui.theme.paletteForGroup
 
 /** A full-screen category view request: which group + which folder to open at. */
 private data class DetailTarget(val group: Int, val folderId: Long)
+
+/** Package of the external app opened by tapping the day-score (Memento Database). */
+const val DAY_SCORE_APP_PACKAGE = "com.luckydroid.droidbase"
+
+/** Launch the external day-score app; show a toast if it isn't installed. */
+fun launchDayScoreApp(context: Context) {
+    val intent = context.packageManager.getLaunchIntentForPackage(DAY_SCORE_APP_PACKAGE)
+        ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+    if (intent != null) context.startActivity(intent)
+    else Toast.makeText(context, "Memento Database не установлена", Toast.LENGTH_SHORT).show()
+}
 
 /**
  * Two-level shell:
@@ -54,9 +68,13 @@ private data class DetailTarget(val group: Int, val folderId: Long)
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
-    val pageCount = Tabs.GROUP_COUNT // 4 task groups, no legacy Notes page
-    val pagerState = rememberPagerState(initialPage = 0) { pageCount }
-    val currentGroup by remember { derivedStateOf { pagerState.currentPage } }
+    // Visual tab order: Notes (group 3) sits leftmost, then Tasks 1/2/3. Page index → group id
+    // goes through groupOrder; the app still opens on Tasks 1 (group 0) by default.
+    val groupOrder = remember { listOf(3, 0, 1, 2) }
+    val pageCount = groupOrder.size
+    val startPage = remember { groupOrder.indexOf(0) }
+    val pagerState = rememberPagerState(initialPage = startPage) { pageCount }
+    val currentGroup by remember { derivedStateOf { groupOrder[pagerState.currentPage] } }
     var showSync by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
     var renaming by remember { mutableStateOf(false) }
@@ -85,6 +103,7 @@ fun MainScreen() {
                                 text = dayScore.toString(),
                                 color = palette.text,
                                 fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable { launchDayScoreApp(context) },
                             )
                             Spacer(Modifier.width(4.dp))
                             Box {
@@ -110,7 +129,8 @@ fun MainScreen() {
                     state = pagerState,
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                 ) { page ->
-                    TasksScreen(group = page, onOpenCategory = { folderId -> detail = DetailTarget(page, folderId) })
+                    val g = groupOrder[page]
+                    TasksScreen(group = g, onOpenCategory = { folderId -> detail = DetailTarget(g, folderId) })
                 }
             }
             // Detail overlays the list; pulling it down reveals the list underneath.

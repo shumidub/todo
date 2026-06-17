@@ -11,6 +11,12 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
 
+    <!-- Day-score tap launches Memento Database; package visibility (API 30+) needs this so
+         getLaunchIntentForPackage can resolve it. -->
+    <queries>
+        <package android:name="com.luckydroid.droidbase" />
+    </queries>
+
 
     <application
         android:name=".App"

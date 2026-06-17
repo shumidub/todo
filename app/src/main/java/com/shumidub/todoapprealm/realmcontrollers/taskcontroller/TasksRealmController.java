@@ -4,9 +4,11 @@ import android.util.Log;
 import com.shumidub.todoapprealm.realmcontrollers.RealmDb;
 import com.shumidub.todoapprealm.realmmodel.task.FolderTaskObject;
 import com.shumidub.todoapprealm.realmmodel.task.TaskObject;
+import com.shumidub.todoapprealm.realmmodel.task.TaskPlacement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -215,10 +217,93 @@ public class TasksRealmController {
         return ids;
     }
 
+    // ---- per-category placements (task-004) ----
+
+    /** True if the task belongs to more than one folder (and therefore uses placements). */
+    public static boolean isMultiCategory(TaskObject task) {
+        RealmList<Long> e = task.getExtraFolderIds();
+        return e != null && !e.isEmpty();
+    }
+
+    /** The task's placement for {@code folderId}, or null if it has none (single-category task). */
+    public static TaskPlacement placementFor(TaskObject task, long folderId) {
+        RealmList<TaskPlacement> ps = task.getPlacements();
+        if (ps != null) {
+            for (TaskPlacement p : ps) {
+                if (p != null && p.isValid() && p.getFolderId() == folderId) return p;
+            }
+        }
+        return null;
+    }
+
+    /** Order index of {@code task} within {@code folderId}: per-category placement, or the legacy
+     *  shared {@code position} as a fallback (single-category tasks / not-yet-materialized). */
+    public static int effectivePosition(TaskObject task, long folderId) {
+        TaskPlacement p = placementFor(task, folderId);
+        return p != null ? p.getPosition() : task.getPosition();
+    }
+
+    /** Section of {@code task} within {@code folderId}: per-category placement, or the legacy
+     *  {@code sectionId} for the primary folder (0 = free in any non-primary folder). */
+    public static long effectiveSection(TaskObject task, long folderId) {
+        TaskPlacement p = placementFor(task, folderId);
+        if (p != null) return p.getSectionId();
+        return folderId == task.getTaskFolderId() ? task.getSectionId() : 0L;
+    }
+
+    /** Write {@code task}'s order within {@code folderId} (placement when present/multi-category,
+     *  else the legacy field). Must run inside a transaction. */
+    public static void setEffectivePosition(TaskObject task, long folderId, int pos) {
+        TaskPlacement p = placementFor(task, folderId);
+        if (p != null) { p.setPosition(pos); return; }
+        if (!isMultiCategory(task)) { task.setPosition(pos); return; }
+        TaskPlacement np = RealmDb.realm().createEmbeddedObject(TaskPlacement.class, task, "placements");
+        np.setFolderId(folderId);
+        np.setSectionId(effectiveSection(task, folderId));
+        np.setPosition(pos);
+    }
+
+    /** Write {@code task}'s section within {@code folderId} (placement when present/multi-category,
+     *  else the legacy field). Must run inside a transaction. */
+    public static void setEffectiveSection(TaskObject task, long folderId, long sectionId) {
+        TaskPlacement p = placementFor(task, folderId);
+        if (p != null) { p.setSectionId(sectionId); return; }
+        if (!isMultiCategory(task)) { task.setSectionId(sectionId); return; }
+        TaskPlacement np = RealmDb.realm().createEmbeddedObject(TaskPlacement.class, task, "placements");
+        np.setFolderId(folderId);
+        np.setPosition(effectivePosition(task, folderId));
+        np.setSectionId(sectionId);
+    }
+
+    /** Distinct, valid members of a folder (its {@code folderTasks} list), ordered for display
+     *  by (done, per-category position). The source of truth for membership is the list, not
+     *  {@code taskFolderId} — a folder also holds tasks whose primary category is elsewhere. */
+    public static List<TaskObject> getFolderMembers(long folderId) {
+        FolderTaskObject folder = FolderTaskRealmController.getFolder(folderId);
+        LinkedHashMap<Long, TaskObject> byId = new LinkedHashMap<>();
+        if (folder != null && folder.getTasks() != null) {
+            for (TaskObject t : folder.getTasks()) {
+                if (t != null && t.isValid()) byId.put(t.getId(), t);
+            }
+        }
+        List<TaskObject> list = new ArrayList<>(byId.values());
+        list.sort((a, b) -> {
+            if (a.isDone() != b.isDone()) return a.isDone() ? 1 : -1;
+            return Integer.compare(effectivePosition(a, folderId), effectivePosition(b, folderId));
+        });
+        return list;
+    }
+
     /**
      * Set the full list of folders this task belongs to.
      * The first id in {@code folderIds} becomes the primary {@code taskFolderId};
      * the rest are stored as extras. Existing folders not in the list lose the task.
+     *
+     * <p>Keeps per-category placements (task-004) in sync: a multi-category task gets exactly one
+     * placement per assigned folder (created seeded at the end of that folder's free zone, the
+     * primary's seeded from the legacy position/section); placements for dropped folders are
+     * removed. A task that falls back to a single category sheds its placements and restores the
+     * legacy {@code position}/{@code sectionId} from the surviving folder so its order is kept.
      */
     public static void setTaskCategories(TaskObject task, List<Long> folderIds) {
         if (folderIds == null || folderIds.isEmpty()) return;
@@ -255,7 +340,45 @@ public class TasksRealmController {
             for (int i = 1; i < finalIds.size(); i++) {
                 extras.add(finalIds.get(i));
             }
+
+            // ---- placements (must run after extraFolderIds is set: isMultiCategory reads it) ----
+            RealmList<TaskPlacement> placements = task.getPlacements();
+            if (finalIds.size() == 1) {
+                // Back to a single category: capture its current order/section into the legacy
+                // fields, then drop placements so the fallback path drives ordering.
+                if (placements != null && !placements.isEmpty()) {
+                    int pos = effectivePosition(task, newPrimary);
+                    long sec = effectiveSection(task, newPrimary);
+                    placements.deleteAllFromRealm();
+                    task.setPosition(pos);
+                    task.setSectionId(sec);
+                }
+            } else {
+                // Multi-category: drop placements for folders no longer assigned…
+                if (placements != null) {
+                    for (int i = placements.size() - 1; i >= 0; i--) {
+                        if (!finalIds.contains(placements.get(i).getFolderId())) {
+                            placements.deleteFromRealm(i);
+                        }
+                    }
+                }
+                // …and create a placement for any assigned folder still missing one.
+                for (Long fid : finalIds) {
+                    if (placementFor(task, fid) != null) continue;
+                    int seedPos = (fid == newPrimary) ? task.getPosition()
+                            : SectionsRealmController.nextOuterPosition(fid);
+                    long seedSec = (fid == newPrimary) ? task.getSectionId() : 0L;
+                    TaskPlacement np = RealmDb.realm()
+                            .createEmbeddedObject(TaskPlacement.class, task, "placements");
+                    np.setFolderId(fid);
+                    np.setPosition(seedPos);
+                    np.setSectionId(seedSec);
+                }
+            }
         });
+
+        // Keep every affected folder's positions dense (nested write reuses the txn if any).
+        for (Long fid : finalIds) SectionsRealmController.compactPositions(fid);
     }
 
     public static void setTaskPriority(TaskObject taskObject, int priority){
