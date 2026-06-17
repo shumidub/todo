@@ -28,12 +28,14 @@ public class FileWritter {
     private static final String FILE_NAME = "REALM_BD_JSON.txt";
     private static final String MIME_TYPE = "text/plain";
 
-    public static void saveFile(String json) {
+    /** @return true if the file was actually written (don't re-query MediaStore to confirm —
+     *  that can't see files owned by a previous install / other app, giving false negatives). */
+    public static boolean saveFile(String json) {
         Context ctx = App.getApp();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            saveViaMediaStore(ctx, json);
+            return saveViaMediaStore(ctx, json);
         } else {
-            saveLegacy(json);
+            return saveLegacy(json);
         }
     }
 
@@ -55,7 +57,7 @@ public class FileWritter {
         return file.exists();
     }
 
-    private static void saveViaMediaStore(Context ctx, String json) {
+    private static boolean saveViaMediaStore(Context ctx, String json) {
         ContentResolver resolver = ctx.getContentResolver();
         Uri existing = findDownloadUri(ctx);
         Uri target;
@@ -78,7 +80,7 @@ public class FileWritter {
 
         if (target == null) {
             Log.e(TAG, "MediaStore insert returned null");
-            return;
+            return false;
         }
 
         try (OutputStream os = resolver.openOutputStream(target, "wt")) {
@@ -88,13 +90,14 @@ public class FileWritter {
         } catch (IOException e) {
             Log.e(TAG, "saveViaMediaStore failed", e);
             if (newlyInserted) resolver.delete(target, null, null);
-            return;
+            return false;
         }
 
         ContentValues done = new ContentValues();
         done.put(MediaStore.Downloads.IS_PENDING, 0);
         resolver.update(target, done, null, null);
         Log.d(TAG, "Saved to Downloads via MediaStore: " + target);
+        return true;
     }
 
     private static String readViaMediaStore(Context ctx) {
@@ -119,12 +122,18 @@ public class FileWritter {
     private static Uri findDownloadUri(Context ctx) {
         Uri collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
         String[] projection = {MediaStore.Downloads._ID};
-        String selection = MediaStore.Downloads.DISPLAY_NAME + " = ? AND "
-                + MediaStore.Downloads.RELATIVE_PATH + " LIKE ?";
-        String[] args = {FILE_NAME, Environment.DIRECTORY_DOWNLOADS + "/%"};
+        // Match REALM_BD_JSON.txt and OEM-deduped variants ("REALM_BD_JSON (1).txt"), but only
+        // files THIS app owns — under scoped storage we can only overwrite our own, and a
+        // same-named file from a previous install is invisible/unwritable. Newest first so
+        // re-saves overwrite the latest instead of piling up new copies.
+        String selection = MediaStore.Downloads.DISPLAY_NAME + " LIKE ? AND "
+                + MediaStore.Downloads.RELATIVE_PATH + " LIKE ? AND "
+                + MediaStore.MediaColumns.OWNER_PACKAGE_NAME + " = ?";
+        String[] args = {"REALM_BD_JSON%", "%" + Environment.DIRECTORY_DOWNLOADS + "%", ctx.getPackageName()};
+        String order = MediaStore.MediaColumns.DATE_MODIFIED + " DESC";
 
         try (Cursor cursor = ctx.getContentResolver().query(
-                collection, projection, selection, args, null)) {
+                collection, projection, selection, args, order)) {
             if (cursor != null && cursor.moveToFirst()) {
                 long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID));
                 return ContentUris.withAppendedId(collection, id);
@@ -133,14 +142,16 @@ public class FileWritter {
         return null;
     }
 
-    private static void saveLegacy(String json) {
+    private static boolean saveLegacy(String json) {
         File file = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS), FILE_NAME);
         try (FileWriter writer = new FileWriter(file, false)) {
             writer.write(json);
             Log.d(TAG, "Saved to " + file);
+            return true;
         } catch (IOException e) {
             Log.e(TAG, "saveLegacy failed", e);
+            return false;
         }
     }
 

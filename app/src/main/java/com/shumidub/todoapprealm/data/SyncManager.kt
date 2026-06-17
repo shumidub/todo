@@ -52,8 +52,8 @@ object SyncManager {
     fun exportToDownloads(): String {
         App.initRealm()
         val tree = serializeWithSections() ?: return "Нечего сохранять"
-        FileWritter.saveFile(gson().toJson(tree))
-        return if (FileWritter.isBackupExist()) "Сохранено в Downloads (REALM_BD_JSON.txt)" else "Ошибка сохранения"
+        return if (FileWritter.saveFile(gson().toJson(tree))) "Сохранено в Downloads (REALM_BD_JSON.txt)"
+        else "Ошибка сохранения"
     }
 
     fun restoreFromUri(uri: Uri?, resolver: ContentResolver): String {
