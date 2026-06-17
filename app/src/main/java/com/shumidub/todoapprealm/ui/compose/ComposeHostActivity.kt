@@ -7,15 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import com.shumidub.todoapprealm.data.TasksRepository
 
 /**
- * Compose entry point for the Jetpack Compose migration (see docs/COMPOSE-MIGRATION-PLAN.md).
- *
- * Kept SEPARATE from the legacy [com.shumidub.todoapprealm.ui.activity.main.MainActivity]
- * during the transition: the launcher still opens the old, fully-working Fragment UI, while
- * this activity hosts the growing Compose skeleton. Launch it for verification with:
- *
- *   adb shell am start -n com.shumidub.todoapprealm.alpha8/com.shumidub.todoapprealm.ui.compose.ComposeHostActivity
- *
- * In Phase 5 (cleanup) this becomes the launcher and MainActivity is deleted.
+ * Sole launcher activity — hosts the full Jetpack Compose UI
+ * (see docs/COMPOSE-MIGRATION-PLAN.md). The legacy Fragment-based `MainActivity` it
+ * replaced has been removed; this is now the only Activity in the app.
  */
 class ComposeHostActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

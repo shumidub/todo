@@ -17,9 +17,8 @@ import com.shumidub.todoapprealm.sync.FileWritter
 import io.realm.RealmList
 
 /**
- * Kotlin backup/sync layer for the Compose host — the same JSON + Firebase logic as the
- * legacy [com.shumidub.todoapprealm.sync.JsonSyncUtil] / [FirebaseSyncUtil] but decoupled
- * from `MainActivity` (returns/reports via callbacks instead of casting the activity).
+ * Kotlin backup/sync layer for the Compose host: JSON + Firebase backup/restore, driven
+ * via callbacks (no Activity coupling — the legacy MainActivity/sync-util classes are gone).
  *
  * Realm is main-thread only, so JSON export/restore run synchronously on the caller's
  * (main) thread, exactly like the original. After a restore the container reference is
