@@ -81,8 +81,10 @@
   <span class="status" id="status"></span>
   <button id="btnFb">Firebase…</button>
   <button id="btnLoadFb">Загрузить из Firebase</button>
+  <select id="histSel" title="Снимок истории" style="width:auto;max-width:260px" disabled><option value="">— история —</option></select>
   <button id="btnImport">Загрузить файл</button>
-  <button id="btnExport">Скачать JSON</button>
+  <button id="btnExport">Скачать последний</button>
+  <button id="btnExportAll">Скачать всю историю</button>
   <button class="primary" id="btnSave">Сохранить в Firebase</button>
   <input type="file" id="file" accept=".json,application/json" hidden />
 </header>
@@ -129,7 +131,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signInAnonymously, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, get, set }
+import { getDatabase, ref, get, set, update }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const DEFAULT_FB_CONFIG = {
@@ -166,6 +168,15 @@ let activeTab = LISTS[0];
 let dirty = false;
 let fb = { app:null, auth:null, db:null, user:null };
 let idSeq = 0;
+// История снимков загруженного пользователя:
+//   history.list  — таймстемпы (мс, по возрастанию)
+//   history.cache — ts → дерево данных (лениво подгружаем из FB либо целиком из файла)
+//   currentTs     — какой снимок сейчас показан в редакторе
+let history = { uid:null, list:[], cache:{} };
+let currentTs = null;
+// Сырой загруженный снимок (контейнер целиком: 4 списка задач + sections/заметки/отчёты).
+// Редактор правит только списки задач, остальное проносим через сохранение как есть.
+let currentRaw = null;
 
 function newId(){ // 13-digit-ish, monotonic, unique within session
   idSeq++;
@@ -331,7 +342,7 @@ function ensureApp(){
     onAuthStateChanged(fb.auth,u=>{
       fb.user=u;
       const dot=$("#connDot"), badge=$("#connBadge");
-      if(u){ dot.classList.add("on"); badge.textContent="вошёл: "+(u.email||u.uid.slice(0,8)+"…"); if(!$("#fbUid").value) $("#fbUid").value=u.uid; }
+      if(u){ dot.classList.add("on"); badge.textContent="вошёл: "+(u.email||u.uid.slice(0,8)+"…"); $("#fbUid").value=u.uid; localStorage.setItem("fbUid",u.uid); }
       else { dot.classList.remove("on"); badge.textContent="не подключено"; }
     });
   }
@@ -356,8 +367,102 @@ async function signIn(anon){
   }
 }
 function targetUid(){
-  return ($("#fbUid").value.trim()) || fb.user?.uid;
+  // Залогинен — всегда работаем со СВОИМ uid: правила БД (users/$uid) пускают
+  // только к своему узлу, читать чужой uid из поля = Permission denied.
+  // Поле UID остаётся ручным фолбэком только когда вход не выполнен.
+  return fb.user?.uid || $("#fbUid").value.trim();
 }
+// История выгрузок: храним последние MAX_HISTORY снимков под
+//   users/{uid}/timestamps  — список таймстемпов (мс, по возрастанию)
+//   users/{uid}/snapshots/{ts} — дерево данных, отправленное в момент ts
+const MAX_HISTORY = 30;
+
+// timestamps в RTDB может прийти массивом или объектом — приводим к
+// отсортированному по возрастанию массиву чисел.
+function readTimestamps(val){
+  if(!val) return [];
+  const arr = Array.isArray(val) ? val.slice() : Object.values(val);
+  return arr.map(Number).filter(n=>Number.isFinite(n) && n>0).sort((a,b)=>a-b);
+}
+
+// Засеваем историю текущим users/{uid}/backup, если история пуста.
+// НЕ удаляем backup — версия из main продолжает его читать/писать (dual-write).
+async function seedHistoryFromBackup(uid){
+  const tsSnap = await get(ref(fb.db,`users/${uid}/timestamps`));
+  if(readTimestamps(tsSnap.val()).length) return;   // история уже есть — сеять не нужно
+  const legacy = await get(ref(fb.db,`users/${uid}/backup`));
+  if(!legacy.exists()) return;                       // backup нет — нечего сеять
+  const updSnap = await get(ref(fb.db,`users/${uid}/updatedAt`));
+  let ts = Number(updSnap.val());
+  if(!Number.isFinite(ts) || ts<=0) ts = Date.now();
+  const updates = {};
+  updates[`users/${uid}/snapshots/${ts}`] = legacy.val();
+  updates[`users/${uid}/timestamps`] = [ts];
+  await update(ref(fb.db), updates);
+  setStatus("текущий backup занесён в историю…");
+}
+
+// Достаём контейнер-уровень (с folderOfTasksList... + sections) из любого формата.
+function unwrapContainer(raw){
+  if(!raw || typeof raw!=="object") return {};
+  if(raw.users){ const uid=Object.keys(raw.users)[0]; return raw.users[uid]?.backup || {}; }
+  if(raw.backup) return raw.backup;
+  return raw;
+}
+
+// Точный диагноз Permission denied. После фикса targetUid uid всегда совпадает
+// с вошедшим, поэтому отказ означает узкие правила БД — выясняем, насколько.
+async function explainPermission(){
+  const authUid=fb.user?.uid;
+  if(!authUid) return "ты не вошёл — нажми «Firebase…» и войди.";
+  const u8=authUid.slice(0,8)+"…";
+  try{
+    await get(ref(fb.db,`users/${authUid}/backup`));
+    return `Permission denied на users/${u8}/timestamps, хотя .../backup читается — правила БД пускают только к /backup. Расширь Security Rules до уровня users/$uid (см. FIREBASE_SETUP.md), иначе история не заработает.`;
+  }catch{
+    return `Permission denied даже на свой узел users/${u8}/backup — проверь Security Rules (нужно auth.uid === $uid на уровне users/$uid).`;
+  }
+}
+
+// Заполняем выпадающий список снимков (новые сверху). selectedTs — что выделить.
+function renderHistory(selectedTs){
+  const sel=$("#histSel");
+  sel.innerHTML="";
+  if(!history.list.length){
+    sel.append(el("option",{value:""},"— история пуста —"));
+    sel.disabled=true; return;
+  }
+  sel.disabled=false;
+  [...history.list].sort((a,b)=>b-a).forEach((ts,i)=>{
+    const label=`${new Date(ts).toLocaleString()}${i===0?" (последний)":""}`;
+    sel.append(el("option",{value:String(ts), ...(String(ts)===String(selectedTs)?{selected:""}:{})}, label));
+  });
+}
+
+// Переключение на конкретный снимок истории (из FB или из кэша/файла).
+async function loadSnapshot(ts){
+  ts=Number(ts);
+  if(!history.list.includes(ts)) return;
+  if(dirty && !confirm("Несохранённые правки потеряются. Переключить снимок?")){ renderHistory(currentTs); return; }
+  try{
+    let tree=history.cache[ts];
+    if(tree===undefined){
+      setStatus("чтение снимка…");
+      const snap=await get(ref(fb.db,`users/${history.uid}/snapshots/${ts}`));
+      tree=snap.exists()?snap.val():null;
+      history.cache[ts]=tree;
+    }
+    backup=normalize(tree);
+    currentRaw=tree||{};
+    currentTs=ts; dirty=false; activeTab=LISTS[0];
+    render(); renderHistory(ts);
+    setStatus(`снимок ${new Date(ts).toLocaleString()} (${history.list.length} в истории)`,"ok");
+  }catch(e){
+    setStatus("ошибка снимка: "+(e.code||e.message),"err");
+    renderHistory(currentTs);
+  }
+}
+
 async function loadFromFirebase(){
   try{
     ensureApp();
@@ -365,12 +470,27 @@ async function loadFromFirebase(){
     const uid=targetUid();
     if(!uid){ setStatus("нет UID","err"); return; }
     setStatus("чтение…");
-    const snap=await get(ref(fb.db,`users/${uid}/backup`));
-    backup=normalize(snap.exists()?snap.val():null);
-    dirty=false; activeTab=LISTS[0]; render();
-    setStatus("загружено из Firebase ("+uid.slice(0,8)+"…)","ok");
+    await seedHistoryFromBackup(uid);
+    // Каноничный «последний» — users/{uid}/backup (как в версии из main).
+    const bSnap=await get(ref(fb.db,`users/${uid}/backup`));
+    const tsSnap=await get(ref(fb.db,`users/${uid}/timestamps`));
+    const list=readTimestamps(tsSnap.val());
+    history={ uid, list, cache:{} };
+    const cur = list.length ? list[list.length-1] : null;
+    let raw = bSnap.exists() ? bSnap.val() : null;
+    if(raw==null && cur!=null){   // backup нет — берём последний снимок
+      const s=await get(ref(fb.db,`users/${uid}/snapshots/${cur}`));
+      raw = s.exists()?s.val():null;
+    }
+    if(cur!=null) history.cache[cur]=raw;   // при dual-write backup == последний снимок
+    currentRaw = raw || {};
+    currentTs = cur;
+    backup=normalize(raw); dirty=false; activeTab=LISTS[0]; render(); renderHistory(cur);
+    if(raw==null && !list.length){ setStatus("в облаке пусто","ok"); return; }
+    setStatus(`загружено${cur!=null?": "+new Date(cur).toLocaleString():""} (${list.length} в истории)`,"ok");
   }catch(e){
-    setStatus("ошибка чтения: "+(e.code||e.message),"err");
+    const m=`${e.code||e.message||e}`;
+    setStatus("ошибка чтения: "+(/permission|denied/i.test(m) ? await explainPermission() : m),"err");
   }
 }
 async function saveToFirebase(){
@@ -380,21 +500,44 @@ async function saveToFirebase(){
     const uid=targetUid();
     if(!uid){ setStatus("нет UID","err"); return; }
     if(!backup){ setStatus("нечего сохранять","err"); return; }
-    if(!confirm(`Записать данные в users/${uid}/backup? Текущие данные в Firebase будут перезаписаны.`)) return;
+    if(!confirm(`Сохранить в users/${uid}? Обновим backup (его читает приложение) и добавим снимок в историю (последние ${MAX_HISTORY}).`)) return;
     setStatus("запись…");
+    await seedHistoryFromBackup(uid);
     const payload=buildPayload();
-    await set(ref(fb.db,`users/${uid}/backup`), payload.backup);
-    await set(ref(fb.db,`users/${uid}/updatedAt`), payload.updatedAt);
-    dirty=false;
-    setStatus("сохранено в Firebase ✓","ok");
+    const tsSnap=await get(ref(fb.db,`users/${uid}/timestamps`));
+    const list=readTimestamps(tsSnap.val());
+    let ts=Date.now();
+    while(list.includes(ts)) ts++;     // гарантируем уникальный ключ в пределах мс
+    list.push(ts);
+    const updates={};
+    while(list.length>MAX_HISTORY){     // переполнение — выкидываем самый старый снимок
+      const removed=list.shift();
+      updates[`users/${uid}/snapshots/${removed}`]=null;
+    }
+    // dual-write: backup+updatedAt — каноничный «последний» (его читает версия из main);
+    // snapshots/{ts}+timestamps — история.
+    updates[`users/${uid}/backup`]=payload.backup;
+    updates[`users/${uid}/updatedAt`]=ts;
+    updates[`users/${uid}/snapshots/${ts}`]=payload.backup;
+    updates[`users/${uid}/timestamps`]=list;
+    await update(ref(fb.db), updates);
+    // освежаем историю в памяти: чистим выпавшие снимки, добавляем новый
+    const cache={}; for(const k of list) if(history.cache[k]!==undefined) cache[k]=history.cache[k];
+    cache[ts]=payload.backup;
+    history={ uid, list, cache };
+    currentTs=ts; currentRaw=payload.backup; dirty=false; renderHistory(ts);
+    setStatus(`сохранено ✓ (backup + снимок ${new Date(ts).toLocaleString()}, ${list.length} в истории)`,"ok");
   }catch(e){
     setStatus("ошибка записи: "+(e.code||e.message),"err");
   }
 }
 
-// строим чистый payload: пустые folderTasks не пишем (как в исходнике)
+// Строим payload. Начинаем с исходного снимка (currentRaw), чтобы сохранить поля,
+// которые редактор не трогает (sections, folderOfNotesList, reportObjectList и т.п.),
+// и поверх кладём отредактированные 4 списка задач. Пустые folderTasks не пишем.
 function buildPayload(){
-  const out={};
+  const out = (currentRaw && typeof currentRaw==="object") ? JSON.parse(JSON.stringify(currentRaw)) : {};
+  delete out.__updatedAt;   // внутреннее поле редактора — в данные не пишем
   LISTS.forEach(l=>{
     out[l]=(backup[l]||[]).map(f=>{
       const c={...f};
@@ -405,33 +548,93 @@ function buildPayload(){
       return c;
     });
   });
-  // updatedAt: возьмём из исходника +1, чтобы не использовать Date.now (sandbox)
   const prev=Number(backup.__updatedAt)||1780670278321;
   return { backup:out, updatedAt: prev+1 };
 }
 
 // ---------- file import/export ----------
-function exportFile(){
-  if(!backup){ setStatus("нет данных","err"); return; }
-  const uid=targetUid()||"ITtrONv5OEh7khdb9kdrYIPWFB02";
-  const payload=buildPayload();
-  const full={ users:{ [uid]:{ backup:payload.backup, updatedAt:payload.updatedAt } } };
-  const blob=new Blob([JSON.stringify(full,null,2)],{type:"application/json"});
-  const a=el("a",{href:URL.createObjectURL(blob), download:"todo100-export.json"});
+function downloadJson(obj, name){
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"});
+  const a=el("a",{href:URL.createObjectURL(blob), download:name});
   document.body.append(a); a.click(); a.remove();
-  setStatus("файл скачан","ok");
 }
+
+// Скачать ПОСЛЕДНИЙ снимок (формат импорта приложения). Если история не загружена —
+// падаем на текущее состояние редактора, как раньше.
+async function exportLatest(){
+  try{
+    if(history.list.length){
+      const uid=history.uid;
+      const latest=history.list[history.list.length-1];
+      let tree=history.cache[latest];
+      if(tree===undefined){
+        ensureApp();
+        const snap=await get(ref(fb.db,`users/${uid}/snapshots/${latest}`));
+        tree=snap.exists()?snap.val():null; history.cache[latest]=tree;
+      }
+      downloadJson({ users:{ [uid]:{ backup:tree, updatedAt:latest } } }, "todo100-latest.json");
+      setStatus(`скачан последний снимок (${new Date(latest).toLocaleString()})`,"ok");
+      return;
+    }
+    if(!backup){ setStatus("нет данных","err"); return; }
+    const uid=targetUid()||"ITtrONv5OEh7khdb9kdrYIPWFB02";
+    const payload=buildPayload();
+    downloadJson({ users:{ [uid]:{ backup:payload.backup, updatedAt:payload.updatedAt } } }, "todo100-export.json");
+    setStatus("файл скачан (текущее состояние)","ok");
+  }catch(e){
+    setStatus("ошибка скачивания: "+(e.code||e.message),"err");
+  }
+}
+
+// Скачать ВСЮ историю одним файлом (читаем целиком из Firebase).
+async function exportAll(){
+  try{
+    ensureApp();
+    if(!fb.user){ $("#fbDlg").showModal(); setStatus("сначала войди",""); return; }
+    const uid=targetUid();
+    if(!uid){ setStatus("нет UID","err"); return; }
+    setStatus("чтение всей истории…");
+    const tsSnap=await get(ref(fb.db,`users/${uid}/timestamps`));
+    const list=readTimestamps(tsSnap.val());
+    if(!list.length){ setStatus("истории нет — нечего скачивать","err"); return; }
+    const snapsSnap=await get(ref(fb.db,`users/${uid}/snapshots`));
+    const snapshots=snapsSnap.exists()?snapsSnap.val():{};
+    downloadJson({ users:{ [uid]:{ timestamps:list, snapshots } } }, "todo100-history-all.json");
+    setStatus(`скачана вся история (${list.length} снимков)`,"ok");
+  }catch(e){
+    const m=`${e.code||e.message||e}`;
+    setStatus("ошибка скачивания: "+(/permission|denied/i.test(m) ? await explainPermission() : m),"err");
+  }
+}
+
 function importFile(file){
   const r=new FileReader();
   r.onload=()=>{
     try{
       const raw=JSON.parse(r.result);
-      // keep original updatedAt if present
+      // Дамп всей истории? {users:{uid:{timestamps,snapshots}}} или {timestamps,snapshots}
+      let node=raw, uid="file";
+      if(raw.users){ uid=Object.keys(raw.users)[0]; node=raw.users[uid]||{}; }
+      if(node.snapshots && Object.keys(node.snapshots).length){
+        const fromTs=readTimestamps(node.timestamps);
+        const list=fromTs.length ? fromTs
+          : Object.keys(node.snapshots).map(Number).filter(n=>Number.isFinite(n)).sort((a,b)=>a-b);
+        const cache={}; for(const k of Object.keys(node.snapshots)) cache[k]=node.snapshots[k];
+        history={ uid, list, cache };
+        const latest=list[list.length-1];
+        backup=normalize(cache[latest]); currentRaw=cache[latest]||{}; currentTs=latest;
+        dirty=false; activeTab=LISTS[0]; render(); renderHistory(latest);
+        setStatus(`загружена история из файла (${list.length} снимков)`,"ok");
+        return;
+      }
+      // Одиночный backup (как раньше)
       let prevUpdated;
-      if(raw.users){ const uid=Object.keys(raw.users)[0]; prevUpdated=raw.users[uid]?.updatedAt; }
+      if(raw.users){ prevUpdated=raw.users[uid]?.updatedAt; }
       backup=normalize(raw);
+      currentRaw=unwrapContainer(raw);
       if(prevUpdated) backup.__updatedAt=prevUpdated;
-      dirty=false; activeTab=LISTS[0]; render();
+      history={ uid:null, list:[], cache:{} }; currentTs=null;
+      dirty=false; activeTab=LISTS[0]; render(); renderHistory();
       setStatus("файл загружен","ok");
     }catch(e){ setStatus("битый JSON: "+e.message,"err"); }
   };
@@ -445,7 +648,9 @@ $("#fbSignIn").addEventListener("click",()=>signIn(false));
 $("#fbAnon").addEventListener("click",()=>signIn(true));
 $("#btnLoadFb").addEventListener("click",loadFromFirebase);
 $("#btnSave").addEventListener("click",saveToFirebase);
-$("#btnExport").addEventListener("click",exportFile);
+$("#btnExport").addEventListener("click",exportLatest);
+$("#btnExportAll").addEventListener("click",exportAll);
+$("#histSel").addEventListener("change",e=>{ if(e.target.value) loadSnapshot(e.target.value); });
 $("#btnImport").addEventListener("click",()=>$("#file").click());
 $("#file").addEventListener("change",e=>{ if(e.target.files[0]) importFile(e.target.files[0]); e.target.value=""; });
 window.addEventListener("beforeunload",e=>{ if(dirty){ e.preventDefault(); e.returnValue=""; } });
