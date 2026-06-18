@@ -18,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,9 +29,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.shumidub.todoapprealm.data.BackupInfo
 import com.shumidub.todoapprealm.data.SyncManager
 import com.shumidub.todoapprealm.sync.LocalSyncUtil
 import com.shumidub.todoapprealm.ui.theme.TabPalette
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private fun toast(ctx: Context, msg: String) = Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
 
@@ -47,6 +53,13 @@ fun SyncDialog(palette: TabPalette, onDismiss: () -> Unit) {
 
     var signedInEmail by remember { mutableStateOf(SyncManager.currentEmail()) }
     var showAuth by remember { mutableStateOf(false) }
+    // Firebase backup stats (count / last / downloaded JSON size), refreshed on sign-in and
+    // after each upload.
+    var info by remember { mutableStateOf<BackupInfo?>(null) }
+    var refreshKey by remember { mutableStateOf(0) }
+    LaunchedEffect(signedInEmail, refreshKey) {
+        if (signedInEmail != null) SyncManager.fetchBackupInfo { info = it } else info = null
+    }
 
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
@@ -73,12 +86,23 @@ fun SyncDialog(palette: TabPalette, onDismiss: () -> Unit) {
                         text = signedInEmail?.let { "Аккаунт: $it" } ?: "Вход не выполнен",
                         color = palette.inputText.copy(alpha = 0.7f),
                     )
+                    info?.let { bi ->
+                        val date = bi.lastTs?.let {
+                            SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(it))
+                        } ?: "—"
+                        val kb = String.format(Locale.US, "%.1f", bi.sizeBytes / 1024.0)
+                        Text(
+                            "Бэкапов: ${bi.count} · последний: $date · $kb КБ",
+                            color = palette.inputText.copy(alpha = 0.55f),
+                            fontSize = 12.sp,
+                        )
+                    }
                     SyncRow(if (signedInEmail != null) "Сменить аккаунт" else "Войти в Firebase") {
                         if (signedInEmail != null) { SyncManager.signOut(); signedInEmail = null }
                         showAuth = true
                     }
                     SyncRow("Выгрузить в Firebase") {
-                        SyncManager.uploadToFirebase { _, msg -> toast(context, msg) }
+                        SyncManager.uploadToFirebase { ok, msg -> toast(context, msg); if (ok) refreshKey++ }
                     }
                     SyncRow("Загрузить из Firebase") {
                         SyncManager.downloadFromFirebase { _, msg -> toast(context, msg) }

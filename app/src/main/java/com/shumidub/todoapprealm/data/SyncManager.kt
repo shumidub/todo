@@ -25,6 +25,9 @@ import io.realm.RealmList
  * rebound and [TasksRepository.notifyRestored] re-emits the live screens (gap G2).
  * Schema version is never touched; old backups stay restorable (extraFolderIds normalized).
  */
+/** Snapshot of the Firebase backup history, for display in the sync dialog. */
+data class BackupInfo(val count: Int, val lastTs: Long?, val sizeBytes: Long)
+
 object SyncManager {
 
     private fun gson(): Gson = GsonBuilder().setPrettyPrinting().create()
@@ -142,6 +145,34 @@ object SyncManager {
         task.addOnCompleteListener { t ->
             if (t.isSuccessful) cb(true, "Вход выполнен: ${currentEmail()}")
             else cb(false, t.exception?.message ?: "Ошибка авторизации")
+        }
+    }
+
+    /**
+     * Read backup-history stats from Firebase: number of snapshots, the latest snapshot's
+     * timestamp, and the byte size of the JSON that "Загрузить из Firebase" would pull
+     * (the backup node, or the latest snapshot if backup is absent). Returns null if not signed in.
+     */
+    fun fetchBackupInfo(cb: (BackupInfo?) -> Unit) {
+        val user = auth()?.currentUser ?: run { cb(null); return }
+        val root = FirebaseDatabase.getInstance().getReference("users").child(user.uid)
+        val sizeOf = { tree: Any? ->
+            if (tree == null) 0L
+            else try { Gson().toJson(tree).toByteArray(Charsets.UTF_8).size.toLong() } catch (e: Exception) { 0L }
+        }
+        root.child("timestamps").get().addOnCompleteListener { t1 ->
+            val list = if (t1.isSuccessful) parseTimestamps(t1.result) else emptyList()
+            root.child("backup").get().addOnCompleteListener { tb ->
+                val backup = if (tb.isSuccessful) tb.result?.value else null
+                if (backup != null) {
+                    cb(BackupInfo(list.size, list.lastOrNull(), sizeOf(backup))); return@addOnCompleteListener
+                }
+                val last = list.lastOrNull()
+                if (last == null) { cb(BackupInfo(list.size, null, 0L)); return@addOnCompleteListener }
+                root.child("snapshots").child(last.toString()).get().addOnCompleteListener { t2 ->
+                    cb(BackupInfo(list.size, last, sizeOf(if (t2.isSuccessful) t2.result?.value else null)))
+                }
+            }
         }
     }
 
