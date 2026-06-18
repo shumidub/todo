@@ -73,14 +73,14 @@ fun SyncDialog(palette: TabPalette, onDismiss: () -> Unit) {
                         text = signedInEmail?.let { "Аккаунт: $it" } ?: "Вход не выполнен",
                         color = palette.inputText.copy(alpha = 0.7f),
                     )
-                    SyncRow(if (signedInEmail != null) "Сменить аккаунт" else "Войти в облако") {
+                    SyncRow(if (signedInEmail != null) "Сменить аккаунт" else "Войти в Firebase") {
                         if (signedInEmail != null) { SyncManager.signOut(); signedInEmail = null }
                         showAuth = true
                     }
-                    SyncRow("Выгрузить в облако") {
+                    SyncRow("Выгрузить в Firebase") {
                         SyncManager.uploadToFirebase { _, msg -> toast(context, msg) }
                     }
-                    SyncRow("Загрузить из облака") {
+                    SyncRow("Загрузить из Firebase") {
                         SyncManager.downloadFromFirebase { _, msg -> toast(context, msg) }
                         onDismiss()
                     }

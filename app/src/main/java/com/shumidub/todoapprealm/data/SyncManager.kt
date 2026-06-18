@@ -172,7 +172,7 @@ object SyncManager {
             updates["snapshots/$ts"] = tree
             updates["timestamps"] = list
             root.updateChildren(updates).addOnCompleteListener { t2 ->
-                if (t2.isSuccessful) cb(true, "Выгружено в облако")
+                if (t2.isSuccessful) cb(true, "Выгружено в Firebase")
                 else cb(false, t2.exception?.message ?: "Ошибка выгрузки")
             }
         }
@@ -182,7 +182,7 @@ object SyncManager {
         val user = auth()?.currentUser ?: run { cb(false, "Не выполнен вход"); return }
         val root = FirebaseDatabase.getInstance().getReference("users").child(user.uid)
         val restore = { tree: Any? ->
-            if (tree == null) cb(false, "В облаке нет бэкапа")
+            if (tree == null) cb(false, "В Firebase нет бэкапа")
             else {
                 val json = try { Gson().toJson(tree) } catch (e: Exception) { null }
                 if (json == null) cb(false, "Ошибка разбора")
@@ -197,7 +197,7 @@ object SyncManager {
             root.child("timestamps").get().addOnCompleteListener { t1 ->
                 if (!t1.isSuccessful) { cb(false, t1.exception?.message ?: "Ошибка загрузки"); return@addOnCompleteListener }
                 val list = parseTimestamps(t1.result)
-                if (list.isEmpty()) { cb(false, "В облаке нет бэкапа"); return@addOnCompleteListener }
+                if (list.isEmpty()) { cb(false, "В Firebase нет бэкапа"); return@addOnCompleteListener }
                 root.child("snapshots").child(list.last().toString()).get().addOnCompleteListener { t2 ->
                     if (!t2.isSuccessful) { cb(false, t2.exception?.message ?: "Ошибка загрузки"); return@addOnCompleteListener }
                     restore(t2.result?.value)
