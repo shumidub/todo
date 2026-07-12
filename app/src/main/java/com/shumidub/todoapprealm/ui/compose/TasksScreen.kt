@@ -1,6 +1,7 @@
 package com.shumidub.todoapprealm.ui.compose
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -78,6 +79,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -104,6 +107,7 @@ import com.shumidub.todoapprealm.ui.theme.TabPalette
 import com.shumidub.todoapprealm.ui.theme.paletteForGroup
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -400,9 +404,18 @@ private fun FolderTasksPage(
     val sectionIds = folder.sections.mapTo(HashSet()) { it.id }
     val freeTasks = folder.tasks.filter { it.sectionId == 0L || it.sectionId !in sectionIds }
     val allFreeDone = freeTasks.isNotEmpty() && freeTasks.none { !it.done }
+    // A single (max-1) task drops into the hidden "Выполнено" bucket the instant it's checked —
+    // too fast to see its completion burst. Pin such a task in place for a beat after the tap so the
+    // animation can play, then let it fall through. Only single tasks linger; repeatable ones stay
+    // visible on their own until the final tap.
+    val lingering = remember(folder.id) { mutableStateListOf<Long>() }
+    val toggleScope = rememberCoroutineScope()
     // Local, mutable copy of the visible rows so the reorderable list can shuffle live during a
-    // drag; it resets whenever Realm re-emits this folder or the show-done toggle flips.
-    var rows by remember(folder, showDone) { mutableStateOf(buildSheetRows(folder, showDone)) }
+    // drag; it resets whenever Realm re-emits this folder, the show-done toggle flips, or a
+    // just-completed single task starts/stops lingering.
+    var rows by remember(folder, showDone, lingering.toList()) {
+        mutableStateOf(buildSheetRows(folder, showDone, lingering.toSet()))
+    }
     var draggedKey by remember(folder.id) { mutableStateOf<String?>(null) }
     var movedDuringDrag by remember(folder.id) { mutableStateOf(false) }
 
@@ -476,7 +489,16 @@ private fun FolderTasksPage(
                             ) {
                                 TaskRow(
                                     task = row.task, group = group, palette = palette,
-                                    onToggle = { id, done -> vm.toggleDone(id, done) },
+                                    onToggle = { id, done ->
+                                        val t = folder.tasks.find { it.id == id }
+                                        // Completing a single task → keep it on screen briefly so its
+                                        // burst can play before it drops into the done bucket.
+                                        if (done && t != null && t.maxAccumulation <= 1 && !t.done) {
+                                            lingering.add(id)
+                                            toggleScope.launch { delay(630); lingering.remove(id) }
+                                        }
+                                        vm.toggleDone(id, done)
+                                    },
                                     onClick = { onEditTask(row.task.id) },
                                 )
                             }
@@ -652,7 +674,7 @@ private fun resolveReorder(
 
 /** Sections interleaved with free tasks by outer position; section tasks (done sink) shown
  *  when expanded; done free tasks last. */
-private fun buildSheetRows(folder: FolderDto, showDone: Boolean): List<SheetRow> {
+private fun buildSheetRows(folder: FolderDto, showDone: Boolean, linger: Set<Long> = emptySet()): List<SheetRow> {
     val tasks = folder.tasks
     val sections = folder.sections.sortedBy { it.position }
     val sectionIds = sections.mapTo(HashSet()) { it.id }
@@ -660,8 +682,11 @@ private fun buildSheetRows(folder: FolderDto, showDone: Boolean): List<SheetRow>
     // SectionObject, so after a restore a task keeps a sectionId pointing at a section
     // that's gone — without this fallback such a task lands in no bucket and looks lost.
     val isFree = { t: TaskDto -> t.sectionId == 0L || t.sectionId !in sectionIds }
-    val freeNotDone = tasks.filter { isFree(it) && !it.done }.sortedBy { it.position }
-    val freeDone = tasks.filter { isFree(it) && it.done }.sortedBy { it.position }
+    // A lingering just-completed task counts as "not done" for placement, so it holds its spot in
+    // the list while its completion burst plays instead of jumping straight to the done bucket.
+    val effectivelyDone = { t: TaskDto -> t.done && t.id !in linger }
+    val freeNotDone = tasks.filter { isFree(it) && !effectivelyDone(it) }.sortedBy { it.position }
+    val freeDone = tasks.filter { isFree(it) && effectivelyDone(it) }.sortedBy { it.position }
 
     data class Outer(val pos: Int, val section: SectionDto?, val task: TaskDto?)
     val outer = buildList {
@@ -675,8 +700,8 @@ private fun buildSheetRows(folder: FolderDto, showDone: Boolean): List<SheetRow>
             e.section != null -> {
                 rows.add(SheetRow.Header(e.section))
                 if (!e.section.currentlyCollapsed) {
-                    val secTasks = tasks.filter { it.sectionId == e.section.id && (showDone || !it.done) }
-                        .sortedWith(compareBy({ it.done }, { it.position }))
+                    val secTasks = tasks.filter { it.sectionId == e.section.id && (showDone || !effectivelyDone(it)) }
+                        .sortedWith(compareBy({ effectivelyDone(it) }, { it.position }))
                     secTasks.forEach { rows.add(SheetRow.Item(it)) }
                     if (secTasks.isEmpty()) rows.add(SheetRow.Empty(e.section))
                 }
@@ -747,10 +772,36 @@ private fun TaskRow(task: TaskDto, group: Int, palette: TabPalette, modifier: Mo
         // checkbox on the right edge. Accent border when cyclic, grey otherwise; a small strip
         // under it marks a task that lives in more than one category.
         if (group != 3) {
+            // A tap on a task should be visible, not just silently bump a number. Drive a one-shot
+            // "burst" (1 → 0) to pop the counter and float a "+points" chip:
+            //   • repeatable task (max > 1): on every count tick that doesn't finish it;
+            //   • single task (max ≤ 1): on the tap that completes it — 30% longer, since the row is
+            //     briefly pinned (see `lingering` in FolderTasksPage) before it leaves.
+            // remember(task.id) resets when a row is recycled, so scrolling a row back into view
+            // never replays a stale animation.
+            val burst = remember(task.id) { Animatable(0f) }
+            var prevCount by remember(task.id) { mutableStateOf(task.countAccumulation) }
+            var prevDone by remember(task.id) { mutableStateOf(task.done) }
+            LaunchedEffect(task.countAccumulation, task.done) {
+                val repeatableTick = task.maxAccumulation > 1 && task.countAccumulation > prevCount && !task.done
+                val singleDone = task.maxAccumulation <= 1 && task.done && !prevDone
+                if (repeatableTick || singleDone) {
+                    burst.snapTo(1f)
+                    burst.animateTo(0f, tween(if (singleDone) 811 else 624))
+                }
+                prevCount = task.countAccumulation
+                prevDone = task.done
+            }
+            val pop = 1f + 0.4f * burst.value
             Spacer(Modifier.width(8.dp))
             Text("${task.countValue}", color = palette.inputText.copy(alpha = 0.6f), fontSize = 12.sp)
             Spacer(Modifier.width(4.dp))
-            Text("${task.countAccumulation}/${task.maxAccumulation}", color = palette.inputText.copy(alpha = 0.6f), fontSize = 12.sp)
+            Text(
+                "${task.countAccumulation}/${task.maxAccumulation}",
+                color = lerp(palette.inputText.copy(alpha = 0.6f), palette.accent, burst.value),
+                fontSize = 12.sp,
+                modifier = Modifier.graphicsLayer { scaleX = pop; scaleY = pop },
+            )
             Box(contentAlignment = Alignment.Center) {
                 Checkbox(
                     checked = task.done,
@@ -762,6 +813,18 @@ private fun TaskRow(task: TaskDto, group: Int, palette: TabPalette, modifier: Mo
                         checkmarkColor = palette.surface,
                     ),
                 )
+                // "+points" floats up and fades out over the checkbox as the burst decays.
+                if (burst.value > 0f) {
+                    Text(
+                        "+${task.countValue}",
+                        color = palette.accent.copy(alpha = burst.value),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = ((1f - burst.value) * -16f).dp),
+                    )
+                }
                 if (task.extraFolderIds.isNotEmpty()) {
                     Box(
                         Modifier
