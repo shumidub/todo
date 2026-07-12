@@ -96,9 +96,10 @@ public class TasksRealmController {
     /** add task*/
     public static  void addTask(String text, int count, int maxAccumulation, boolean cycling, int priority, long taskFolderId ){
         RealmDb.write(() -> {
-            TaskObject task = RealmDb.realm().createObject(TaskObject.class);
+            // id is a primary key (SCHEMA_VERSION 7), so it must be supplied at creation time —
+            // createObject(TaskObject.class) without it throws RealmException.
             long id = getIdForNextValue();
-            task.setId(id);
+            TaskObject task = RealmDb.realm().createObject(TaskObject.class, id);
             task.setText(text);
             task.setLastDoneDate(0);
             task.setPriority(priority);

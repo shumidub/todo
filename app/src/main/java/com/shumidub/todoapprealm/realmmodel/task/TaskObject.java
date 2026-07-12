@@ -6,6 +6,7 @@ import com.shumidub.todoapprealm.realmmodel.RealmInteger;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by Артем on 19.12.2017.
@@ -13,6 +14,13 @@ import io.realm.RealmObject;
 
 public class TaskObject extends RealmObject {
 
+    /** Stable identity of a task, shared across every folder it belongs to. Made a primary key in
+     *  SCHEMA_VERSION 7: before that the field was non-unique, so a multi-category task got cloned
+     *  into one row per folder on every backup restore (Gson tree-serializes the shared object once
+     *  per folder, and insertOrUpdate without a PK behaves as a plain insert). Those out-of-sync
+     *  clones made checkbox/edit/delete hit the wrong copy. The PK + the v7 consolidation migration
+     *  collapse them back to a single shared row and stop restore from ever re-cloning them. */
+    @PrimaryKey
     private long id;
     private String text;
     private boolean done; // done or note completelly
