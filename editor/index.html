@@ -82,6 +82,7 @@
   <button id="btnFb">Firebase…</button>
   <button id="btnLoadFb">Загрузить из Firebase</button>
   <select id="histSel" title="Снимок истории" style="width:auto;max-width:260px" disabled><option value="">— история —</option></select>
+  <button id="btnMakeCurrent" title="Записать выбранный снимок как новый последний — его будут тянуть приложение и «Загрузить из Firebase»">Сделать актуальным</button>
   <button id="btnImport">Загрузить файл</button>
   <button id="btnExport">Скачать последний</button>
   <button id="btnExportAll">Скачать всю историю</button>
@@ -504,29 +505,63 @@ async function saveToFirebase(){
     setStatus("запись…");
     await seedHistoryFromBackup(uid);
     const payload=buildPayload();
-    const tsSnap=await get(ref(fb.db,`users/${uid}/timestamps`));
-    const list=readTimestamps(tsSnap.val());
-    let ts=Date.now();
-    while(list.includes(ts)) ts++;     // гарантируем уникальный ключ в пределах мс
-    list.push(ts);
-    const updates={};
-    while(list.length>MAX_HISTORY){     // переполнение — выкидываем самый старый снимок
-      const removed=list.shift();
-      updates[`users/${uid}/snapshots/${removed}`]=null;
-    }
-    // dual-write: backup+updatedAt — каноничный «последний» (его читает версия из main);
-    // snapshots/{ts}+timestamps — история.
-    updates[`users/${uid}/backup`]=payload.backup;
-    updates[`users/${uid}/updatedAt`]=ts;
-    updates[`users/${uid}/snapshots/${ts}`]=payload.backup;
-    updates[`users/${uid}/timestamps`]=list;
-    await update(ref(fb.db), updates);
-    // освежаем историю в памяти: чистим выпавшие снимки, добавляем новый
-    const cache={}; for(const k of list) if(history.cache[k]!==undefined) cache[k]=history.cache[k];
-    cache[ts]=payload.backup;
-    history={ uid, list, cache };
+    const ts=await publishTree(uid,payload.backup);
     currentTs=ts; currentRaw=payload.backup; dirty=false; renderHistory(ts);
-    setStatus(`сохранено ✓ (backup + снимок ${new Date(ts).toLocaleString()}, ${list.length} в истории)`,"ok");
+    setStatus(`сохранено ✓ (backup + снимок ${new Date(ts).toLocaleString()}, ${history.list.length} в истории)`,"ok");
+  }catch(e){
+    setStatus("ошибка записи: "+(e.code||e.message),"err");
+  }
+}
+
+// Записываем дерево как новый «последний»: dual-write backup+updatedAt (его читает
+// приложение и версия из main) + snapshots/{ts}+timestamps (история). Возвращает ts.
+async function publishTree(uid,tree){
+  const tsSnap=await get(ref(fb.db,`users/${uid}/timestamps`));
+  const list=readTimestamps(tsSnap.val());
+  let ts=Date.now();
+  while(list.includes(ts)) ts++;     // гарантируем уникальный ключ в пределах мс
+  list.push(ts);
+  const updates={};
+  while(list.length>MAX_HISTORY){     // переполнение — выкидываем самый старый снимок
+    const removed=list.shift();
+    updates[`users/${uid}/snapshots/${removed}`]=null;
+  }
+  updates[`users/${uid}/backup`]=tree;
+  updates[`users/${uid}/updatedAt`]=ts;
+  updates[`users/${uid}/snapshots/${ts}`]=tree;
+  updates[`users/${uid}/timestamps`]=list;
+  await update(ref(fb.db), updates);
+  // освежаем историю в памяти: чистим выпавшие снимки, добавляем новый
+  const cache={}; for(const k of list) if(history.cache[k]!==undefined) cache[k]=history.cache[k];
+  cache[ts]=tree;
+  history={ uid, list, cache };
+  return ts;
+}
+
+// Выбранный в истории снимок становится актуальным: пишем его копию как новый
+// последний (backup + снимок). Сама история не редактируется, ничего не удаляем.
+async function makeCurrentSnapshot(){
+  try{
+    ensureApp();
+    if(!fb.user){ $("#fbDlg").showModal(); setStatus("сначала войди",""); return; }
+    const uid=targetUid();
+    if(!uid){ setStatus("нет UID","err"); return; }
+    const ts=Number($("#histSel").value);
+    if(!Number.isFinite(ts)||!history.list.includes(ts)){ setStatus("выбери снимок из истории","err"); return; }
+    if(ts===history.list[history.list.length-1]){ setStatus("этот снимок и так последний","ok"); return; }
+    if(dirty && !confirm("Несохранённые правки НЕ попадут в запись — актуальной станет исходная версия снимка. Продолжить?")) return;
+    if(!confirm(`Сделать снимок ${new Date(ts).toLocaleString()} актуальным? Его копия станет новым последним (backup + снимок в истории).`)) return;
+    setStatus("запись…");
+    let tree=history.cache[ts];
+    if(tree===undefined){
+      const snap=await get(ref(fb.db,`users/${uid}/snapshots/${ts}`));
+      tree=snap.exists()?snap.val():null;
+    }
+    if(tree==null){ setStatus("снимок не найден","err"); return; }
+    const newTs=await publishTree(uid,tree);
+    backup=normalize(tree); currentRaw=tree; currentTs=newTs; dirty=false;
+    render(); renderHistory(newTs);
+    setStatus(`снимок ${new Date(ts).toLocaleString()} теперь актуальный ✓ (${history.list.length} в истории)`,"ok");
   }catch(e){
     setStatus("ошибка записи: "+(e.code||e.message),"err");
   }
@@ -651,6 +686,7 @@ $("#btnSave").addEventListener("click",saveToFirebase);
 $("#btnExport").addEventListener("click",exportLatest);
 $("#btnExportAll").addEventListener("click",exportAll);
 $("#histSel").addEventListener("change",e=>{ if(e.target.value) loadSnapshot(e.target.value); });
+$("#btnMakeCurrent").addEventListener("click",makeCurrentSnapshot);
 $("#btnImport").addEventListener("click",()=>$("#file").click());
 $("#file").addEventListener("change",e=>{ if(e.target.files[0]) importFile(e.target.files[0]); e.target.value=""; });
 window.addEventListener("beforeunload",e=>{ if(dirty){ e.preventDefault(); e.returnValue=""; } });
