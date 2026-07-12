@@ -86,17 +86,21 @@ fun SyncDialog(palette: TabPalette, onDismiss: () -> Unit) {
                         text = signedInEmail?.let { "Аккаунт: $it" } ?: "Вход не выполнен",
                         color = palette.inputText.copy(alpha = 0.7f),
                     )
-                    info?.let { bi ->
+                    // Две строки зарезервированы всегда (minLines), иначе кнопки ниже
+                    // прыгают, когда статистика догружается после входа.
+                    val backupStats = info?.let { bi ->
                         val date = bi.lastTs?.let {
                             SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(it))
                         } ?: "—"
                         val kb = String.format(Locale.US, "%.1f", bi.sizeBytes / 1024.0)
-                        Text(
-                            "Бэкапов: ${bi.count} · последний: $date · $kb КБ",
-                            color = palette.inputText.copy(alpha = 0.55f),
-                            fontSize = 12.sp,
-                        )
-                    }
+                        "Бэкапов: ${bi.count} · последний: $date · $kb КБ"
+                    } ?: ""
+                    Text(
+                        backupStats,
+                        color = palette.inputText.copy(alpha = 0.55f),
+                        fontSize = 12.sp,
+                        minLines = 2,
+                    )
                     SyncRow(if (signedInEmail != null) "Сменить аккаунт" else "Войти в Firebase") {
                         if (signedInEmail != null) { SyncManager.signOut(); signedInEmail = null }
                         showAuth = true
